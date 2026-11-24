@@ -1,6 +1,7 @@
 // One process serves both the API and the app, on one port.
 import { installGigPay } from './gigpay.js';
 import { installHaAi } from './haai.js';
+import { installHaSensors } from './hasensors.js';
 import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -1083,6 +1084,7 @@ installRules(app);
 installDeposits(app);
 installReceipts(app);
 installAlerts(app);
+installHaSensors(app, { summaryFor });
 installPaydays(app);
 installPaystub(app);
 installStatements(app);

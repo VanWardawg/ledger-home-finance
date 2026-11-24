@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.18
+
+- Optional sensors for your automations: a bill due tomorrow, checking forecast to run low, a budget over, days until payday, what is left before payday, and budget used. Each is off until you switch it on in Settings, "Home Assistant sensors".
+
 ## 0.1.17
 
 - Settings, "Download your data" and these notes now explain how Ledger is backed up: it is part of Home Assistant's own backups, which can keep an encrypted copy off your machine.

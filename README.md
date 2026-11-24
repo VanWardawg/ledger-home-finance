@@ -47,9 +47,12 @@ Add this repository to the add-on store (Settings, Add-ons, Add-on Store, ⋮, R
 The add-on asks for permission to call Home Assistant's API. Home Assistant offers no narrower permission
 than that, so here is exactly what Ledger does with it: nothing at all unless you choose "The AI in your
 Home Assistant" in Ledger's Settings, or one of your Home Assistant calendars for a side gig paid by booked
-sessions. Then it makes three calls and no others, all of which only read or ask: it lists your AI Tasks
-and calendars for a menu, it asks the AI Task you chose (`ai_task.generate_data`), and it reads the events
-of the calendar you chose. The code is in `ledger/server/haai.js`.
+sessions, or switch on one of its optional sensors. Then it makes four calls and no others. Three only
+read or ask: it lists your AI Tasks and calendars for a menu, it asks the AI Task you chose
+(`ai_task.generate_data`), and it reads the events of the calendar you chose. The fourth writes, and only
+Ledger's own sensors (`binary_sensor.ledger_...` and `sensor.ledger_...`, six in all, each off until you
+switch it on in Ledger's Settings) so your automations can react to a bill due tomorrow or a low balance.
+It cannot write anything else. The code is in `ledger/server/haai.js`.
 
 ### From source
 

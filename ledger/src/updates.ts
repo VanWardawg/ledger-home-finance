@@ -22,6 +22,7 @@ export const JUST_ADDED: [title: string, text: string, more?: { date: string; go
 
 export const UPDATES: [date: string, items: string[]][] = [
   ['2026-11-24', [
+    'Inside Home Assistant, Ledger can offer sensors for your automations, such as "a bill is due tomorrow" or "checking is forecast to run low". Each one is off until you switch it on in Settings, "Home Assistant sensors".',
     'Inside Home Assistant, Settings, "Download your data" now explains how Ledger is backed up: it is part of Home Assistant\'s own backups, which can keep an encrypted copy off your machine.',
     'Every side gig can say how it pays: about the same each time, by booked sessions from a calendar at your rate, or by jobs you type in. Jobs past their pay day show as "Owed to you". Settings, "Side gig".',
     'Inside Home Assistant, Ledger can use the AI you already have set up there for the recap, category suggestions and a basic CFO. Choose it in Settings, "AI recap and logos".',

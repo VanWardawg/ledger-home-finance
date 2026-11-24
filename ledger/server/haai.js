@@ -23,10 +23,13 @@ import { db, getSetting, setSetting } from './db.js';
 // The Supervisor's token opens the whole of Home Assistant's API (there is no narrower permission to ask
 // for), so what is done with it is kept as small as it can be (the NAS session's review, 2026-11-24):
 //   - it is only ever sent to the Supervisor's own address, never to an address from a setting or a request;
-//   - Ledger makes three calls with it and no others: listing states (to find the AI Tasks and the
-//     calendars), ai_task.generate_data, and reading one calendar's events between two dates (for a side gig
-//     paid by booked sessions; added 2026-11-24 at the owner's word, on the NAS session's advice). All three
-//     only read or ask; none changes anything in Home Assistant. No part of a request from the page chooses
+//   - Ledger makes four calls with it and no others: listing states (to find the AI Tasks and the
+//     calendars), ai_task.generate_data, reading one calendar's events between two dates (for a side gig
+//     paid by booked sessions; added 2026-11-24 at the owner's word, on the NAS session's advice), and
+//     writing one of Ledger's own six sensors (the same day, at his word, for automations; off until the
+//     household switches a sensor on). The first three only read or ask. The fourth writes, and only
+//     entities named binary_sensor.ledger_... or sensor.ledger_... from a fixed list: it cannot touch
+//     anything else in Home Assistant. No part of a request from the page chooses
 //     the service or the address;
 //   - the entity is checked to be an ai_task before every call;
 //   - neither the token nor Home Assistant's own error text is logged or sent to the page.
@@ -38,6 +41,9 @@ const AI_TASK = /^ai_task\.[a-z0-9_]+$/;
 const CALENDAR = /^calendar\.[a-z0-9_]+$/;
 const PATHS = new Set(['GET /states', 'POST /services/ai_task/generate_data?return_response']);
 // The one path that carries values: a calendar's id and two timestamps, each made here and checked here.
+// The one call that writes: one of Ledger's own six sensors, named in server/hasensors.js. Nothing else in
+// Home Assistant can be written through it, and only when the household has switched that sensor on.
+const SENSOR_PATH = /^POST \/states\/(?:binary_sensor\.ledger_(?:bill_due_tomorrow|checking_low|budget_over)|sensor\.ledger_(?:days_to_payday|left_before_payday|budget_used))$/;
 const CALENDAR_PATH = /^GET \/calendars\/calendar\.[a-z0-9_]+\?start=\d{4}-\d\d-\d\dT\d\d%3A\d\d%3A\d\d\.\d{3}Z&end=\d{4}-\d\d-\d\dT\d\d%3A\d\d%3A\d\d\.\d{3}Z$/;
 
 /** Whether this copy can reach a Home Assistant at all (it is running as its add-on). */
@@ -51,7 +57,7 @@ export const haIsClaude = () => /claude|anthropic/i.test(`${haEntity()} ${getSet
 export const aiName = () => (viaHa() && !haIsClaude() ? 'your AI' : 'Claude');
 
 async function call(method, path, body, check = 'Check that its AI is set up under Settings, Devices & services.') {
-  if (!PATHS.has(`${method} ${path}`) && !CALENDAR_PATH.test(`${method} ${path}`)) throw new Error('Ledger does not make that call to Home Assistant.');
+  if (!PATHS.has(`${method} ${path}`) && !CALENDAR_PATH.test(`${method} ${path}`) && !SENSOR_PATH.test(`${method} ${path}`)) throw new Error('Ledger does not make that call to Home Assistant.');
   const res = await fetch(`${BASE()}${path}`, {
     method, signal: AbortSignal.timeout(120_000),
     headers: { Authorization: `Bearer ${TOKEN()}`, 'Content-Type': 'application/json' },
@@ -95,6 +101,14 @@ export async function haCalendarEvents(entity, from, to) {
     throw e?.name === 'TimeoutError' || e instanceof TypeError ? new Error("Ledger couldn't reach Home Assistant.") : e;
   }
   return Array.isArray(out) ? out.slice(0, 5000) : [];
+}
+
+/** Writes one of Ledger's own sensors to Home Assistant: a state and a few plain attributes. The address is checked in call(). */
+export async function haPublish(entity, state, attributes = {}) {
+  if (!haOffered()) throw new Error("This copy of Ledger isn't running inside Home Assistant.");
+  try { await call('POST', `/states/${entity}`, { state: String(state).slice(0, 60), attributes }, 'Home Assistant may be restarting; Ledger tries again in a few minutes.'); } catch (e) {
+    throw e?.name === 'TimeoutError' || e instanceof TypeError ? new Error("Ledger couldn't reach Home Assistant.") : e;
+  }
 }
 
 const thisMonth = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; };

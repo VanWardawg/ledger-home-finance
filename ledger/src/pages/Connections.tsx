@@ -1213,6 +1213,38 @@ function AiSent() {
 
 /** Claude looks up logos for merchants the built-in list doesn't know. */
 /** Whether Ledger may ask the icon services for shops' logos at all. On unless switched off. */
+// Sensors Ledger can write to Home Assistant for automations. Each is off until switched on here.
+function HaSensors() {
+  const { data: v, reload } = useData<any>('/api/ha/sensors');
+  const [err, setErr] = useState('');
+  const [low, setLow] = useState<string | null>(null);
+  if (!v?.offered) return null;
+  const put = async (body: object) => { setErr(''); try { await api('/api/ha/sensors', { method: 'PUT', body }); forgetLoaded(); reload(); } catch (e: any) { setErr(e.message); } };
+  const says = (s: any) => (s.state === null ? 'Not written yet' : s.state === 'on' ? 'Yes' : s.state === 'off' ? 'No' : s.state === 'unknown' ? 'Nothing to go on yet' : String(s.state));
+  const row = (s: any) => (
+    <label className="row check" key={s.id}><span className="grow wrap">{s.name}{s.figure ? <em className="tag">shows a figure</em> : null}
+      <small>{s.hint} <code>{s.entity}</code>{s.on ? <> · now: <b>{says(s)}</b></> : null}{s.error ? <span className="bad"> · {s.error}</span> : null}</small></span>
+      <input type="checkbox" checked={s.on} onChange={(e) => put({ id: s.id, on: e.target.checked })} /></label>
+  );
+  const anyOn = v.sensors.some((s: any) => s.on);
+  return (
+    <section className="card ha-sensors">
+      <div className="card-head"><h2>Home Assistant sensors</h2>{anyOn && <span className="good">On</span>}</div>
+      <p className="sub first">For automations and dashboards in Home Assistant: a phone notification the day before a bill, a light that turns amber when checking runs low, a line on a wall display. Everything here is <b>off until you switch it on</b>, one sensor at a time, and Ledger writes nothing to Home Assistant otherwise.</p>
+      <p className="sub">Worth knowing first: whatever you switch on can be seen by everyone who uses your Home Assistant, can be put on its dashboards, and is kept in its history. The first three only say yes or no. The ones marked "shows a figure" put a number from your finances there.</p>
+      <h3 className="setup-sub">Yes or no</h3>
+      {v.sensors.filter((s: any) => !s.figure && s.entity.startsWith('binary_')).map(row)}
+      <label className="field ha-low"><span>"Running low" means checking forecast below</span>
+        <input type="text" inputMode="decimal" value={low ?? String(v.low)} onChange={(e) => setLow(e.target.value)} onBlur={() => { if (low !== null && low !== String(v.low)) put({ low }); setLow(null); }} />
+        <small>Shared with the email alerts.</small></label>
+      <h3 className="setup-sub">Numbers</h3>
+      {v.sensors.filter((s: any) => !s.entity.startsWith('binary_')).map(row)}
+      {err && <p className="error" role="alert">{err}</p>}
+      <p className="sub">Ledger refreshes them every five minutes. In Home Assistant they appear under Developer tools, States, and can be used in any automation as a trigger or condition. Switch one off and it reads "unavailable" until Home Assistant next restarts, then it is gone.</p>
+    </section>
+  );
+}
+
 export function LogoFetch() {
   const { data: s, reload } = useData<any>('/api/settings');
   if (!s) return null;
@@ -1913,6 +1945,7 @@ export default function Connections({ onChanged }: { onChanged: () => void }) {
       {needsPassword ? null : <Fold id="allowance" title="Allowances" note="A notebook of what you hold for each child"><AllowanceSwitch /></Fold>}
       {needsPassword ? null : <Fold id="email" title="Summary email" note="A short summary sent on the days you choose"><WeeklyEmail /></Fold>}
       {needsPassword ? null : <Fold id="alerts" title="Alerts" note="Emails when checking runs low, a bill is due or a budget tips over, and the pay stub reminder"><Alerts /></Fold>}
+      {needsPassword || !auth.ingress ? null : <Fold id="ha-sensors" title="Home Assistant sensors" note="Optional: let automations react to bills, a low balance or budgets"><HaSensors /></Fold>}
       {needsPassword ? null : <Fold id="ai" title="AI recap and logos" note="Claude writes the recap, reads screenshots and finds logos"><AiRecap /></Fold>}
       {needsPassword || !gig.classes ? null : <Fold id="vipkid" title={`${gig.name} class calendar`} note="Reads your classes to work out each Friday's pay"><VipkidCalendar /></Fold>}
     </div>

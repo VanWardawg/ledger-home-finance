@@ -37,10 +37,44 @@ Ledger works without any AI. If you want the extras, Settings, "AI recap and log
   suggest changes. You pay Anthropic for what you use.
 
 Either way Ledger sends only what each job needs, Settings lists what has been sent, and you can keep
-chosen categories away from the AI. The add-on asks for permission to call Home Assistant for two things only, and
-only if you choose them: that AI Task, and reading one of your Home Assistant calendars for a side gig paid
-by booked sessions (Settings, "Side gig"). It lists your AI Tasks and calendars, asks the AI Task, and
-reads the calendar you picked. It changes nothing in Home Assistant.
+chosen categories away from the AI. The add-on asks for permission to call Home Assistant for three things only, and
+only if you choose them: that AI Task, reading one of your Home Assistant calendars for a side gig paid
+by booked sessions (Settings, "Side gig"), and the optional sensors below. It lists your AI Tasks and
+calendars, asks the AI Task, reads the calendar you picked, and writes its own sensors if you switch them
+on. It changes nothing else in Home Assistant.
+
+## Sensors for automations
+
+Off until you switch them on, one at a time, in Ledger's Settings under "Home Assistant sensors":
+
+| Sensor | Says |
+|---|---|
+| `binary_sensor.ledger_bill_due_tomorrow` | on the day before a bill comes out of checking (attribute `bills`: how many) |
+| `binary_sensor.ledger_checking_low` | on when checking is forecast below the amount you set |
+| `binary_sensor.ledger_budget_over` | on when a category is over budget this month (attribute `categories`) |
+| `sensor.ledger_days_to_payday` | a number of days |
+| `sensor.ledger_left_before_payday` | a dollar figure |
+| `sensor.ledger_budget_used` | a percentage |
+
+The first three say yes or no, with no names or amounts. The last two put a number from your finances
+into Home Assistant. Anything switched on can be seen by everyone who uses your Home Assistant and is
+kept in its history, so choose with that in mind. Ledger refreshes them every five minutes. They are
+plain states without a device, so they come back a few minutes after Home Assistant restarts, and a
+sensor you switch off reads "unavailable" until the next restart.
+
+An example automation:
+
+```yaml
+alias: Bill due tomorrow
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.ledger_bill_due_tomorrow
+    to: "on"
+actions:
+  - action: notify.notify
+    data:
+      message: A bill comes out of checking tomorrow.
+```
 
 ## If it ever stops
 
