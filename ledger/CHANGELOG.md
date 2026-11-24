@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.15
+
+- Setup guide, first step: on a computer the Save button lines up with its boxes, and the closing sentence reads correctly.
+
 ## 0.1.14
 
 - Answering "which job was this deposit for?" only accepts money in, and says so plainly when it is sent something else.

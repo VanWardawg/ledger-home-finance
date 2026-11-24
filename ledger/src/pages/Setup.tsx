@@ -58,7 +58,7 @@ function Household() {
       <form onSubmit={sortOut} noValidate className="add-grid">
         <label className="field"><span>Your work</span><input type="text" value={you ?? w.you} maxLength={120} placeholder="What you do, and where" onChange={(e) => setYou(e.target.value)} /></label>
         {joint && <label className="field"><span>Your spouse's work</span><input type="text" value={spouse ?? w.spouse} maxLength={120} placeholder="What they do, and where" onChange={(e) => setSpouse(e.target.value)} /></label>}
-        <div><button type="submit" className="primary" disabled={busy}>{busy ? 'Working it out…' : 'Save'}</button></div>
+        <div className="setup-save"><button type="submit" className="primary" disabled={busy}>{busy ? 'Working it out…' : 'Save'}</button></div>
       </form>
       {err && <p className="error" role="alert">{err}</p>}
       {found && (
@@ -75,7 +75,7 @@ function Household() {
           <p className="sub">These are suggestions to raise with whoever prepares your taxes. Ledger isn't a tax preparer and can't tell you that you qualify.</p>
         </>
       )}
-      <p className="sub">The tax estimate covers federal income tax and your state's. Your state is chosen in the first step of this guide.</p>
+      <p className="sub">The tax estimate covers federal income tax and your state's, which you chose at the top of this step.</p>
     </>
   );
 }
