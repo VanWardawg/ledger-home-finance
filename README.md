@@ -21,7 +21,7 @@ personal project, shared as it is. It is not a product, and nobody is on call fo
   the year, with pay stubs month by month, purchases that might be deductible, and a pack to hand to
   a tax preparer. **An estimate, not tax advice.**
 - **Savings goals, investments** (balances, and prices if you switch them on), **statement checks**.
-- **Ask your CFO** and other optional AI features, run on your own Anthropic API key.
+- **Ask your CFO** and other optional AI features, run on your own Anthropic API key, or, inside Home Assistant, on the AI you already have set up there (the basics; Claude by key does the most).
 - Works on a phone and can be added to its home screen.
 
 ## Running it
@@ -43,6 +43,11 @@ tunnel with its own sign-in if you want to reach it from outside your home.
 
 Add this repository to the add-on store (Settings, Add-ons, Add-on Store, ⋮, Repositories), install
 **Ledger**, start it, and open it from the sidebar. See [the add-on's notes](ledger/DOCS.md).
+
+The add-on asks for permission to call Home Assistant's API. Home Assistant offers no narrower permission
+than that, so here is exactly what Ledger does with it: nothing at all unless you choose "The AI in your
+Home Assistant" in Ledger's Settings, and then two calls only: it lists your AI Tasks for a menu, and it
+asks the one you chose (`ai_task.generate_data`). The code is in `ledger/server/haai.js`.
 
 ### From source
 

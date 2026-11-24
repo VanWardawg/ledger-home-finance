@@ -1102,7 +1102,7 @@ function AiRecap() {
   const setIncluded = async (on: boolean) => { setErr(''); try { await api('/api/ai/included', { method: 'PUT', body: { on } }); setNote(on ? 'Included AI is on.' : 'Included AI is off.'); reload(); reloadAi(); } catch (e: any) { setErr(e.message); } };
   return (
     <section className="card">
-      <div className="card-head"><h2>AI recap</h2>{s.hasKey && <span className="good">On</span>}</div>
+      <div className="card-head"><h2>AI recap</h2>{(s.hasKey || s.viaHa) && <span className="good">On</span>}</div>
       <p className="sub first">
         With AI on, Claude writes the dashboard recap, reads screenshots of purchases and looks up merchant logos. Without it, the recap is an automatic summary and the other two are off.
         Ledger sends Anthropic only what each job needs: that day's totals and bills, the picture you chose, or a list of merchant names. No account numbers.
