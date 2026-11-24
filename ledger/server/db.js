@@ -76,7 +76,11 @@ function seed() {
     [14, 'Transfer', '↔️', '#9a9aa5', 'transfer', 0, 0],
   ];
   const insCat = db.prepare('INSERT INTO categories (id,name,icon,color,kind,fixed,budget,sort) VALUES (?,?,?,?,?,?,?,?)');
-  cats.forEach((c, i) => insCat.run(...c, i));
+  // The amounts above belong to the sample household. A copy that starts empty (another household's, or the
+  // Home Assistant add-on) starts with no budgets: a stranger was otherwise told they were "$3,111 under
+  // budget" on a budget nobody had set (found by the NAS session's look at the add-on, 2026-11-24).
+  const blank = !!process.env.LEDGER_SETUP_CODE || process.env.LEDGER_FRESH === '1';
+  cats.forEach((c, i) => insCat.run(...c.slice(0, 6), blank ? 0 : c[6], i));
 
   // A copy made for another household (it is given a one-time setup code) starts with the starter
   // categories and nothing else: no sample accounts or purchases to clear away.

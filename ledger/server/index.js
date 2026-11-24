@@ -1093,6 +1093,10 @@ installLogoFinder(app);
 // ---- Bank connection (SimpleFIN) --------------------------------------------
 
 const ACCOUNT_TYPES = ['checking', 'savings', 'credit', 'investment', 'hsa', 'auto', 'mortgage', 'loan', 'insurance'];
+// The clock Ledger is working by. "Today", paydays and the email's hour all follow the server's time zone
+// (the TZ setting of its container), so this is the way to see which one it really has.
+app.get('/api/clock', (_req, res) => { const now = new Date(); res.json({ zone: Intl.DateTimeFormat().resolvedOptions().timeZone, tz: process.env.TZ || null, today: iso(now), now: now.toString() }); });
+
 // Whether anyone on the network could open this copy with no password. As a Home Assistant add-on nobody
 // can: Home Assistant signs people in, and any other address is refused until a Ledger password is set
 // (server/auth.js). So no password is asked for there before the bank connection and the rest of Settings.

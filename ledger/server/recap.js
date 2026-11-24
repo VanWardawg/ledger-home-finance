@@ -104,7 +104,12 @@ export function buildFacts(month, { summaryFor, debtPlan, taxEstimate }) {
 function writeFromRules(f) {
   const paras = [], bullets = [];
   const diff = f.expected_spending_by_today - f.spent_so_far;
-  if (f.is_current_month) {
+  // No budgets set yet (a new copy): say what was spent and earned, and where to set them, not "$0 of $0".
+  const none = !(f.monthly_budget > 0);
+  if (none) {
+    paras.push(f.is_current_month ? `You've spent ${money(f.spent_so_far)} so far in ${f.month_name}, and income so far is ${money(f.income_so_far)}.` : `In ${f.month_name} you spent ${money(f.spent_so_far)}. Income was ${money(f.income_so_far)}.`);
+    paras.push('No budgets are set yet. Give each kind of spending a monthly amount on the Budgets page, or have Ledger suggest them there, and this summary will say how you are doing against them.');
+  } else if (f.is_current_month) {
     paras.push(`You've spent ${money(f.spent_so_far)} of your ${money(f.monthly_budget)} budget so far in ${f.month_name}. That's ${money(diff)} ${diff >= 0 ? 'under' : 'over'} where your budget expects you to be by day ${f.day_of_month}. Income so far this month is ${money(f.income_so_far)}.`);
   } else {
     const d = f.monthly_budget - f.spent_so_far;
@@ -115,7 +120,7 @@ function writeFromRules(f) {
   const close = flexible.filter((c) => c.spent <= c.budget && c.spent >= c.budget * 0.8);
   if (over.length) paras.push(`Already over budget: ${over.slice(0, 3).map((c) => `${c.name} (${money(c.spent)} of ${money(c.budget)})`).join(', ')}.${close.length ? ` Close to the limit: ${close.slice(0, 2).map((c) => c.name).join(' and ')}.` : ''}`);
   else if (close.length) paras.push(`Nothing is over budget yet. Closest to the limit: ${close.slice(0, 3).map((c) => `${c.name} (${money(c.spent)} of ${money(c.budget)})`).join(', ')}.`);
-  else paras.push('Every category is comfortably inside its budget.');
+  else if (!none) paras.push('Every category is comfortably inside its budget.');
 
   if (f.checking_account?.next_payday) {
     const c = f.checking_account;
