@@ -193,6 +193,9 @@ button.link:focus-visible { outline: 2px solid var(--accent); outline-offset: 1p
 /* In a grid of fields, each field's label, box, hint and error sit on lines shared with its neighbours, so
    a label that wraps onto two lines no longer pushes its box below the others (his screenshot of "Costs
    that lower your tax", 2026-11-23). A short label sits just above its box. */
+.backup-note { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line, rgba(128,128,128,.25)); }
+.backup-note h3 { margin: 0 0 6px; font-size: 1rem; }
+.backup-note ol { margin: 8px 0; padding-left: 1.3em; display: grid; gap: 6px; }
 /* The setup guide's Save beside the work boxes: on a computer it sits on the boxes' line, not the labels'. */
 @media (min-width: 761px) { @supports (grid-template-rows: subgrid) {
   .setup-save { grid-row: span 4; display: grid; grid-template-rows: subgrid; }

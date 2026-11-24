@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.17
+
+- Settings, "Download your data" and these notes now explain how Ledger is backed up: it is part of Home Assistant's own backups, which can keep an encrypted copy off your machine.
+
 ## 0.1.16
 
 - The first Ledger password can only be set from inside Home Assistant. A port you open yourself can never be used to claim the copy.

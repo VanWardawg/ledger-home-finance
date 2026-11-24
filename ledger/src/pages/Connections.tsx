@@ -1872,11 +1872,25 @@ export default function Connections({ onChanged }: { onChanged: () => void }) {
 
       {needsPassword ? null : <h3 className="group-title">Income</h3>}
       {needsPassword ? null : <Fold id="rules" title="What Ledger has learned" note="Rules for filing purchases and claiming them for tax"><Rules /></Fold>}
-      {needsPassword ? null : <Fold id="export" title="Download your data" note="Every transaction as a spreadsheet file">
+      {needsPassword ? null : <Fold id="export" title="Download your data" note={auth.ingress ? 'Every transaction as a spreadsheet file, and how Ledger is backed up' : 'Every transaction as a spreadsheet file'}>
         <section className="card">
           <div className="card-head"><h2>Download your data</h2></div>
           <p className="sub first">Every transaction in Ledger as a spreadsheet file (CSV) that opens in Excel, Numbers or Google Sheets: date, account, description, amount, category, note and any tax claim. For your own records, or to hand to whoever prepares your taxes.</p>
           <a className="button-link" href={at('/api/export/transactions.csv')} download>Download transactions</a>
+          {auth.ingress ? (
+            <div className="backup-note">
+              <h3>Backing up everything</h3>
+              <p className="sub">That file is only your transactions. The whole of Ledger (accounts, budgets, settings, receipts) is included in <b>Home Assistant's own backups</b>, so it is kept wherever those are kept. Three things worth doing in Home Assistant, under Settings, System, Backups:</p>
+              <ol className="sub">
+                <li><b>Switch on automatic backups</b>, so a recent copy always exists.</li>
+                <li><b>Keep a copy off this machine.</b> If you subscribe to Home Assistant Cloud, it stores an encrypted copy of your latest backup for you. A network drive works too. A backup that lives only on this machine is lost with it.</li>
+                <li><b>Leave encryption on, and save the encryption key</b> Home Assistant shows you somewhere safe. A backup holds your figures and any keys you saved in Ledger, and without that key an encrypted backup can't be opened again.</li>
+              </ol>
+              <p className="sub">To bring Ledger back, restore the backup in Home Assistant. Ledger pauses for the few seconds a backup takes, so the copy is whole.</p>
+            </div>
+          ) : !auth.canErase ? (
+            <p className="sub">That file is only your transactions. Everything else lives in Ledger's data folder on the machine that runs it: copy that folder somewhere else now and then, and you have a full backup.</p>
+          ) : null}
         </section>
       </Fold>}
       {needsPassword || !auth.canErase ? null : <Fold id="erase" title="Delete everything" note="Wipe your copy of Ledger for good"><EraseEverything hasPassword={!!auth.passwordSet} /></Fold>}

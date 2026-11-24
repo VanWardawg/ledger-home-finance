@@ -55,8 +55,22 @@ Ledger refuses everything that doesn't come through Home Assistant.
 
 ## Your data
 
-One SQLite file in the add-on's `/data` folder. It is included in Home Assistant's backups. Removing
-the add-on removes it.
+One SQLite file in the add-on's `/data` folder. Removing the add-on removes it.
+
+### Backing it up
+
+Ledger is included in Home Assistant's own backups, so it is kept wherever those are kept. Under
+**Settings → System → Backups** in Home Assistant:
+
+- Switch on automatic backups.
+- Keep a copy off this machine. Home Assistant Cloud, if you subscribe, stores an encrypted copy of
+  your latest backup; a network drive works too.
+- Leave encryption on and save the encryption key somewhere safe. A backup holds your figures and
+  any keys you saved in Ledger, and an encrypted backup can't be opened without that key.
+
+To bring Ledger back, restore the backup in Home Assistant. Ledger is stopped for the few seconds a
+backup takes, so the copy is whole. "Download your data" in Ledger's Settings is only a spreadsheet
+of transactions, not a full backup.
 
 ## The tax estimate
 
