@@ -194,7 +194,7 @@ button.link:focus-visible { outline: 2px solid var(--accent); outline-offset: 1p
    a label that wraps onto two lines no longer pushes its box below the others (his screenshot of "Costs
    that lower your tax", 2026-11-23). A short label sits just above its box. */
 .ha-sensors code { font-size: .82em; opacity: .8; word-break: break-all; }
-.ha-sensors .tag { margin-left: 8px; padding: 1px 7px; border-radius: 999px; font-style: normal; font-size: .72rem; background: rgba(240, 170, 60, .18); color: #e0a040; white-space: nowrap; }
+.ha-sensors .tag { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 999px; font-style: normal; font-size: .72rem; background: rgba(240, 170, 60, .18); color: #e0a040; }
 .ha-sensors .ha-low { max-width: 320px; margin: 10px 0 4px; }
 .ha-sensors .bad { color: #e0705f; }
 .backup-note { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line, rgba(128,128,128,.25)); }

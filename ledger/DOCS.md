@@ -53,12 +53,14 @@ Off until you switch them on, one at a time, in Ledger's Settings under "Home As
 | `binary_sensor.ledger_checking_low` | on when checking is forecast below the amount you set |
 | `binary_sensor.ledger_budget_over` | on when a category is over budget this month (attribute `categories`) |
 | `sensor.ledger_days_to_payday` | a number of days |
-| `sensor.ledger_left_before_payday` | a dollar figure |
+| `sensor.ledger_left_before_payday` | a dollar figure (unit USD) |
 | `sensor.ledger_budget_used` | a percentage |
 
 The first three say yes or no, with no names or amounts. The last two put a number from your finances
-into Home Assistant. Anything switched on can be seen by everyone who uses your Home Assistant and is
-kept in its history, so choose with that in mind. Ledger refreshes them every five minutes. They are
+into Home Assistant. Anything switched on can be seen by **every Home Assistant login, not only
+administrators**: ordinary users, guests and wall displays can read it in the interface, in history and
+through Home Assistant's API, even though only administrators can open Ledger itself. Choose with that
+in mind. Ledger refreshes them every five minutes. They are
 plain states without a device, so they come back a few minutes after Home Assistant restarts, and a
 sensor you switch off reads "unavailable" until the next restart.
 

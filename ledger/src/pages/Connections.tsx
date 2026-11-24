@@ -1220,9 +1220,9 @@ function HaSensors() {
   const [low, setLow] = useState<string | null>(null);
   if (!v?.offered) return null;
   const put = async (body: object) => { setErr(''); try { await api('/api/ha/sensors', { method: 'PUT', body }); forgetLoaded(); reload(); } catch (e: any) { setErr(e.message); } };
-  const says = (s: any) => (s.state === null ? 'Not written yet' : s.state === 'on' ? 'Yes' : s.state === 'off' ? 'No' : s.state === 'unknown' ? 'Nothing to go on yet' : String(s.state));
+  const says = (s: any) => (s.state === null ? 'Not written yet' : s.state === 'on' ? 'Yes' : s.state === 'off' ? 'No' : s.state === 'unknown' ? (s.needs ? `Nothing yet: it needs ${s.needs}` : 'Nothing to go on yet') : String(s.state));
   const row = (s: any) => (
-    <label className="row check" key={s.id}><span className="grow wrap">{s.name}{s.figure ? <em className="tag">shows a figure</em> : null}
+    <label className="row check" key={s.id}><span className="grow wrap">{s.name}{s.figure ? <em className="tag">shows a figure to every Home Assistant user</em> : null}
       <small>{s.hint} <code>{s.entity}</code>{s.on ? <> · now: <b>{says(s)}</b></> : null}{s.error ? <span className="bad"> · {s.error}</span> : null}</small></span>
       <input type="checkbox" checked={s.on} onChange={(e) => put({ id: s.id, on: e.target.checked })} /></label>
   );
@@ -1232,6 +1232,7 @@ function HaSensors() {
       <div className="card-head"><h2>Home Assistant sensors</h2>{anyOn && <span className="good">On</span>}</div>
       <p className="sub first">For automations and dashboards in Home Assistant: a phone notification the day before a bill, a light that turns amber when checking runs low, a line on a wall display. Everything here is <b>off until you switch it on</b>, one sensor at a time, and Ledger writes nothing to Home Assistant otherwise.</p>
       <p className="sub">Worth knowing first: whatever you switch on can be seen by everyone who uses your Home Assistant, can be put on its dashboards, and is kept in its history. The first three only say yes or no. The ones marked "shows a figure" put a number from your finances there.</p>
+      <p className="sub"><b>"Everyone" means every Home Assistant login, not only administrators:</b> ordinary users, guest logins and wall displays can all read these, even though only administrators can open Ledger itself.</p>
       <h3 className="setup-sub">Yes or no</h3>
       {v.sensors.filter((s: any) => !s.figure && s.entity.startsWith('binary_')).map(row)}
       <label className="field ha-low"><span>"Running low" means checking forecast below</span>

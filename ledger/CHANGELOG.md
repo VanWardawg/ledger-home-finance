@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.19
+
+- Sensors: the page and these notes now say plainly that a sensor you switch on can be read by every Home Assistant login, not only administrators.
+- A sensor with nothing to report says what it needs (a checking account, a payday, a budget).
+- The number sensors carry units and classes, so Home Assistant can graph them and keep statistics. "Left before payday" is in USD.
+- Switching off a sensor that was never on no longer creates it in Home Assistant.
+
 ## 0.1.18
 
 - Optional sensors for your automations: a bill due tomorrow, checking forecast to run low, a budget over, days until payday, what is left before payday, and budget used. Each is off until you switch it on in Settings, "Home Assistant sensors".

@@ -30,9 +30,10 @@ const SENSORS = [
   { id: 'bill_due_tomorrow', entity: 'binary_sensor.ledger_bill_due_tomorrow', name: 'A bill is due tomorrow', hint: 'On the day before a bill comes out of checking. Says yes or no, and how many.', icon: 'mdi:calendar-alert' },
   { id: 'checking_low', entity: 'binary_sensor.ledger_checking_low', name: 'Checking is forecast to run low', hint: 'On when checking is forecast to fall below the amount below before the next payday. Says yes or no.', icon: 'mdi:bank-minus' },
   { id: 'budget_over', entity: 'binary_sensor.ledger_budget_over', name: 'A budget is over', hint: 'On when a category has gone over its budget this month. Says yes or no, and how many.', icon: 'mdi:chart-box-outline' },
-  { id: 'days_to_payday', entity: 'sensor.ledger_days_to_payday', name: 'Days until payday', hint: 'A number of days.', icon: 'mdi:calendar-clock', unit: 'd' },
-  { id: 'left_before_payday', entity: 'sensor.ledger_left_before_payday', name: 'Left before payday', hint: 'What checking is forecast to hold just before the next payday.', icon: 'mdi:cash', unit: '$', figure: true },
-  { id: 'budget_used', entity: 'sensor.ledger_budget_used', name: 'Budget used this month', hint: 'Spending so far as a share of the month\'s budgets.', icon: 'mdi:percent', unit: '%', figure: true },
+  // unit and extra are what Home Assistant needs to graph a number and keep statistics for it.
+  { id: 'days_to_payday', entity: 'sensor.ledger_days_to_payday', name: 'Days until payday', hint: 'A number of days.', icon: 'mdi:calendar-clock', unit: 'd', extra: { device_class: 'duration', state_class: 'measurement' } },
+  { id: 'left_before_payday', entity: 'sensor.ledger_left_before_payday', name: 'Left before payday', hint: 'What checking is forecast to hold just before the next payday.', icon: 'mdi:cash', unit: 'USD', extra: { state_class: 'measurement' }, figure: true },
+  { id: 'budget_used', entity: 'sensor.ledger_budget_used', name: 'Budget used this month', hint: 'Spending so far as a share of the month\'s budgets.', icon: 'mdi:percent', unit: '%', extra: { state_class: 'measurement' }, figure: true },
 ];
 const BY_ID = new Map(SENSORS.map((s) => [s.id, s]));
 
@@ -51,13 +52,15 @@ function values() {
   const has = !!(o && o.accounts.length);
   const due = alerts.filter((a) => a.key.startsWith('due:')).length;
   const over = alerts.filter((a) => a.key.startsWith('over:')).length;
+  // `needs` says, for the page, why a sensor has nothing to report yet.
+  const account = has ? '' : 'a checking account', payday = has ? (o.nextPayday ? '' : 'a payday') : 'a checking account';
   return {
-    bill_due_tomorrow: { state: has ? (due ? 'on' : 'off') : 'unknown', attributes: { bills: due } },
-    checking_low: { state: has ? (alerts.some((a) => a.key.startsWith('low:')) ? 'on' : 'off') : 'unknown', attributes: {} },
-    budget_over: { state: over ? 'on' : 'off', attributes: { categories: over } },
-    days_to_payday: { state: has && o.nextPayday ? o.daysToPayday : 'unknown', attributes: {} },
-    left_before_payday: { state: has ? Math.round((o.nextPayday ? o.beforePayday : o.lowest.balance) * 100) / 100 : 'unknown', attributes: {} },
-    budget_used: { state: s && s.budget > 0 ? Math.round((s.spent / s.budget) * 100) : 'unknown', attributes: {} },
+    bill_due_tomorrow: { state: has ? (due ? 'on' : 'off') : 'unknown', attributes: { bills: due }, needs: account },
+    checking_low: { state: has ? (alerts.some((a) => a.key.startsWith('low:')) ? 'on' : 'off') : 'unknown', attributes: {}, needs: account },
+    budget_over: { state: over ? 'on' : 'off', attributes: { categories: over }, needs: '' },
+    days_to_payday: { state: has && o.nextPayday ? o.daysToPayday : 'unknown', attributes: {}, needs: payday },
+    left_before_payday: { state: has ? Math.round((o.nextPayday ? o.beforePayday : o.lowest.balance) * 100) / 100 : 'unknown', attributes: {}, needs: account },
+    budget_used: { state: s && s.budget > 0 ? Math.round((s.spent / s.budget) * 100) : 'unknown', attributes: {}, needs: s && s.budget > 0 ? '' : 'a budget' },
   };
 }
 
@@ -70,8 +73,8 @@ export async function publishSensors() {
   for (const id of on) {
     const s = BY_ID.get(id), v = now[id];
     try {
-      await haPublish(s.entity, String(v.state), { friendly_name: `Ledger: ${s.name}`, icon: s.icon, ...(s.unit && v.state !== 'unknown' ? { unit_of_measurement: s.unit } : {}), ...v.attributes });
-      last[id] = { state: v.state, at: Date.now(), error: '' };
+      await haPublish(s.entity, String(v.state), { friendly_name: `Ledger: ${s.name}`, icon: s.icon, ...(s.unit && v.state !== 'unknown' ? { unit_of_measurement: s.unit, ...(s.extra || {}) } : {}), ...v.attributes });
+      last[id] = { state: v.state, needs: v.state === 'unknown' ? v.needs : '', at: Date.now(), error: '' };
     } catch (e) { last[id] = { ...(last[id] || {}), error: String(e?.message || 'It could not be written.').slice(0, 200) }; }
   }
 }
@@ -85,7 +88,7 @@ async function retire(id) {
 
 const view = () => {
   const on = new Set(chosen());
-  return { offered: haOffered(), low: low(), sensors: SENSORS.map((s) => ({ id: s.id, entity: s.entity, name: s.name, hint: s.hint, figure: !!s.figure, on: on.has(s.id), state: on.has(s.id) ? last[s.id]?.state ?? null : null, error: on.has(s.id) ? last[s.id]?.error || '' : '' })) };
+  return { offered: haOffered(), low: low(), sensors: SENSORS.map((s) => ({ id: s.id, entity: s.entity, name: s.name, hint: s.hint, figure: !!s.figure, on: on.has(s.id), state: on.has(s.id) ? last[s.id]?.state ?? null : null, needs: on.has(s.id) ? last[s.id]?.needs || '' : '', error: on.has(s.id) ? last[s.id]?.error || '' : '' })) };
 };
 
 export function installHaSensors(app, sources) {
@@ -101,16 +104,20 @@ export function installHaSensors(app, sources) {
     }
     if (b.id !== undefined) {
       if (!BY_ID.has(b.id)) return res.status(400).json({ error: "Ledger has no sensor by that name." });
-      const on = new Set(chosen());
+      const on = new Set(chosen()), was = on.has(b.id);
       if (b.on) on.add(b.id); else on.delete(b.id);
       setSetting('ha_sensors', JSON.stringify(SENSORS.map((s) => s.id).filter((id) => on.has(id))));
-      if (!b.on) await retire(b.id);
+      // Only a sensor that was on is told to read "unavailable": writing that for one that never existed
+      // would create it in Home Assistant (found by the NAS session's test, 2026-11-24).
+      if (!b.on && was) await retire(b.id);
     }
     await publishSensors();
     res.json(view());
   });
   if (haOffered()) {
-    setTimeout(() => publishSensors().catch(() => {}), 30_000).unref();
-    setInterval(() => publishSensors().catch(() => {}), 5 * 60_000).unref();
+    // Not unref'd: these timers are part of what the server is for. LEDGER_HA_SENSORS_EVERY (ms) is for tests.
+    const every = Math.max(1000, Number(process.env.LEDGER_HA_SENSORS_EVERY) || 5 * 60_000);
+    setTimeout(() => publishSensors().catch(() => {}), Math.min(30_000, every));
+    setInterval(() => publishSensors().catch(() => {}), every);
   }
 }
