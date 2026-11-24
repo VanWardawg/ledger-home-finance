@@ -9,9 +9,11 @@ a debt payoff plan and a running estimate of federal and state income tax.
 2. Open **Ledger** from the sidebar. A short setup guide asks about your household, accounts and paydays.
    You can skip it and come back to it from Settings.
 
-Home Assistant signs you in, so Ledger asks for no password of its own in the sidebar. **Anyone who can
-open your Home Assistant sidebar can open Ledger.** If people you would not show your finances to have
-Home Assistant accounts, hide the Ledger panel from them or don't install it there.
+Home Assistant signs you in, so Ledger asks for no password of its own in the sidebar. **Every Home
+Assistant administrator can open Ledger; other users can't.** Home Assistant shows add-ons to
+administrators only, and hiding the panel from someone's sidebar is a preference they can undo, not a
+lock. If someone you would not show your finances to is an administrator, make them a regular user first,
+or don't install Ledger there.
 
 ## Getting your money in
 
@@ -35,8 +37,10 @@ Ledger works without any AI. If you want the extras, Settings, "AI recap and log
   suggest changes. You pay Anthropic for what you use.
 
 Either way Ledger sends only what each job needs, Settings lists what has been sent, and you can keep
-chosen categories away from the AI. The add-on asks for permission to call Home Assistant only so it can
-use that AI Task; it calls nothing else.
+chosen categories away from the AI. The add-on asks for permission to call Home Assistant for two things only, and
+only if you choose them: that AI Task, and reading one of your Home Assistant calendars for a side gig paid
+by booked sessions (Settings, "Side gig"). It lists your AI Tasks and calendars, asks the AI Task, and
+reads the calendar you picked. It changes nothing in Home Assistant.
 
 ## Using it outside the sidebar
 

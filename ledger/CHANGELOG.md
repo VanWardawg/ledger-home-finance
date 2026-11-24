@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.12
+
+- Every side gig can now say how it pays (Settings, "Side gig"): the average of its deposits as before; about the same each week or month; booked sessions read from a calendar at your own rate; or jobs you type in with what you expect and when.
+- A booking calendar can be one of your Home Assistant calendars, with nothing to paste, or a private iCal address. For the first, the add-on reads that calendar's events from Home Assistant: a third call, read-only like the other two.
+- The forecast uses a labelled estimate past your last booked session and in weeks with no job typed in.
+- Jobs past their pay day move to "Owed to you" and stay until you say what happened; the dashboard mentions them.
+- A deposit close to a job's amount ticks it off only when it is the one job it could be; otherwise Ledger asks.
+- With no budgets set, an AI-written recap no longer reports spending against "a $0 budget".
+- Fetching shops' logos from the internet can be switched off in Settings, "AI recap and logos", and the setup guide's last step says so and offers the switch.
+- If Ledger stops answering, Home Assistant now starts it again.
+- Everyone who installs this version builds from the same pinned base.
+- The notes are corrected on who can open Ledger: Home Assistant administrators, and nobody else.
+
 ## 0.1.11
 
 - With no debts recorded, the recap no longer mentions a debt-free date or a mortgage.

@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { api, cents, forgetLoaded, money, setTaxes, useData, useTaxes } from '../lib';
 import { MoneyInput, NumField } from '../ui';
-import { Paydays, SideGig } from './Connections';
+import { LogoFetch, Paydays, SideGig } from './Connections';
 import { PayStub, HouseholdNames, StatePick } from './Taxes';
 import { TaxMore } from './TaxMore';
 import { ZeroGuide } from './ZeroGuide';
@@ -310,6 +310,9 @@ export default function Setup({ first, onDone }: { first: boolean; onDone: () =>
           {step === last && (
             <>
               <p className="sub first">That's everything Ledger needs to start. The dashboard fills in as your accounts and purchases come in.</p>
+              <h3 className="setup-sub">One thing that reaches the internet</h3>
+              <p className="sub">Ledger keeps your figures on this machine. The one thing it does by itself that goes outside is fetch shops' logos, so your transactions are easier to scan. You can leave it on or switch it off here, and change your mind later in Settings.</p>
+              <LogoFetch />
               <p className="sub">Three things worth knowing: the round "+" button adds a purchase from any page; Settings holds everything you just entered; and "Ask your CFO" under the menu answers questions about your money in plain words.</p>
             </>
           )}

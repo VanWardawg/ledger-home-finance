@@ -59,6 +59,8 @@ export function buildFacts(month, { summaryFor, debtPlan, taxEstimate }) {
     today, month: s.month, month_name: monthName(s.month), is_current_month: s.isCurrent,
     day_of_month: s.lastDay, days_in_month: s.days,
     spent_so_far: s.spent, monthly_budget: s.budget,
+    // No budgets yet (a new copy): said in words, so the recap doesn't report "$0 of a $0 budget".
+    ...(s.budget > 0 ? {} : { no_budgets_set: 'This household has not set any budgets yet. Do not compare spending with a budget; say once that budgets can be set on the Budgets page.' }),
     expected_spending_by_today: s.isCurrent ? s.paceToday : s.budget,
     income_so_far: s.income,
     last_month: s.cashflow.at(-2) ? { income: s.cashflow.at(-2).income, spending: s.cashflow.at(-2).spending } : null,

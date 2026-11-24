@@ -64,6 +64,8 @@ export function installTaxDocs(app, { year }) {
     res.json({ on: true, list: docList(year()) });
   });
   app.get('/api/tax/docs/:id', (req, res) => {
+    // Only a document's number opens one; anything else here is simply not an address.
+    if (!/^\d+$/.test(req.params.id)) return res.status(404).json({ error: 'Ledger has nothing at that address.' });
     const d = docsOn() && db.prepare('SELECT name, type, data FROM tax_docs WHERE id = ?').get(Number(req.params.id));
     if (!d) return res.status(404).json({ error: 'That document is no longer kept.' });
     res.setHeader('Content-Type', d.type);

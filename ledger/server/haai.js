@@ -23,8 +23,11 @@ import { db, getSetting, setSetting } from './db.js';
 // The Supervisor's token opens the whole of Home Assistant's API (there is no narrower permission to ask
 // for), so what is done with it is kept as small as it can be (the NAS session's review, 2026-11-24):
 //   - it is only ever sent to the Supervisor's own address, never to an address from a setting or a request;
-//   - Ledger makes two calls with it and no others: listing states, to find the AI Tasks, and
-//     ai_task.generate_data. No part of a request from the page chooses the service or the address;
+//   - Ledger makes three calls with it and no others: listing states (to find the AI Tasks and the
+//     calendars), ai_task.generate_data, and reading one calendar's events between two dates (for a side gig
+//     paid by booked sessions; added 2026-11-24 at the owner's word, on the NAS session's advice). All three
+//     only read or ask; none changes anything in Home Assistant. No part of a request from the page chooses
+//     the service or the address;
 //   - the entity is checked to be an ai_task before every call;
 //   - neither the token nor Home Assistant's own error text is logged or sent to the page.
 // The stand-in address is honoured only together with its own stand-in token, for tests.
@@ -32,7 +35,10 @@ const TESTING = () => !!process.env.LEDGER_HA_TOKEN && !!process.env.LEDGER_HA_U
 const BASE = () => (TESTING() ? process.env.LEDGER_HA_URL.replace(/\/+$/, '') : 'http://supervisor/core/api');
 const TOKEN = () => (TESTING() ? process.env.LEDGER_HA_TOKEN : process.env.SUPERVISOR_TOKEN || '');
 const AI_TASK = /^ai_task\.[a-z0-9_]+$/;
+const CALENDAR = /^calendar\.[a-z0-9_]+$/;
 const PATHS = new Set(['GET /states', 'POST /services/ai_task/generate_data?return_response']);
+// The one path that carries values: a calendar's id and two timestamps, each made here and checked here.
+const CALENDAR_PATH = /^GET \/calendars\/calendar\.[a-z0-9_]+\?start=\d{4}-\d\d-\d\dT\d\d%3A\d\d%3A\d\d\.\d{3}Z&end=\d{4}-\d\d-\d\dT\d\d%3A\d\d%3A\d\d\.\d{3}Z$/;
 
 /** Whether this copy can reach a Home Assistant at all (it is running as its add-on). */
 export const haOffered = () => TOKEN() !== '';
@@ -45,7 +51,7 @@ export const haIsClaude = () => /claude|anthropic/i.test(`${haEntity()} ${getSet
 export const aiName = () => (viaHa() && !haIsClaude() ? 'your AI' : 'Claude');
 
 async function call(method, path, body) {
-  if (!PATHS.has(`${method} ${path}`)) throw new Error('Ledger does not make that call to Home Assistant.');
+  if (!PATHS.has(`${method} ${path}`) && !CALENDAR_PATH.test(`${method} ${path}`)) throw new Error('Ledger does not make that call to Home Assistant.');
   const res = await fetch(`${BASE()}${path}`, {
     method, signal: AbortSignal.timeout(120_000),
     headers: { Authorization: `Bearer ${TOKEN()}`, 'Content-Type': 'application/json' },
@@ -70,6 +76,25 @@ export async function haEntities(strict = false) {
     if (strict) throw e instanceof TypeError || e?.name === 'TimeoutError' ? new Error("Ledger couldn't reach Home Assistant. Try again in a moment.") : e;
     return [];
   }
+}
+
+/** The calendars this Home Assistant has, for a side gig's menu. Empty when it can't be asked. */
+export async function haCalendars() {
+  if (!haOffered()) return [];
+  try {
+    const states = await call('GET', '/states');
+    return (Array.isArray(states) ? states : []).filter((s) => CALENDAR.test(String(s.entity_id))).map((s) => ({ id: s.entity_id, name: String(s.attributes?.friendly_name || s.entity_id) }));
+  } catch { return []; }
+}
+/** One calendar's events between two moments, as Home Assistant gives them (it works repeats out itself). Read only. */
+export async function haCalendarEvents(entity, from, to) {
+  if (!haOffered()) throw new Error("This copy of Ledger isn't running inside Home Assistant.");
+  if (!CALENDAR.test(String(entity))) throw new Error("Choose one of your Home Assistant calendars.");
+  let out;
+  try { out = await call('GET', `/calendars/${entity}?start=${encodeURIComponent(from.toISOString())}&end=${encodeURIComponent(to.toISOString())}`); } catch (e) {
+    throw e?.name === 'TimeoutError' || e instanceof TypeError ? new Error("Ledger couldn't reach Home Assistant.") : e;
+  }
+  return Array.isArray(out) ? out.slice(0, 5000) : [];
 }
 
 const thisMonth = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; };

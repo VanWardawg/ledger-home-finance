@@ -73,6 +73,9 @@ export function installLogos(app) {
     const domain = String(req.params.domain).toLowerCase();
     if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(domain) || domain.length > 80) return res.status(400).end();
     let row = db.prepare('SELECT image, type, fetched FROM logos WHERE domain = ?').get(domain);
+    // Fetching can be switched off (setting `logos_off`): logos already kept still show, and nothing new is
+    // asked of the icon services, which would otherwise be told the websites of the shops a household uses.
+    if (getSetting('logos_off') === '1' && !row?.image) return res.status(404).end();
     // Found logos are kept for good; a miss is retried after a month.
     if (!row || (!row.image && Date.now() - row.fetched > 30 * DAY)) {
       if (!inFlight.has(domain)) {

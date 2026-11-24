@@ -1,3 +1,4 @@
+import { OwedNotice } from './pages/GigPay';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useTaxes, setTaxes } from './lib';
@@ -710,6 +711,7 @@ function Shell({ onAuthChanged }: { onAuthChanged: () => void }) {
         {page === 'dashboard' && <BankAttention a={bank?.attention} />}
         {page === 'dashboard' && <StubReminder r={stubs?.remind} />}
         {page === 'dashboard' && <StatementReminder due={stmts?.due} />}
+        {page === 'dashboard' && <OwedNotice />}
         {page === 'dashboard' && <SignInTip />}
         {page === 'dashboard' && <NewsNotice mark={<Logo />} />}
         <header className="topbar">

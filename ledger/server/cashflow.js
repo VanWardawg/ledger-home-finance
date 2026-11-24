@@ -5,6 +5,7 @@ import { getRecurrings, getRegularTransfers, nextDue, occurrences } from './recu
 import { expectedPayment } from './vipkid.js';
 import { WAITING_DAYS } from './waiting.js';
 import { gig, isGigPay } from './gig.js';
+import { expectedGigPay, gigsWithOwnPay } from './gigpay.js';
 import { bankUpdateExpected, nextReadAt } from './simplefin.js';
 
 // When each paycheck arrives. `rule` is either "monthdays:15,last" (those days
@@ -193,7 +194,11 @@ export function outlook() {
 
   // Paychecks.
   const pay = [];
+  // A side gig forecast from booked sessions or typed-in jobs (server/gigpay.js) takes the place of its
+  // paycheck's average here, so its pay isn't counted both ways.
+  const ownPay = gigsWithOwnPay(), firstGig = gig();
   for (const s of db.prepare('SELECT * FROM pay_schedules').all()) {
+    if (isGigPay(s) && (ownPay.has(s.name) || (ownPay.has(firstGig.name) && String(s.id) === getSetting('gig_schedule_id')))) continue;
     const recent = db.prepare('SELECT date, amount FROM transactions WHERE merchant LIKE ? AND amount > 0 ORDER BY date DESC LIMIT 8').all(s.merchant_like);
     // A typed amount needs no deposits to go on; the other two do.
     const fixed = s.amount_mode === 'fixed' && s.amount > 0;
@@ -219,6 +224,7 @@ export function outlook() {
       }
     }
   }
+  if (ownPay.size) pay.push(...expectedGigPay(today, limit));
   const hold = taxHold();
   if (hold?.active) for (const p of pay) if (p.gig) p.aside = true;
   for (const p of pay) {

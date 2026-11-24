@@ -1,3 +1,4 @@
+import { GigPay } from './GigPay';
 import { useTaxes, setTaxes } from '../lib';
 import { AllowanceSwitch } from './Allowance';
 import { at } from '../base';
@@ -965,6 +966,7 @@ export function SideGig() {
       {err && <p className="error" role="alert">{err}</p>}
       {note && <p className="good" role="status">{note}</p>}
       {gig.on && <MoreGigs gig={gig} />}
+      {gig.on && <GigPay />}
     </section>
   );
 }
@@ -1172,6 +1174,7 @@ function AiRecap() {
       {ai && <AiSent />}
       {note && <p className="good" role="status">{note}</p>}
       {err && <p className="error" role="alert">{err}</p>}
+      <LogoFetch />
       {s.hasKey && <LogoFinder />}
     </section>
   );
@@ -1209,6 +1212,19 @@ function AiSent() {
 }
 
 /** Claude looks up logos for merchants the built-in list doesn't know. */
+/** Whether Ledger may ask the icon services for shops' logos at all. On unless switched off. */
+export function LogoFetch() {
+  const { data: s, reload } = useData<any>('/api/settings');
+  if (!s) return null;
+  const on = s.logos_off !== '1';
+  return (
+    <div className="logo-fetch">
+      <label className="row check"><span className="grow wrap">Fetch shops' logos from the internet<small>To show a logo, Ledger asks an icon service (Google's, then DuckDuckGo's) for the icon of that shop's website, once per shop. That tells the service which shops' sites were looked up, and nothing else. Off, shops show as a letter; logos already fetched stay.</small></span>
+        <input type="checkbox" checked={on} onChange={async (e) => { await api('/api/settings', { method: 'PUT', body: { logos_off: e.target.checked ? '0' : '1' } }); forgetLoaded(); reload(); }} /></label>
+    </div>
+  );
+}
+
 function LogoFinder() {
   const { data: f, reload } = useData('/api/logos/finder');
   const [busy, setBusy] = useState(false);

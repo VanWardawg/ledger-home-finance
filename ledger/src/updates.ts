@@ -22,6 +22,7 @@ export const JUST_ADDED: [title: string, text: string, more?: { date: string; go
 
 export const UPDATES: [date: string, items: string[]][] = [
   ['2026-11-24', [
+    'Every side gig can say how it pays: about the same each time, by booked sessions from a calendar at your rate, or by jobs you type in. Jobs past their pay day show as "Owed to you". Settings, "Side gig".',
     'Inside Home Assistant, Ledger can use the AI you already have set up there for the recap, category suggestions and a basic CFO. Choose it in Settings, "AI recap and logos".',
     'A new copy of Ledger no longer assumes a state: the Taxes page asks you to choose yours from a map first. If you already use Ledger, nothing changes.',
     'The tax section can be switched off in Settings, "Tax section", for anyone outside the United States.',

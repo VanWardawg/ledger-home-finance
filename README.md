@@ -46,8 +46,10 @@ Add this repository to the add-on store (Settings, Add-ons, Add-on Store, ⋮, R
 
 The add-on asks for permission to call Home Assistant's API. Home Assistant offers no narrower permission
 than that, so here is exactly what Ledger does with it: nothing at all unless you choose "The AI in your
-Home Assistant" in Ledger's Settings, and then two calls only: it lists your AI Tasks for a menu, and it
-asks the one you chose (`ai_task.generate_data`). The code is in `ledger/server/haai.js`.
+Home Assistant" in Ledger's Settings, or one of your Home Assistant calendars for a side gig paid by booked
+sessions. Then it makes three calls and no others, all of which only read or ask: it lists your AI Tasks
+and calendars for a menu, it asks the AI Task you chose (`ai_task.generate_data`), and it reads the events
+of the calendar you chose. The code is in `ledger/server/haai.js`.
 
 ### From source
 
@@ -79,7 +81,8 @@ Nothing, unless you switch it on:
   your balances and transactions. Your bank password never reaches Ledger.
 - **AI features**: what each one sends to Anthropic is described in the app (About, and Settings,
   "What has been sent to Claude"). Off until you add a key.
-- **Logos**: a merchant's website name is sent to a logo service to fetch its icon.
+- **A booking calendar**, if you connect one for a side gig paid by the session: Ledger fetches that calendar's iCal address every few hours. Nothing is sent to it.
+- **Logos**: to show a shop's logo, Ledger asks an icon service (Google's, then DuckDuckGo's) for the icon of that shop's website, once per shop. This happens with or without an AI key, and can be switched off in Settings, "AI recap and logos"; shops then show as a letter.
 - **Investment prices**: ticker symbols only, off until switched on.
 - **Summary email and alerts**: through a mail account you set up.
 

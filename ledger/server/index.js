@@ -1,4 +1,5 @@
 // One process serves both the API and the app, on one port.
+import { installGigPay } from './gigpay.js';
 import { installHaAi } from './haai.js';
 import express from 'express';
 import path from 'node:path';
@@ -617,7 +618,7 @@ app.get('/api/reports', (req, res) => {
 const SETTING_DEFAULTS = {
   // How the household files: joint (married filing jointly), single, or hoh (head of household).
   filing_status: 'joint',
-  // The state the household pays income tax to (two letters). Arkansas unless changed: Ledger began there.
+  // The state the household pays income tax to (two letters). Empty until chosen: none is assumed.
   tax_state: '',
   your_salary: '0', spouse_salary: '0', pretax_you: '0', pretax_spouse: '0', kids: '0',
   educators: '0', vipkid_expenses: '0', vipkid_override: '', extra_payment: '', mins_in_budget: '0',
@@ -627,6 +628,8 @@ const SETTING_DEFAULTS = {
   retired: '0',
   // The savings account where money for the VIPKid tax bill is kept (an account id).
   tax_account: '',
+  // '1' stops Ledger asking icon services for shops' logos (server/logos.js).
+  logos_off: '0',
 };
 const settings = () => Object.fromEntries(Object.entries(SETTING_DEFAULTS).map(([k, d]) => [k, getSetting(k, d)]));
 const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
@@ -637,6 +640,7 @@ app.put('/api/settings', (req, res) => {
     if (!(k in SETTING_DEFAULTS)) continue;
     const s = String(v ?? '').trim();
     if (k === 'tax_state') { if (!stateChosen(s)) return res.status(400).json({ error: 'Choose a state.' }); setSetting(k, s.toUpperCase()); continue; }
+    if (k === 'logos_off') { setSetting(k, s === '1' ? '1' : '0'); continue; }
     if (k === 'filing_status') { if (!['joint', 'single', 'hoh', 'separate'].includes(s)) return res.status(400).json({ error: 'Choose how you file.' }); setSetting(k, s); continue; }
     const blankOk = ['vipkid_override', 'extra_payment', 'withheld_fed', 'withheld_ar', 'paid_fed', 'paid_ar', 'tax_account'].includes(k);
     if (s === '' && blankOk) { setSetting(k, ''); continue; }
@@ -1074,6 +1078,7 @@ installPasskeys(app);
 installCashflow(app);
 installVipkid(app);
 installGig(app);
+installGigPay(app);
 installRules(app);
 installDeposits(app);
 installReceipts(app);
