@@ -22,10 +22,21 @@ Home Assistant accounts, hide the Ledger panel from them or don't install it the
 
 ## AI features (optional)
 
-The written recap, "Ask your CFO", reading receipts, pay stubs and statements, and logo and category
-suggestions use Claude, from Anthropic. They are off until you paste an Anthropic API key of your own
-in Settings, and you pay Anthropic for what you use. Settings lists what has been sent, and lets you
-keep chosen categories out of it.
+Ledger works without any AI. If you want the extras, Settings, "AI recap and logos" offers two ways:
+
+- **The AI in your Home Assistant.** If you have an AI set up under Home Assistant's Settings, Devices &
+  services (Anthropic, OpenAI, Google, Ollama and others provide an "AI Task"), Ledger can use it: no second
+  key, and with a model on your own machine nothing leaves the house. This gives the basics: the dashboard
+  recap, category suggestions, and a CFO that answers from your month's figures. Only Claude has been tried
+  with it; other models may read less well.
+- **An Anthropic key of your own.** Ledger talks to Claude directly, which is what it was built around and
+  works best. This gives everything: the basics, plus reading receipts, statements and pay stubs, finding
+  and drawing logos, and the full CFO, which looks things up in your data and on official tax sites and can
+  suggest changes. You pay Anthropic for what you use.
+
+Either way Ledger sends only what each job needs, Settings lists what has been sent, and you can keep
+chosen categories away from the AI. The add-on asks for permission to call Home Assistant only so it can
+use that AI Task; it calls nothing else.
 
 ## Using it outside the sidebar
 

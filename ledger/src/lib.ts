@@ -128,6 +128,16 @@ export async function setTaxes(on: boolean) {
   dispatchEvent(new Event('ledger-taxes')); dispatchEvent(new Event('ledger-refresh'));
 }
 
+/**
+ * How the AI features are reached here. `claude` is false only where the household uses the AI set up in
+ * its Home Assistant and that AI isn't Claude: the app then drops Claude's name, and the CFO is the
+ * "Chief Financial Officer". `plain` means the CFO answers through Home Assistant's AI, the basic way.
+ */
+export function useAi() {
+  const { data } = useData<{ ready: boolean; plain?: boolean; claude?: boolean; aiName?: string }>('/api/cfo');
+  return { claude: data ? data.claude !== false : true, plain: !!data?.plain, name: data?.aiName || 'Claude' };
+}
+
 export function useGig() {
   const { data, reload } = useData<{ on: boolean; name: string; match: string; classes: boolean; teachers: number; two: boolean; who: string; cash: number; extras: { id: number; name: string; match: string; who: string; cash: number; costs: number }[] }>('/api/gig');
   // Every part of the app that shows the gig hears when Settings changes it.

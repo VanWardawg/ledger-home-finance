@@ -3,7 +3,7 @@
 // and can be opened again from Settings. Every step saves as you go and can be skipped; nothing
 // here is the only place to set something, since each step reuses a section of Settings or Taxes.
 import { useState } from 'react';
-import { api, cents, forgetLoaded, money, useData } from '../lib';
+import { api, cents, forgetLoaded, money, setTaxes, useData, useTaxes } from '../lib';
 import { MoneyInput, NumField } from '../ui';
 import { Paydays, SideGig } from './Connections';
 import { PayStub, HouseholdNames, StatePick } from './Taxes';
@@ -15,6 +15,7 @@ const KIND: Record<string, string> = { checking: 'Checking', savings: 'Savings',
 
 /** Step 1: how the household files, children, and what each adult does for work. */
 function Household() {
+  const taxesOn = useTaxes();
   const { data: s, reload } = useData('/api/settings');
   const { data: w, reload: reloadWork } = useData('/api/setup/work');
   const [you, setYou] = useState<string | null>(null);
@@ -38,9 +39,10 @@ function Household() {
   return (
     <>
       <p className="sub first">A few facts about your household. They shape the tax estimate and which parts of the app you see. You can change any of them later on the Taxes page.</p>
+      {!taxesOn && <p className="sub">You've said you are not in the United States, so Ledger's tax section is switched off: it only knows US federal and state income tax. Everything else works the same. Choosing a state here switches it back on.</p>}
       <div className="add-grid">
         <StatePick value={s.tax_state} onPick={(v) => save('tax_state')(v)} />
-        <label className="field"><span>How you file your taxes</span>
+        {taxesOn && <><label className="field"><span>How you file your taxes</span>
           <select value={s.filing_status} onChange={(e) => save('filing_status')(e.target.value)}>
             <option value="joint">Married, filing jointly</option>
             <option value="single">Single</option>
@@ -48,7 +50,7 @@ function Household() {
             <option value="separate">Married, filing separately</option>
           </select>
         </label>
-        <NumField label="Children under 17" value={s.kids} onSave={save('kids')} />
+        <NumField label="Children under 17" value={s.kids} onSave={save('kids')} /></>}
       </div>
       <div className="add-grid"><HouseholdNames joint={joint} /></div>
       <h3 className="setup-sub">Where do you work?</h3>
@@ -137,7 +139,14 @@ function Accounts() {
 /** Step 5: yearly pay, typed or read from a pay stub. Optional. */
 function TaxStep() {
   const { data: s, reload } = useData('/api/settings');
+  const taxesOn = useTaxes();
   if (!s) return null;
+  if (!taxesOn) return (
+    <>
+      <p className="sub first">Nothing to do here. The tax section is switched off, because you said you are not in the United States, and Ledger's estimate only covers US federal and state income tax.</p>
+      <p className="sub">If that was a mistake, <button type="button" className="link" onClick={() => setTaxes(true)}>switch the tax section back on</button>. It is also in Settings, "Tax section".</p>
+    </>
+  );
   const joint = s.filing_status === 'joint' || s.filing_status === 'separate';
   const save = (key: string) => async (v: string) => { await api('/api/settings', { method: 'PUT', body: { [key]: v } }); forgetLoaded(); reload(); };
   return (
@@ -248,7 +257,7 @@ function Budgets() {
         </div>
         <p className="sub">The amounts below are your <b>usual</b> amounts. On the Budgets page, "Fill empty ones with my usual amounts" hands them out for a month in one press, and you adjust from there.</p>
       </>}
-      <p className="sub">{zero ? 'Usual amounts' : 'A monthly amount'} for each kind of spending. Ledger can suggest them: from what you really spend if your bank is connected and it has seen a full month, otherwise from your take-home pay. You can ask again any time on the Budgets page, and the suggestions get better once a month or two of your spending is in.</p>
+      <p className="sub">{zero ? 'Usual amounts' : 'A monthly amount'} for each kind of spending. Ledger can suggest them: from what you really spend if your bank is connected and it has seen a full month, otherwise from the paydays you entered. It works without an AI key (with one, Claude fine-tunes the amounts), and with neither spending nor paydays to go on it leaves the amounts for you to type. You can ask again any time on the Budgets page, and the suggestions get better once a month or two of your spending is in.</p>
       <BudgetSuggest onApplied={reload} />
       <h3 className="setup-sub">{zero ? 'Your usual amounts' : 'Your budgets now'}</h3>
       <div className="add-grid setup-budgets">
@@ -261,14 +270,24 @@ function Budgets() {
 
 export default function Setup({ first, onDone }: { first: boolean; onDone: () => void }) {
   const [step, setStep] = useState(first ? 0 : 1);
+  // A copy someone was invited to (it came with a setup code) lives on that person's server; any other is the reader's own.
+  const { data: auth } = useData<any>('/api/auth/status');
+  const invited = !!auth?.invited;
   const last = STEPS.length - 1;
+  // With the tax section off (someone not in the United States) the Taxes step is passed over, both ways,
+  // and the count and dots are one shorter.
+  const taxesOn = useTaxes();
+  const TAX = STEPS.indexOf('Taxes');
+  const skipped = (n: number) => !taxesOn && n === TAX;
+  const go = (by: 1 | -1) => { let n = step + by; if (skipped(n)) n += by; setStep(n); };
+  const shown = STEPS.map((_, i) => i).filter((i) => i > 0 && i < last && !skipped(i));
   const finish = async () => { await api('/api/setup/done', { method: 'POST' }); forgetLoaded(); onDone(); };
   return (
     <div className="setup">
       <div className="setup-inner">
         <div className="setup-top">
-          <span className="setup-count">{step === 0 || step === last ? 'Ledger' : `Step ${step} of ${last - 1}`}</span>
-          <div className="setup-dots" aria-hidden="true">{STEPS.slice(1, last).map((s, i) => <i key={s} className={i + 1 <= step ? 'on' : ''} />)}</div>
+          <span className="setup-count">{step === 0 || step === last ? 'Ledger' : `Step ${shown.indexOf(step) + 1} of ${shown.length}`}</span>
+          <div className="setup-dots" aria-hidden="true">{shown.map((i) => <i key={i} className={i <= step ? 'on' : ''} />)}</div>
           {step < last && <button className="link" onClick={finish}>{first ? 'Skip setup' : 'Close'}</button>}
         </div>
         <section className="card setup-card">
@@ -277,7 +296,9 @@ export default function Setup({ first, onDone }: { first: boolean; onDone: () =>
             <>
               <p className="sub first">Ledger keeps your household's money in one place: what you have, what's coming out before payday, where it goes each month, and what to set aside.</p>
               <p className="sub">The next few screens set it up for you. It takes about five minutes, every step can be skipped, and everything here can be changed later in Settings.</p>
-              <p className="sub">This copy is your household's alone. It is kept apart from every other household's and opens only for you. It lives on the home server of the person who invited you, who looks after it and its backups.</p>
+              {invited
+                ? <p className="sub">This copy is your household's alone. It is kept apart from every other household's and opens only for you. It lives on the home server of the person who invited you, who looks after it and its backups.</p>
+                : <p className="sub">This copy is yours alone. It lives on the machine you installed it on, and what you enter stays there: nothing is sent anywhere unless you choose to connect a bank or switch on the AI features.</p>}
             </>
           )}
           {step === 1 && <Household />}
@@ -294,9 +315,9 @@ export default function Setup({ first, onDone }: { first: boolean; onDone: () =>
           )}
         </section>
         <div className="setup-nav">
-          {step > 0 && <button onClick={() => setStep(step - 1)}>Back</button>}
+          {step > 0 && <button onClick={() => go(-1)}>Back</button>}
           <span className="grow" />
-          {step < last ? <button className="primary" onClick={() => setStep(step + 1)}>{step === 0 ? "Let's start" : 'Continue'}</button> : <button className="primary" onClick={finish}>Open Ledger</button>}
+          {step < last ? <button className="primary" onClick={() => go(1)}>{step === 0 ? "Let's start" : 'Continue'}</button> : <button className="primary" onClick={finish}>Open Ledger</button>}
         </div>
       </div>
     </div>

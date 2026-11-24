@@ -15,6 +15,7 @@ import { settleBudgets } from './rollover.js';
 import { db, getSetting, iso } from './db.js';
 import { apiKey, model, buildFacts, readableError } from './recap.js';
 import { noteUsage, aiSource, limitMessage, notPrivate, privateCats } from './ai.js';
+import { viaHa, haAsk, aiName, haIsClaude } from './haai.js';
 import { outlook, checkingEstimate } from './cashflow.js';
 import { getRecurrings, nextDue } from './recurring.js';
 import { renameBill } from './names.js';
@@ -461,12 +462,39 @@ async function ask(convo, question, deps) {
   throw new Error('That question took too many lookups to answer. Try asking about one thing at a time.');
 }
 
+// The CFO through Home Assistant's own AI: one question, one bundle of figures, one answer. None of what
+// Claude's own service gives the full CFO is promised there (asking for figures step by step, looking up
+// official pages, proposing changes), so it gets the everyday figures up front and answers from those.
+const PLAIN_SYSTEM = `You are the financial officer inside Ledger, a household's private personal finance app. The people asking are the household themselves. Answer their question from the figures given below and nothing else. If the figures don't cover what they ask, say so plainly and say which page of Ledger would show it (Transactions, Budgets, Recurring, Debt, Accounts, Reports, Taxes).
+
+Amounts that are negative are money out. Give dollar figures as they are, without rounding away cents that matter. Be brief and plain: a few sentences, or a short list with "- " at the start of each line. No headings and no tables.
+
+You explain their own figures. Do not tell them what to claim or deduct on their taxes, and do not recommend particular investments: for those, say that a tax preparer or a licensed adviser is the person to ask. You cannot change anything in Ledger.`;
+
+async function askPlain(convo, question, deps) {
+  const facts = {};
+  for (const [label, tool] of [['this_month', 'get_month_overview'], ['checking_forecast', 'get_checking_forecast'], ['accounts', 'get_accounts'], ['bills', 'get_bills'], ['debt_plan', 'get_debt_plan'], ['savings_goals', 'get_savings_goals']]) {
+    try { facts[label] = runTool(tool, {}, deps, convo); } catch { /* that part is left out */ }
+  }
+  convo.plain = convo.plain || [];
+  const earlier = convo.plain.slice(-4).map((t) => `They asked: ${t.q}\nYou answered: ${t.a}`).join('\n\n');
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const text = await haAsk('a question about the household\'s money',
+    `${PLAIN_SYSTEM}${privateCats().length ? PRIVATE_NOTE : ''}\n\nToday is ${today}.\n\nThe household's figures:\n${capped(facts, 45000)}${earlier ? `\n\nEarlier in this conversation:\n${earlier}` : ''}\n\nTheir question: ${question}`,
+    'cfo', "your question, with this month's totals, your accounts, bills, debts and savings goals");
+  convo.plain.push({ q: question, a: text });
+  convo.turns++;
+  return { reply: text, looked: ['this month', 'your accounts', 'your bills', 'the debt plan', 'your savings goals'], sources: [], cost: 0, actions: [] };
+}
+
 export function installCfo(app, deps) {
-  app.get('/api/cfo', (_req, res) => res.json({ ready: apiKey() !== '', limitNote: limitMessage() }));
+  // `plain`: answered through Home Assistant's AI, without the look-ups and proposals. `claude`: whether the
+  // CFO is Claude here, which decides its name (Claude Financial Officer, or Chief Financial Officer).
+  app.get('/api/cfo', (_req, res) => res.json({ ready: apiKey() !== '' || viaHa(), limitNote: limitMessage(), plain: viaHa(), claude: !viaHa() || haIsClaude(), aiName: aiName() }));
   app.post('/api/cfo/ask', async (req, res) => {
     const question = String(req.body?.question || '').trim().slice(0, 2000);
     if (!question) return res.status(400).json({ error: 'Type a question first.' });
-    if (!apiKey()) return res.status(400).json({ error: limitMessage() || 'The CFO needs AI switched on. Add an Anthropic key on the Settings page.' });
+    if (!apiKey() && !viaHa()) return res.status(400).json({ error: limitMessage() || 'The CFO needs AI switched on. Add an Anthropic key on the Settings page.' });
     tidyUp();
     let id = String(req.body?.id || '');
     let convo = conversations.get(id);
@@ -476,7 +504,7 @@ export function installCfo(app, deps) {
     convo.busy = true;
     convo.at = Date.now();
     try {
-      res.json({ id, ...(await ask(convo, question, deps)) });
+      res.json({ id, ...(await (viaHa() ? askPlain(convo, question, deps) : ask(convo, question, deps))) });
     } catch (e) {
       res.status(502).json({ id, error: e.message });
     } finally {

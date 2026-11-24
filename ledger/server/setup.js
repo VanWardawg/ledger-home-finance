@@ -122,8 +122,10 @@ function takeHome() {
   return known ? round(total) : null;
 }
 
+const USUAL_SHARES = { Groceries: 600, 'Dining out': 250, 'Gas and car': 200, Shopping: 300, Entertainment: 120, Health: 100, Travel: 200, Rent: 1650, Housing: 1650, Pets: 60, 'Bills and utilities': 225, Subscriptions: 76, Insurance: 118, Other: 50 };
+
 async function suggestBudgets() {
-  const cats = db.prepare("SELECT id, name, icon, budget, fixed FROM categories WHERE kind = 'expense' ORDER BY sort").all();
+  const cats = db.prepare("SELECT id, name, COALESCE(key, name) known, icon, budget, fixed FROM categories WHERE kind = 'expense' ORDER BY sort").all();
   // The last three full months that have purchases in them.
   const thisMonth = iso(new Date()).slice(0, 7);
   const months = db.prepare(`SELECT substr(t.date, 1, 7) m, COUNT(*) n FROM transactions t JOIN categories c ON c.id = t.category_id
@@ -136,15 +138,19 @@ async function suggestBudgets() {
   const basis = months.length ? 'spending' : pay ? 'pay' : 'starter';
   const nice = (n) => (n <= 0 ? 0 : n < 100 ? Math.ceil(n / 5) * 5 : Math.ceil(n / 25) * 25);
   // Arithmetic first; Claude improves on it when it can.
-  const starterTotal = cats.reduce((a, c) => a + c.budget, 0) || 1;
+  // How take-home pay is usually shared between the starter categories. These are proportions only: a copy
+  // that starts empty has no budgets of its own to take them from (since 2026-11-24), and a category the
+  // household made itself gets a share only if it already has a budget.
+  const share = (c) => USUAL_SHARES[c.known] ?? c.budget ?? 0;
+  const starterTotal = cats.reduce((a, c) => a + share(c), 0) || 1;
   let out = cats.map((c) => ({
     id: c.id, name: c.name, icon: c.icon, current: c.budget, spent: spent.has(c.id) ? spent.get(c.id) : null,
-    suggested: basis === 'spending' ? nice(spent.get(c.id) || 0) : basis === 'pay' ? nice((c.budget / starterTotal) * pay * 0.9) : c.budget,
-    why: basis === 'spending' ? (spent.has(c.id) ? `you spend about $${Math.round(spent.get(c.id))} a month` : 'nothing spent here yet') : basis === 'pay' ? 'a usual share of your take-home pay' : 'the starter amount',
+    suggested: basis === 'spending' ? nice(spent.get(c.id) || 0) : basis === 'pay' ? nice((share(c) / starterTotal) * pay * 0.9) : c.budget,
+    why: basis === 'spending' ? (spent.has(c.id) ? `you spend about $${Math.round(spent.get(c.id))} a month` : 'nothing spent here yet') : basis === 'pay' ? 'a usual share of your take-home pay' : 'unchanged',
   }));
   let note = basis === 'spending' ? `Based on your spending over ${months.length === 1 ? 'the last full month' : `the last ${months.length} full months`}.`
     : basis === 'pay' ? 'Based on your take-home pay, since Ledger has not seen a full month of your spending yet.'
-      : 'Ledger has no paydays or spending to go on yet, so these are the starter amounts. Add your paydays, or connect your bank, and ask again.';
+      : 'Ledger has nothing to go on yet, so it has left your amounts as they are. Add your paydays, or connect your bank and let a month of spending come in, then ask again. Until then, type the amounts yourself below.';
   let byAi = false;
   if (apiKey() && basis !== 'starter') {
     const source = aiSource();

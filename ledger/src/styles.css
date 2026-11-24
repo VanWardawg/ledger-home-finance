@@ -837,6 +837,11 @@ html[data-season][data-scheme='dark'] {
 .state-not-us { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); }
 @media (max-width: 760px) { .state-map .state text { display: none; } }
 .state-first h2 { font-family: var(--display); font-size: 26px; margin: 0 0 6px; }
+.ai-route { margin: 6px 0 16px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.ai-route h3 { margin: 0 0 4px; font-size: 15px; }
+.ai-route .budget-way { cursor: default; }
+.ai-route-pick { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
+.ai-route-pick select { max-width: 100%; }
 .budget-ways { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin: 10px 0 6px; }
 .budget-way { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; text-align: left; padding: 14px 16px; border-radius: 14px; border: 2px solid var(--line); background: transparent; color: inherit; font: inherit; cursor: pointer; white-space: normal; height: auto; }
 .budget-way.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }

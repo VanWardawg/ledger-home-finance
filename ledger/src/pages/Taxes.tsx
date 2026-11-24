@@ -1,4 +1,5 @@
-import { setTaxes } from '../lib';
+import { setTaxes, useTaxes } from '../lib';
+const NOT_US = 'not-us';
 import { StateMap } from '../StateMap';
 import { useEffect, useRef, useState } from 'react';
 import { api, cents, money, pct, useData } from '../lib';
@@ -66,20 +67,30 @@ function ChooseState({ onPick }: { onPick: (code: string) => void }) {
   return (
     <>
       <StateMap states={states} onPick={onPick} />
-      <div className="state-list"><StatePick value="" onPick={onPick} /></div>
+      <div className="state-list"><StatePick value="" onPick={onPick} label="Or choose from a list" /></div>
     </>
   );
 }
 
-export function StatePick({ value, onPick }: { value: string; onPick: (code: string) => void }) {
+export function StatePick({ value, onPick, label = 'Your state' }: { value: string; onPick: (code: string) => void; label?: string }) {
   const { data: states } = useData<any[]>('/api/tax/states');
+  // "Not in the United States" is a choice here too: it switches the whole tax section off, and choosing a
+  // state afterwards switches it back on.
+  const taxesOn = useTaxes();
+  const choose = async (v: string) => {
+    if (v === NOT_US) return void setTaxes(false);
+    if (!v) return;
+    if (!taxesOn) await setTaxes(true);
+    onPick(v);
+  };
   return (
-    <label className="field"><span>{value ? 'Your state' : 'Or choose from a list'}</span>
-      <select value={value || ''} onChange={(e) => { if (e.target.value) onPick(e.target.value); }}>
-        {!value && <option value="">Choose your state…</option>}
+    <label className="field"><span>{label}</span>
+      <select value={taxesOn ? value || '' : NOT_US} onChange={(e) => choose(e.target.value)}>
+        {!value && taxesOn && <option value="">Choose your state…</option>}
+        <option value={NOT_US}>Not in the United States</option>
         {(states || (value ? [{ code: value, name: '…' }] : [])).map((x: any) => <option key={x.code} value={x.code}>{x.name}{x.none ? ' (no income tax)' : ''}</option>)}
       </select>
-      <small>For state income tax. Arkansas is worked out in detail; other states by a simpler table of rates.</small>
+      <small>{taxesOn ? 'For state income tax. Arkansas is worked out in detail; other states by a simpler table of rates.' : 'The tax section is switched off. Choose a state to switch it back on.'}</small>
     </label>
   );
 }

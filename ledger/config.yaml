@@ -1,6 +1,6 @@
 # Ledger as a Home Assistant add-on. Home Assistant builds it on your own machine from this folder.
 name: Ledger
-version: "0.1.6"
+version: "0.1.8"
 slug: ledger
 description: A private household budget, bills, debt and tax-estimate app that keeps its data on your own machine
 url: "https://github.com/moeckjeremy/ledger-home-finance"
@@ -10,6 +10,9 @@ arch:
 init: false
 # Opened from the sidebar. Home Assistant signs you in, so Ledger asks for no password of its own there.
 ingress: true
+# Lets Ledger use the AI you have set up in Home Assistant (its AI Task), if you choose that in Ledger's
+# Settings. Ledger calls nothing else in Home Assistant, and not even that unless you switch it on.
+homeassistant_api: true
 ingress_port: 4317
 panel_icon: mdi:cash-multiple
 panel_title: Ledger

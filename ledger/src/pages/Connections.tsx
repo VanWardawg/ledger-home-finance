@@ -1027,6 +1027,54 @@ function VipkidCalendar() {
   );
 }
 
+/**
+ * The choice between Home Assistant's own AI and an Anthropic key, shown only where Ledger runs inside
+ * Home Assistant. The first is the basics with whatever model the house already has; the second is everything.
+ */
+function AiRoute({ onChange }: { onChange: () => void }) {
+  const { data: ha, reload } = useData<any>('/api/ai/ha');
+  const [entity, setEntity] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  if (!ha?.offered) return null;
+  const chosen = entity ?? ha.entity ?? '';
+  const put = async (body: object) => {
+    setBusy(true); setErr('');
+    try { await api('/api/ai/ha', { method: 'PUT', body }); forgetLoaded(); reload(); onChange(); dispatchEvent(new Event('ledger-refresh')); } catch (e: any) { setErr(e.message); }
+    setBusy(false);
+  };
+  return (
+    <div className="ai-route">
+      <h3>Which AI Ledger uses</h3>
+      <div className="budget-ways" role="radiogroup" aria-label="Which AI Ledger uses">
+        <div className={`budget-way ${ha.on ? 'on' : ''}`}>
+          <b>The AI in your Home Assistant</b>
+          <span>Whatever model you have already set up there: Claude, ChatGPT, Gemini, or one running on your own machine. No second key, and with a local model nothing leaves your house.</span>
+          <small>The basics: the dashboard recap, category suggestions, and a CFO that answers from your month's figures.</small>
+          {ha.entities.length === 0 ? <small className="bad">Your Home Assistant has no AI Task yet. Add an AI under its Settings, Devices &amp; services, then come back.</small> : (
+            <span className="ai-route-pick">
+              <select aria-label="Which AI Task" value={chosen} disabled={busy} onChange={(e) => setEntity(e.target.value)}>
+                <option value="">Home Assistant's preferred AI</option>
+                {ha.entities.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}
+              </select>
+              {ha.on && chosen === (ha.entity ?? '') ? <button type="button" disabled={busy} onClick={() => put({ on: false })}>Stop using it</button>
+                : <button type="button" className="primary" disabled={busy} onClick={() => put({ on: true, entity: chosen })}>{busy ? 'Checking it answers…' : 'Use this'}</button>}
+            </span>
+          )}
+        </div>
+        <div className={`budget-way ${ha.on ? '' : 'on'}`}>
+          <b>An Anthropic key of your own</b>
+          <span>Ledger talks to Claude directly. This is what the app was built around, and it works best this way.</span>
+          <small>Everything: all of the above, plus reading receipts, statements and pay stubs, finding and drawing logos, and the full CFO, which looks things up in your data and on official tax sites and can suggest changes.</small>
+          <small>{ha.on ? 'A key saved below is still used for those extras.' : 'Set it up below.'}</small>
+        </div>
+      </div>
+      {ha.on && !ha.claude && <p className="sub">This AI isn't Claude as far as Ledger can tell, so the app calls it "your AI" and the CFO is your Chief Financial Officer. How well another model does here hasn't been tested: if the recap or the CFO reads oddly, that is the place to look.</p>}
+      {err && <p className="error" role="alert">{err}</p>}
+    </div>
+  );
+}
+
 function AiRecap() {
   const { data: s, reload } = useData('/api/recap/settings');
   const { data: ai, reload: reloadAi } = useData<any>('/api/ai');
@@ -1059,6 +1107,7 @@ function AiRecap() {
         With AI on, Claude writes the dashboard recap, reads screenshots of purchases and looks up merchant logos. Without it, the recap is an automatic summary and the other two are off.
         Ledger sends Anthropic only what each job needs: that day's totals and bills, the picture you chose, or a list of merchant names. No account numbers.
       </p>
+      <AiRoute onChange={() => { reload(); reloadAi(); }} />
 
       {inc && (
         <div className="ai-choice">

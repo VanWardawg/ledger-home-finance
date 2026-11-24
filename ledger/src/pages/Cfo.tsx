@@ -3,7 +3,7 @@
 // change anything. The conversation lives on this page only: leaving the page or
 // pressing "New conversation" starts afresh.
 import { useEffect, useRef, useState } from 'react';
-import { api, cents, dayShort, useData, useGig } from '../lib';
+import { api, cents, dayShort, useAi, useData, useGig } from '../lib';
 import { shrinkPicture } from '../ui';
 
 // `actions`: changes the CFO proposed in this answer, each waiting for Confirm or Cancel; `result` once answered.
@@ -20,12 +20,15 @@ const gigIdea = (name: string) => `How much have I set aside for ${name} taxes, 
 
 /** The seal from the owner's sketch: CFO in the middle, "Claude Financial Officer" round the ring. */
 export function CfoSeal({ size = 96 }: { size?: number }) {
+  // "Claude Financial Officer" where the CFO is Claude; "Chief Financial Officer" where a household uses
+  // another model through its Home Assistant (the owner, 2026-11-24).
+  const { claude } = useAi();
   return (
     <svg className="cfo-seal" viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
       <defs><path id="cfo-arc" d="M 50 50 m -34 0 a 34 34 0 1 1 68 0 a 34 34 0 1 1 -68 0" /></defs>
       <circle className="outer" cx="50" cy="50" r="47" />
       <circle className="inner" cx="50" cy="50" r="25" />
-      <text className="ring"><textPath href="#cfo-arc" startOffset="1%" textLength="212" lengthAdjust="spacing">CLAUDE · FINANCIAL · OFFICER ·</textPath></text>
+      <text className="ring"><textPath href="#cfo-arc" startOffset="1%" textLength="212" lengthAdjust="spacing">{claude ? 'CLAUDE' : 'CHIEF'} · FINANCIAL · OFFICER ·</textPath></text>
       <text className="mid" x="50" y="50" textAnchor="middle" dominantBaseline="central">CFO</text>
     </svg>
   );
@@ -191,6 +194,7 @@ function FileCard({ file }: { file: File }) {
 
 export default function Cfo() {
   const gig = useGig();
+  const ai = useAi();
   const { data: state } = useData<any>('/api/cfo');
   const [turns, setTurns] = useState<Turn[]>([]);
   const [id, setId] = useState('');
@@ -256,10 +260,10 @@ export default function Cfo() {
         <section className="card cfo-intro">
           <CfoOwl size={128} />
           <h2>Ask about your money</h2>
-          <p className="sub">Your Claude Financial Officer looks through your accounts, bills, budgets and taxes to answer. It can look things up, read a bank screenshot or export file you hand it with the paperclip, and suggest a few changes (filing a transaction, a new category, a budget, a bill's name) that only happen when you tap Confirm. It is an AI and explains your figures; it doesn't give tax or investment advice.</p>
+          {ai.plain ? <p className="sub">Your {ai.claude ? 'Claude' : 'Chief'} Financial Officer answers from this month's totals, your accounts, bills, debts and savings goals, using the AI set up in your Home Assistant. That is the basic CFO: it can't dig through single transactions, look up tax rules, read a screenshot or suggest changes. Those need an Anthropic key of your own, under Settings, "AI recap and logos". It explains your figures; it doesn't give financial or tax advice.</p> : <p className="sub">Your Claude Financial Officer looks through your accounts, bills, budgets and taxes to answer. It can look things up, read a bank screenshot or export file you hand it with the paperclip, and suggest a few changes (filing a transaction, a new category, a budget, a bill's name) that only happen when you tap Confirm. It is an AI and explains your figures; it doesn't give tax or investment advice.</p>}
           <div className="cfo-ideas">
-            {[...IDEAS, ...(gig.on ? [gigIdea(gig.name)] : [])].map((s) => <button key={s} type="button" onClick={() => ask(s)}>{s}</button>)}
-            <label htmlFor="cfo-file" className="cfo-idea-file" role="button" tabIndex={0}>📎 Catch Ledger up with my bank: here's a screenshot or file</label>
+            {[...(ai.plain ? IDEAS.filter((q) => !/forecast change/.test(q)) : IDEAS), ...(gig.on && !ai.plain ? [gigIdea(gig.name)] : [])].map((s) => <button key={s} type="button" onClick={() => ask(s)}>{s}</button>)}
+            {!ai.plain && <label htmlFor="cfo-file" className="cfo-idea-file" role="button" tabIndex={0}>📎 Catch Ledger up with my bank: here's a screenshot or file</label>}
           </div>
         </section>
       ) : (
@@ -292,14 +296,14 @@ export default function Cfo() {
       )}
       <form className="cfo-ask" onSubmit={(e) => { e.preventDefault(); ask(q); }}>
         {fileBox}
-        <label htmlFor="cfo-file" className="cfo-attach" role="button" tabIndex={0} title="Give your CFO a bank screenshot or file" aria-label="Give your CFO a bank screenshot or file">📎</label>
+        {!ai.plain && <label htmlFor="cfo-file" className="cfo-attach" role="button" tabIndex={0} title="Give your CFO a bank screenshot or file" aria-label="Give your CFO a bank screenshot or file">📎</label>}
         <textarea value={q} rows={1} placeholder="Ask your CFO a question" aria-label="Your question" disabled={busy}
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ask(q); } }} />
         <button type="submit" className="primary" disabled={busy || !q.trim()}>Ask</button>
       </form>
       <p className="cfo-foot">
-        Your question and the figures needed to answer it are sent to Anthropic. Answers are an explanation of your own numbers, not financial or tax advice.
+        Your question and the figures needed to answer it are sent to {ai.plain ? 'the AI set up in your Home Assistant' : 'Anthropic'}. Answers are an explanation of your own numbers, not financial or tax advice.
         {turns.length > 0 && <> {total > 0 ? `This conversation: about $${total.toFixed(2)}. ` : ''}The CFO remembers this conversation for two hours, or until you start a new one.</>}
       </p>
     </div>

@@ -1,4 +1,5 @@
 // One process serves both the API and the app, on one port.
+import { installHaAi } from './haai.js';
 import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -1059,6 +1060,7 @@ app.delete('/api/accounts/:id', (req, res) => {
 
 installRecap(app, { summaryFor, debtPlan, taxEstimate });
 installAi(app);
+installHaAi(app);
 installHoldings(app);
 installReconcile(app);
 installCfo(app, { summaryFor, debtPlan, taxEstimate, goals, investments });
