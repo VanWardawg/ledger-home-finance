@@ -1775,7 +1775,8 @@ export default function Connections({ onChanged }: { onChanged: () => void }) {
     if (auth?.access?.login && auth.access.email) { location.href = '/cdn-cgi/access/logout'; return; }
     refresh();
   };
-  const needsPassword = !s.passwordSet && s.networkOpen;
+  // Nothing protects this copy yet: no Ledger password and no sign-in at the web address either.
+  const needsPassword = !s.passwordSet && !s.locked && s.networkOpen;
   const r = s.lastResult;
 
   return (

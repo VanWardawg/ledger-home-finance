@@ -25,7 +25,7 @@ export const passwordSet = () => getSetting('password_hash') !== '';
 const setupCode = () => String(process.env.LEDGER_SETUP_CODE || '').trim();
 // A family copy can also be claimed, and signed in to, with Cloudflare's check alone (server/access.js).
 // "Claimed" means somebody has made it theirs: by setting a password, or by choosing that.
-const claimed = () => passwordSet() || accessLogin();
+export const claimed = () => passwordSet() || accessLogin();
 export const awaitingSetupCode = () => setupCode() !== '' && !claimed();
 const sameText = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y); };
 

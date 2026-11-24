@@ -11,7 +11,7 @@ import { db, iso, getSetting, setSetting } from './db.js';
 import { WAITING_DAYS } from './waiting.js';
 import { estimateTax, TAX_YEAR } from './tax.js';
 import { stateChosen, stateList, stateOf, STATES } from './states.js';
-import { installAuth, passwordSet } from './auth.js';
+import { installAuth, passwordSet, claimed } from './auth.js';
 import * as simplefin from './simplefin.js';
 import * as importer from './importer.js';
 import { getRecurrings, installRecurring, nextDue, inMonth } from './recurring.js';
@@ -1120,11 +1120,15 @@ app.get('/api/clock', (_req, res) => { const now = new Date(); res.json({ zone: 
 // can: Home Assistant signs people in, and any other address is refused until a Ledger password is set
 // (server/auth.js). So no password is asked for there before the bank connection and the rest of Settings.
 const openToNetwork = () => HOST !== '127.0.0.1' && process.env.LEDGER_INGRESS !== '1';
-app.get('/api/simplefin', (_req, res) => res.json({ ...simplefin.status(), passwordSet: passwordSet(), networkOpen: openToNetwork() }));
+// `locked`: something already stands between the network and this copy, a Ledger password or, on a family
+// copy, the web address's own sign-in (Cloudflare) with no Ledger password. Until 2026-11-24 only a password
+// counted, so a household signed in the second way was told to "set a password first" and could not reach
+// the token box or most of Settings (found when the owner's mom could not connect her bank).
+app.get('/api/simplefin', (_req, res) => res.json({ ...simplefin.status(), passwordSet: passwordSet(), locked: claimed(), networkOpen: openToNetwork() }));
 
 app.post('/api/simplefin/connect', async (req, res) => {
   // Real bank data shouldn't sit on an app anyone on the Wi-Fi can open.
-  if (!passwordSet() && openToNetwork()) return res.status(400).json({ error: 'Set a password first, since other devices on your network can open this app.' });
+  if (!claimed() && openToNetwork()) return res.status(400).json({ error: 'Set a password first, since other devices on your network can open this app.' });
   try {
     await simplefin.connect(req.body?.token);
     res.json({ ok: true, result: await simplefin.sync() });
