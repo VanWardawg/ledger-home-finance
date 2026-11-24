@@ -87,9 +87,15 @@ export const STATES = {
   WY: { name: 'Wyoming', none: true },
 };
 
-export const stateOf = (v) => (Object.hasOwn(STATES, String(v || '').toUpperCase()) ? String(v).toUpperCase() : 'AR');
+// No state is assumed (2026-11-24, the owner: "I'd prefer for it not to assume any state at all"). Until a
+// household chooses one the setting is empty, which is NO_STATE here: no state tax is worked out, and the
+// Taxes page shows nothing but the menu to choose from.
+export const NO_STATE = '--';
+STATES[NO_STATE] = { name: 'No state chosen yet', none: true, unset: true };
+export const stateOf = (v) => { const c = String(v || '').toUpperCase(); return c !== NO_STATE && Object.hasOwn(STATES, c) ? c : NO_STATE; };
+export const stateChosen = (v) => stateOf(v) !== NO_STATE;
 /** For the menu: every state by name. */
-export const stateList = () => Object.entries(STATES).map(([code, s]) => ({ code, name: s.name, none: !!s.none })).sort((a, b) => a.name.localeCompare(b.name));
+export const stateList = () => Object.entries(STATES).filter(([, s]) => !s.unset).map(([code, s]) => ({ code, name: s.name, none: !!s.none })).sort((a, b) => a.name.localeCompare(b.name));
 
 /** Tax on `taxable` from a list of [rate in percent, starts at]. Income under the first start is not taxed. */
 export function bracketTax(taxable, rows) {
@@ -120,7 +126,7 @@ export function simpleStateTax(code, { income, two, dependents }) {
 export function stateInfo(code) {
   const S = STATES[code];
   return {
-    code, name: S.name, none: !!S.none, detailed: !!S.own,
+    code, name: S.name, none: !!S.none, unset: !!S.unset, detailed: !!S.own,
     topRate: S.b ? Math.max(...S.b.s.map(([r]) => r)) : S.own ? 3.7 : 0,
     flat: !!S.b && S.b.s.length === 1,
     source: S.own ? "Arkansas's own 2026 estimated tax worksheet" : S.none ? '' : "the Tax Foundation's table of state rates as of January 1, 2026",

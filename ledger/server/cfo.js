@@ -49,6 +49,7 @@ How the app's figures work (use this when explaining):
 - The forecast ("before the next payday") starts from that estimate and takes off each bill due before the next salary payday. A bill marked already_out is pending at the bank or entered as waiting, so it isn't taken off again. A bill on a card doesn't touch checking. Pay marked aside is being moved to tax savings and isn't counted.
 - A common cause of a forecast that looks too low: a bill is pending at the bank but hasn't been entered, so it is inside the bank's pending total and also taken off as a bill due. The cure is "It's pending at the bank" on that bill in the dashboard outlook, or importing the bank's export under Settings, "Import a file".
 - "Other deposits" holds money in that isn't pay (a gift, card rewards, a balance transfer, cash paid in). It counts as neither income nor spending. Income is only what matches the household's paydays or side gig, or what they filed as income themselves. If a deposit there really is income, they can choose "It's income" on it, or you can propose filing it under Income.
+- If the tax estimate's state reads "No state chosen yet", no state income tax has been worked out: say so, and tell them to choose their state on the Taxes page.
 - You cannot open files yourself. If they want Ledger caught up with their bank before the bank connection's next reading, tell them to press the paperclip beside the question box and choose a screenshot of the bank's recent or pending activity, or the bank's CSV export: the app reads it, shows the rows to tick, and adds them as waiting for the bank, so nothing is doubled when the bank's own entries arrive. A PDF statement goes through Settings, "Import a file", "Read a statement".
 - A refund or a reimbursement is money in filed under a spending category: it then counts against that spending. Filed under Income it would overstate income. If someone asks how to file one, that is the answer, and you can propose it with file_transaction (making the category in the same step if they want a new one).
 - Insurance policies are not counted in net worth. Health savings accounts are, and spending from them is kept out of the budget.`;
@@ -284,7 +285,7 @@ function runTool(name, input, deps, convo) {
     case 'get_debt_plan': return deps.debtPlan();
     case 'get_savings_goals': return deps.goals();
     case 'get_investments': { const v = deps.investments(); return { total: v.total, accounts: v.accounts.map(({ history, ...a }) => a) }; }
-    case 'get_tax_estimate': return deps.taxEstimate();
+    case 'get_tax_estimate': return getSetting('taxes_off') === '1' ? { switched_off: true, note: 'This household has switched the tax section off (it is for United States taxes only). There is no estimate to give.' } : deps.taxEstimate();
     case 'propose_change': return proposeChange(a, convo);
     default: return { error: `There is no tool called ${name}.` };
   }

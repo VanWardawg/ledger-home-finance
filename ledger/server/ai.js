@@ -13,7 +13,7 @@ import { db, getSetting, setSetting } from './db.js';
 import { STATES, stateOf } from './states.js';
 
 /** The state the household lives in, by name, for prompts that read bank descriptions or talk about tax. */
-export const homeState = () => STATES[stateOf(getSetting('tax_state', 'AR'))].name;
+export const homeState = () => { const c = stateOf(getSetting('tax_state')); return STATES[c].unset ? 'the United States' : STATES[c].name; };
 
 db.exec(`CREATE TABLE IF NOT EXISTS ai_usage (
   id INTEGER PRIMARY KEY, at INTEGER NOT NULL, month TEXT NOT NULL, feature TEXT NOT NULL, model TEXT NOT NULL,

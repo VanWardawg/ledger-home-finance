@@ -282,6 +282,7 @@ export default function About() {
     ],
     'taxes': [
       <>
+        <p><b>Your state comes first.</b> Ledger assumes no state. The first time you open Taxes it shows a map of the United States: tap your state (or choose it from the list) and the estimate appears. You can change it later under "Your household". If you live outside the United States, the tax section has nothing useful to say: switch it off on that first screen or in Settings, "Tax section", and it leaves the menu.</p>
         <p>The Taxes page estimates this year's <b>federal and state</b> income tax. Choose <b>your state</b> under "Your household" (it starts on Arkansas, where Ledger began). Arkansas is worked out in detail. Every other state uses a simpler table of its rates, standard deduction and personal exemptions, so treat that figure as rough; states with no income tax show federal only. It is an estimate for planning, not tax advice and not a tax return.</p>
       </>,
       <>

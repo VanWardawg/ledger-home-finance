@@ -818,6 +818,25 @@ html[data-season][data-scheme='dark'] {
 .kid-form .kid-wide { grid-column: 1 / -1; }
 .kid-form label.hint-every { flex-direction: row; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; margin: 0; }
 .kid-form label.hint-every input { width: 18px; height: 18px; min-height: 0; padding: 0; flex: none; appearance: auto; }
+.state-first { max-width: 860px; }
+.state-map svg { display: block; width: 100%; height: auto; margin: 6px 0 10px; }
+.state-map .state { cursor: pointer; outline: none; }
+.state-map .state path { fill: color-mix(in srgb, var(--ink) 9%, transparent); stroke: color-mix(in srgb, var(--ink) 38%, transparent); stroke-width: 1; stroke-linejoin: round; }
+.state-map .state text { font-size: 12px; font-weight: 600; fill: var(--ink2); pointer-events: none; }
+.state-map .state:focus-visible path { stroke: var(--accent); stroke-width: 2.5; }
+.state-map .state.on path { fill: var(--accent); stroke: var(--accent); }
+.state-map .state.on text { fill: #fff; }
+@media (hover: hover) { .state-map .state:hover path { fill: color-mix(in srgb, var(--accent) 45%, transparent); } }
+.state-small { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.state-small button { min-height: 32px; padding: 0 10px; border-radius: 999px; font-size: 13px; }
+.state-small button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.state-chosen { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 14px; min-height: 46px; padding: 10px 0; border-top: 1px solid var(--line); }
+.state-chosen b { font-family: var(--display); font-size: 22px; }
+.state-chosen small { color: var(--ink2); }
+.state-list { max-width: 360px; margin-top: 6px; }
+.state-not-us { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); }
+@media (max-width: 760px) { .state-map .state text { display: none; } }
+.state-first h2 { font-family: var(--display); font-size: 26px; margin: 0 0 6px; }
 .budget-ways { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin: 10px 0 6px; }
 .budget-way { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; text-align: left; padding: 14px 16px; border-radius: 14px; border: 2px solid var(--line); background: transparent; color: inherit; font: inherit; cursor: pointer; white-space: normal; height: auto; }
 .budget-way.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }

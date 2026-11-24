@@ -113,7 +113,10 @@ export default function Tour() {
   // opened from the Home Assistant app.
   const [inHa, setInHa] = useState(false);
   useEffect(() => { fetch('/api/auth/status').then((r) => (r.ok ? r.json() : null)).then((d) => { if (d?.ingress) setInHa(true); }).catch(() => {}); }, []);
-  const STOPS = inHa ? ALL_STOPS.filter((s) => s.clip !== 'home') : ALL_STOPS;
+  // ...and the Taxes stop where the household has switched the tax section off.
+  const [noTax, setNoTax] = useState(false);
+  useEffect(() => { if (n === 0) fetch('/api/tax/on').then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) setNoTax(!d.on); }).catch(() => {}); }, [n]);
+  const STOPS = ALL_STOPS.filter((s) => !(inHa && s.clip === 'home') && !(noTax && s.page === 'taxes'));
   // The stop's short film, when it has one and "Watch it" was pressed. Put away on moving to another stop.
   const [clip, setClip] = useState(false);
   useEffect(() => { setClip(false); }, [n]);

@@ -240,6 +240,7 @@ export function installTaxPack(app, { taxEstimate }) {
   const january = async () => {
     const now = new Date();
     const t = taxEstimate();
+    if (getSetting('taxes_off') === '1') return;
     if (!(now.getFullYear() === t.year + 1 && now.getMonth() === 0 && now.getDate() >= 2) || getSetting('taxpack_sent') === String(t.year)) return;
     if (!canSendMail() || getSetting('mail_on') !== '1' || now.getHours() < 8 || now.getHours() >= 20) return;
     const { files } = await build();

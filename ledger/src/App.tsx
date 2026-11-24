@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
+import { useTaxes, setTaxes } from './lib';
 import { api, lastLoaded, monthLong, noteLoaded, useData, handoff, monthShort, busyFor, midSession } from './lib';
 import { IconDialog, LogoDialog, UndoToast, reducedMotion } from './ui';
 import { setFoundLogos } from './logos';
@@ -99,6 +100,19 @@ function NavIcon({ id }: { id: PageId }) {
  * and About in a ring around it (the ring was his idea too, once he had seen it as a grid). Choosing one, or touching anywhere else, puts the sheet away. Shown only
  * at phone width; the computer keeps its side menu.
  */
+/** What the Taxes address shows when the household has switched the tax section off. */
+function TaxesOff() {
+  return (
+    <div className="stack">
+      <section className="card">
+        <div className="card-head"><h2>The tax section is switched off</h2></div>
+        <p className="sub first">Ledger's tax estimate covers United States federal and state income tax only, and this household has switched it off. Everything else in Ledger works as usual.</p>
+        <div className="add-actions"><button onClick={() => setTaxes(true)}>Switch the tax section on</button></div>
+      </section>
+    </div>
+  );
+}
+
 function PhoneMenu({ tabs, page }: { tabs: { id: PageId; short: string }[]; page: string }) {
   const [open, setOpen] = useState(false);
   useEffect(() => {
@@ -669,14 +683,15 @@ function Shell({ onAuthChanged }: { onAuthChanged: () => void }) {
   const usesMonth = page === 'dashboard' || page === 'transactions' || page === 'budgets';
   const narrow = typeof matchMedia === 'function' && matchMedia('(max-width: 760px)').matches;
   const title = PAGES.find((p) => p.id === page)!.label;
-  const tabs = PAGES.filter((p) => p.id !== 'connections' && p.id !== 'cfo' && p.id !== 'about');
+  const taxesOn = useTaxes();
+  const tabs = PAGES.filter((p) => p.id !== 'connections' && p.id !== 'cfo' && p.id !== 'about' && (taxesOn || p.id !== 'taxes'));
 
   const news = useUnseenNews().length;
   return (
     <div className="shell">
       <nav className="sidebar" aria-label="Sections">
         <div className="brand with-logo"><Logo loop /></div>
-        {PAGES.filter((p) => p.id !== 'cfo').map((p) => (
+        {PAGES.filter((p) => p.id !== 'cfo' && (taxesOn || p.id !== 'taxes')).map((p) => (
           <a key={p.id} href={`#${p.id}`} className={`nav ${page === p.id ? 'on' : ''}`} aria-current={page === p.id ? 'page' : undefined}>
             <NavIcon id={p.id} />
             {p.label}
@@ -736,7 +751,7 @@ function Shell({ onAuthChanged }: { onAuthChanged: () => void }) {
             {page === 'budgets' && <Budgets month={active} />}
             {page === 'recurring' && <Recurring />}
             {page === 'debt' && <Debt />}
-            {page === 'taxes' && <Taxes />}
+            {page === 'taxes' && (taxesOn ? <Taxes /> : <TaxesOff />)}
             {page === 'accounts' && <Accounts />}
             {page === 'reports' && <Reports />}
           </>

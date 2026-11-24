@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import { db, iso, getSetting, setSetting } from './db.js';
 import { WAITING_DAYS } from './waiting.js';
 import { estimateTax, TAX_YEAR } from './tax.js';
-import { stateList, stateOf, STATES } from './states.js';
+import { stateChosen, stateList, stateOf, STATES } from './states.js';
 import { installAuth, passwordSet } from './auth.js';
 import * as simplefin from './simplefin.js';
 import * as importer from './importer.js';
@@ -617,7 +617,7 @@ const SETTING_DEFAULTS = {
   // How the household files: joint (married filing jointly), single, or hoh (head of household).
   filing_status: 'joint',
   // The state the household pays income tax to (two letters). Arkansas unless changed: Ledger began there.
-  tax_state: 'AR',
+  tax_state: '',
   your_salary: '0', spouse_salary: '0', pretax_you: '0', pretax_spouse: '0', kids: '0',
   educators: '0', vipkid_expenses: '0', vipkid_override: '', extra_payment: '', mins_in_budget: '0',
   // Tax taken out of paychecks for the whole year, and estimated payments already sent. Blank until known.
@@ -635,7 +635,7 @@ app.put('/api/settings', (req, res) => {
   for (const [k, v] of Object.entries(req.body || {})) {
     if (!(k in SETTING_DEFAULTS)) continue;
     const s = String(v ?? '').trim();
-    if (k === 'tax_state') { if (!Object.hasOwn(STATES, s.toUpperCase())) return res.status(400).json({ error: 'Choose a state.' }); setSetting(k, s.toUpperCase()); continue; }
+    if (k === 'tax_state') { if (!stateChosen(s)) return res.status(400).json({ error: 'Choose a state.' }); setSetting(k, s.toUpperCase()); continue; }
     if (k === 'filing_status') { if (!['joint', 'single', 'hoh', 'separate'].includes(s)) return res.status(400).json({ error: 'Choose how you file.' }); setSetting(k, s); continue; }
     const blankOk = ['vipkid_override', 'extra_payment', 'withheld_fed', 'withheld_ar', 'paid_fed', 'paid_ar', 'tax_account'].includes(k);
     if (s === '' && blankOk) { setSetting(k, ''); continue; }
@@ -785,7 +785,16 @@ installTaxPack(app, { taxEstimate });
 // Whether VIPKid pay is still being kept for taxes. The target is what's owed at
 // filing once the year's withholding has been entered; until then, the tax built
 // up on VIPKid income so far.
+// The whole tax section can be switched off (2026-11-24, the owner: for people outside the United States,
+// whose taxes Ledger knows nothing about). Setting `taxes_off` '1': the Taxes page leaves the menus, and
+// nothing else in the app leans on the estimate: no pay held back in the forecast, no tax goal figure, no
+// tax set aside in the debt plan, no pay stub reminder, no January tax pack.
+const taxesOff = () => getSetting('taxes_off') === '1';
+app.get('/api/tax/on', (_req, res) => res.json({ on: !taxesOff() }));
+app.put('/api/tax/on', (req, res) => { setSetting('taxes_off', req.body?.on ? '0' : '1'); res.json({ on: !taxesOff() }); });
+
 setTaxHoldSource(() => {
+  if (taxesOff()) return null;
   const t = taxEstimate();
   const account = t.taxSavings.account;
   if (!account || !gig().on) return null;
@@ -797,6 +806,7 @@ setTaxHoldSource(() => {
 // until then, the tax built up so far on side-gig income (which has none taken out). The same figure
 // the forecast holds side-gig pay back for.
 setTaxTarget(() => {
+  if (taxesOff()) return { target: 0, basis: 'none' };
   const t = taxEstimate();
   if (t.filing.known) return { target: round(Math.max(0, t.filing.federal + t.filing.arkansas)), basis: 'filing' };
   if (gig().on) return { target: round(Math.max(0, t.taxSavings.owedSoFar)), basis: 'gig' };
@@ -910,7 +920,7 @@ function debtPlan() {
   const income = round(db.prepare(`SELECT COALESCE(SUM(t.amount), 0) s FROM transactions t JOIN categories c ON c.id = t.category_id
     WHERE c.kind = 'income' AND t.date >= ? AND t.date < ?`).get(since, until).s / 3);
   const budget = round(db.prepare("SELECT COALESCE(SUM(budget), 0) s FROM categories WHERE kind = 'expense'").get().s);
-  const taxSetAside = round(taxEstimate().extra / 12);
+  const taxSetAside = getSetting('taxes_off') === '1' ? 0 : round(taxEstimate().extra / 12);
   const minimums = round(all.filter(ready).reduce((a, d) => a + d.min_payment, 0));
   // Mortgage and loan payments show up as spending in budget categories (Housing,
   // Loan payments). Card payments are transfers, so their minimums are extra.

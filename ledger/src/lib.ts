@@ -116,6 +116,18 @@ export function useOwners() {
   return { data, reload, label, possessive, list, marked: !!data?.marked };
 }
 
+/** Whether the tax section is in use. A household outside the United States can switch it off in Settings. */
+export function useTaxes() {
+  const { data, reload } = useData<{ on: boolean }>('/api/tax/on');
+  useEffect(() => { addEventListener('ledger-taxes', reload); return () => removeEventListener('ledger-taxes', reload); }, [reload]);
+  return data ? data.on : true;
+}
+export async function setTaxes(on: boolean) {
+  await api('/api/tax/on', { method: 'PUT', body: { on } });
+  forgetLoaded();
+  dispatchEvent(new Event('ledger-taxes')); dispatchEvent(new Event('ledger-refresh'));
+}
+
 export function useGig() {
   const { data, reload } = useData<{ on: boolean; name: string; match: string; classes: boolean; teachers: number; two: boolean; who: string; cash: number; extras: { id: number; name: string; match: string; who: string; cash: number; costs: number }[] }>('/api/gig');
   // Every part of the app that shows the gig hears when Settings changes it.

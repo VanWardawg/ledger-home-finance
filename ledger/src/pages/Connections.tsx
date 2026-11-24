@@ -1,3 +1,4 @@
+import { useTaxes, setTaxes } from '../lib';
 import { AllowanceSwitch } from './Allowance';
 import { at } from '../base';
 import { useEffect, useRef, useState } from 'react';
@@ -1645,6 +1646,7 @@ function ApplePay() {
 export default function Connections({ onChanged }: { onChanged: () => void }) {
   const { data: s, error, reload } = useData('/api/simplefin');
   const { data: auth, reload: reloadAuth } = useData('/api/auth/status');
+  const taxesOn = useTaxes();
   const gig = useGig();
   const { data: family } = useData('/api/family');
   const [token, setToken] = useState('');
@@ -1822,6 +1824,13 @@ export default function Connections({ onChanged }: { onChanged: () => void }) {
       {needsPassword ? null : <h3 className="group-title">Extras</h3>}
       {/* Not on a family copy: a phone's report can't pass the Cloudflare sign-in in front of its address. */}
       {needsPassword || auth.canErase || auth.ingress ? null : <Fold id="applepay" title="Apple Pay purchases" note="An iPhone reports each purchase as you pay, including Apple Card"><ApplePay /></Fold>}
+      {needsPassword ? null : <Fold id="taxes-on" title="Tax section" note={taxesOn ? 'On: an estimate of US federal and state income tax' : 'Switched off'}>
+        <section className="card">
+          <div className="card-head"><h2>Tax section</h2>{taxesOn && <span className="good">On</span>}</div>
+          <p className="sub first">The Taxes page estimates United States federal and state income tax. If you live somewhere else it has nothing useful to say: switch it off and it leaves the menu, and Ledger stops holding money back for tax in the forecast, asking for pay stubs and sending the January tax pack. Nothing you entered is lost, and you can switch it back on here.</p>
+          <label className="row check"><span className="grow">Use the tax section</span><input type="checkbox" checked={taxesOn} onChange={(e) => setTaxes(e.target.checked)} /></label>
+        </section>
+      </Fold>}
       {needsPassword ? null : <Fold id="allowance" title="Allowances" note="A notebook of what you hold for each child"><AllowanceSwitch /></Fold>}
       {needsPassword ? null : <Fold id="email" title="Summary email" note="A short summary sent on the days you choose"><WeeklyEmail /></Fold>}
       {needsPassword ? null : <Fold id="alerts" title="Alerts" note="Emails when checking runs low, a bill is due or a budget tips over, and the pay stub reminder"><Alerts /></Fold>}

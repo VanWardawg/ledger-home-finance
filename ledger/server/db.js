@@ -187,6 +187,14 @@ export const getSetting = (key, fallback = '') => db.prepare('SELECT value FROM 
 export const setSetting = (key, value) =>
   db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run(key, String(value));
 
+// No state is assumed for the tax estimate any more (server/states.js). A copy that was already in use when
+// that changed had been shown Arkansas all along, so it keeps Arkansas; a new copy, or one nobody has claimed
+// yet, has no state until its household chooses. Done once.
+if (getSetting('state_v1') === '') {
+  if (!firstRun && getSetting('tax_state') === '' && getSetting('setup_done') !== '0') setSetting('tax_state', 'AR');
+  setSetting('state_v1', '1');
+}
+
 // First-run setup (src/pages/Setup.tsx) is for a new household's copy. Every database that existed
 // before it was built, and any started without a setup code, counts as already set up.
 if (getSetting('setup_done') === '') {

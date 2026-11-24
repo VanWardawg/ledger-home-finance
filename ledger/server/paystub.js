@@ -283,7 +283,7 @@ export function withheldSoFar() {
 export const stubRemindOn = () => getSetting('stub_remind') !== '0';
 export function stubReminder(now = new Date()) {
   const joint = ['joint', 'separate'].includes(statusOf(getSetting('filing_status', 'joint')));
-  if (!stubRemindOn()) { const n = householdNames(); return { people: [], joint, name: n.you, spouseName: n.spouse }; }
+  if (!stubRemindOn() || getSetting('taxes_off') === '1') { const n = householdNames(); return { people: [], joint, name: n.you, spouseName: n.spouse }; }
   const wages = (who) => Number(getSetting(who === 'you' ? 'your_salary' : 'spouse_salary')) > 0;
   // Paychecks set up but no pay typed yet: the estimate has nothing to go on, and a stub is the quickest cure.
   let paydays = 0;

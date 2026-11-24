@@ -1,3 +1,5 @@
+import { setTaxes } from '../lib';
+import { StateMap } from '../StateMap';
 import { useEffect, useRef, useState } from 'react';
 import { api, cents, money, pct, useData } from '../lib';
 import { NumField, Skeleton, Fold, Modal, openFold } from '../ui';
@@ -57,12 +59,25 @@ const PAY_STEPS: [site: string, intro: string, steps: string[]][] = [
 ];
 
 /** The state the household pays income tax to. Used on the Taxes page and in the setup guide. */
+/** The first thing the Taxes page asks: a map to tap, with the plain menu beneath for anyone who prefers it. */
+function ChooseState({ onPick }: { onPick: (code: string) => void }) {
+  const { data: states } = useData<any[]>('/api/tax/states');
+  if (!states) return null;
+  return (
+    <>
+      <StateMap states={states} onPick={onPick} />
+      <div className="state-list"><StatePick value="" onPick={onPick} /></div>
+    </>
+  );
+}
+
 export function StatePick({ value, onPick }: { value: string; onPick: (code: string) => void }) {
   const { data: states } = useData<any[]>('/api/tax/states');
   return (
-    <label className="field"><span>Your state</span>
-      <select value={value || 'AR'} onChange={(e) => onPick(e.target.value)}>
-        {(states || [{ code: value || 'AR', name: '…' }]).map((x: any) => <option key={x.code} value={x.code}>{x.name}{x.none ? ' (no income tax)' : ''}</option>)}
+    <label className="field"><span>{value ? 'Your state' : 'Or choose from a list'}</span>
+      <select value={value || ''} onChange={(e) => { if (e.target.value) onPick(e.target.value); }}>
+        {!value && <option value="">Choose your state…</option>}
+        {(states || (value ? [{ code: value, name: '…' }] : [])).map((x: any) => <option key={x.code} value={x.code}>{x.name}{x.none ? ' (no income tax)' : ''}</option>)}
       </select>
       <small>For state income tax. Arkansas is worked out in detail; other states by a simpler table of rates.</small>
     </label>
@@ -570,6 +585,19 @@ export default function Taxes() {
 
   const s = t.settings;
   const save = (key: string) => async (v: string) => { await api('/api/settings', { method: 'PUT', body: { [key]: v } }); reload(); dispatchEvent(new Event('ledger-gig')); };
+  // No state chosen yet: nothing on this page means anything until one is, so the menu is all there is.
+  if (t.state?.unset) {
+    return (
+      <div className="page tax-page">
+        <section className="card state-first">
+          <h2>Choose your state</h2>
+          <p className="sub first">Ledger works out an estimate of this year's federal and state income tax. It needs to know which state you live in before it shows anything here. You can change it later under "Your household".</p>
+          <ChooseState onPick={(code) => save('tax_state')(code)} />
+          <p className="sub state-not-us">Not in the United States? Ledger's tax estimate only covers US federal and state income tax. <button type="button" className="link" onClick={() => { setTaxes(false); location.hash = '#dashboard'; }}>Switch the tax section off</button> and it leaves the menu; you can switch it back on in Settings.</p>
+        </section>
+      </div>
+    );
+  }
   // Married filing jointly has two earners; single and head of household have one.
   // (Married filing separately still has two people; `joint` here means "there is a spouse".)
   const joint = t.status === 'joint' || t.status === 'separate';

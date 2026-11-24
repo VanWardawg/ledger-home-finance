@@ -22,6 +22,8 @@ export const JUST_ADDED: [title: string, text: string, more?: { date: string; go
 
 export const UPDATES: [date: string, items: string[]][] = [
   ['2026-11-24', [
+    'A new copy of Ledger no longer assumes a state: the Taxes page asks you to choose yours from a map first. If you already use Ledger, nothing changes.',
+    'The tax section can be switched off in Settings, "Tax section", for anyone outside the United States.',
     'Ask your CFO has a paperclip: hand it a screenshot of your bank\'s recent or pending activity, or the bank\'s CSV export, to catch Ledger up before the bank connection does.',
     'Allowances: switch them on in Settings and the Accounts page keeps a notebook of what you hold for each child, with a weekly amount that adds itself.',
     'A card you clear every month can be marked "I pay this card in full every month" on the Debt page, which takes it out of the payoff order.',
