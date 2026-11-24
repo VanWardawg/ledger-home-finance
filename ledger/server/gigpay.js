@@ -527,7 +527,10 @@ export function installGigPay(app) {
   app.delete('/api/gig/jobs/:id', async (req, res) => { db.prepare('DELETE FROM gig_jobs WHERE id = ?').run(Number(req.params.id)); res.json(await view()); });
   // "Is this deposit that job?": yes for one of them, or none of them. Either way the deposit isn't asked about again.
   app.post('/api/gig/jobs/match', async (req, res) => {
-    const tx = db.prepare('SELECT id FROM transactions WHERE id = ?').get(Number(req.body?.tx));
+    const txId = Number(req.body?.tx);
+    if (!Number.isInteger(txId) || txId <= 0) return res.status(400).json({ error: 'Choose a deposit.' });
+    // Only money in can be a job's pay: a purchase is never moved under the gig by this route.
+    const tx = db.prepare('SELECT id FROM transactions WHERE id = ? AND amount > 0').get(txId);
     if (!tx) return res.status(404).json({ error: "That deposit isn't here any more." });
     const job = req.body?.job == null ? null : db.prepare('SELECT * FROM gig_jobs WHERE id = ? AND done = 0').get(Number(req.body.job));
     if (req.body?.job != null && !job) return res.status(404).json({ error: "That job isn't waiting to be paid any more." });

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.14
+
+- Answering "which job was this deposit for?" only accepts money in, and says so plainly when it is sent something else.
+
 ## 0.1.13
 
 - A job is now matched to money you typed in yourself, such as cash in hand: a deposit that carries the gig's words counts even when it was filed as plain Income, and is moved under the gig once matched.
