@@ -126,7 +126,10 @@ export function installAuth(app) {
       access: offered ? { email: who?.email || null, login: accessLogin() } : null, needsSetupCode: awaitingSetupCode(), setupDone: getSetting('setup_done', '1') !== '0', thisMac: isThisMac(req), passkeyOrigins: passkeyOrigins(),
       // The look a device starts with before anyone chooses one in Settings: plain Onyx on a family copy
       // (The owner's choice, 2026-11-18), the holiday scenes on his own. Family copies are the ones with a setup code.
-      look: process.env.LEDGER_SETUP_CODE ? 'none' : 'auto',
+      // Every other copy starts plain as well (2026-11-24, after he saw the add-on open on the holiday scenes:
+      // "Ledger should be starting with standard background"). A copy starts on the scenes only where its
+      // setting `start_look` says 'auto', which is set on the owner's own copy and nowhere else.
+      look: !process.env.LEDGER_SETUP_CODE && getSetting('start_look') === 'auto' ? 'auto' : 'none',
       // A family copy's sign-in screen offers "Forgot your password?" (a reset code from whoever runs the copies).
       canReset: setupCode() !== '' && claimed(),
       // Whether "Email me a reset code" can work here (the copy knows how to reach the request service).
