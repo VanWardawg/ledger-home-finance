@@ -53,7 +53,9 @@ async function call(method, path, body) {
   });
   if (res.status === 401 || res.status === 403) throw new Error("Home Assistant didn't let Ledger in. The add-on needs its permission to use Home Assistant: reinstall or update it, then try again.");
   if (!res.ok) throw new Error(`Home Assistant answered with an error (${res.status}). Check that its AI is set up under Settings, Devices & services.`);
-  return res.json();
+  // Whatever comes back is read here and never passed on as it is: an answer that isn't JSON would otherwise
+  // carry a piece of Home Assistant's own text into the error the page shows.
+  try { return await res.json(); } catch { throw new Error("Home Assistant gave an answer Ledger couldn't read. Try again."); }
 }
 
 /** The AI Tasks this Home Assistant has, for the menu. Empty when it can't be asked. */

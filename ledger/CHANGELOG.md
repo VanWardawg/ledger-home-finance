@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.10
+
+- The basic CFO now sees your Cash account as well, so what it says agrees with the Accounts page.
+- An answer from Home Assistant that Ledger can't read is reported in Ledger's own words.
+
 ## 0.1.9
 
 - Tightened how Ledger uses its permission to call Home Assistant: its token only ever goes to Home Assistant itself, only two calls can be made with it (listing the AI Tasks, and asking one), and the chosen AI is checked to be an AI Task before every call.
