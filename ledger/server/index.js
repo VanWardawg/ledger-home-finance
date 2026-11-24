@@ -1192,4 +1192,21 @@ if (process.env.NODE_ENV === 'production') {
 
 simplefin.upgradeCategories();
 startAutoSync();
-app.listen(PORT, HOST, () => console.log(`Ledger is running at http://localhost:${PORT}`));
+const server = app.listen(PORT, HOST, () => console.log(`Ledger is running at http://localhost:${PORT}`));
+
+// Asked to stop (a deploy, a Home Assistant backup or update): finish up and leave cleanly. Node running as
+// the container's first process takes no notice of the request by default, so it was killed ten seconds
+// later, which Home Assistant showed as the add-on being in "error" during every backup (found by the NAS
+// session's backup test, 2026-11-24). The database is closed first, which folds its journal into the file.
+let stopping = false;
+for (const signal of ['SIGTERM', 'SIGINT']) {
+  process.on(signal, () => {
+    if (stopping) return;
+    stopping = true;
+    console.log('Ledger is stopping.');
+    server.close();
+    server.closeAllConnections?.();
+    try { db.close(); } catch { /* already closed */ }
+    process.exit(0);
+  });
+}
