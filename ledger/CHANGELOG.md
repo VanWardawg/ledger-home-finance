@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.21
+
+- On a phone, the "filed under Other" card on Transactions no longer squeezes its words into a narrow strip.
+- A copy hosted behind a web sign-in with no Ledger password can reach the bank token box and the rest of Settings (this never affected the add-on).
+
 ## 0.1.20
 
 - Settings, "Bank connection" is now "Bank connection (SimpleFIN)", with numbered steps and a full-width box plainly marked "SimpleFIN setup token".

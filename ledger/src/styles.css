@@ -1838,7 +1838,9 @@ button.danger:disabled { opacity: 0.45; }
 /* Deposits waiting for the household to say whether they are income (Transactions). */
 .deposit-review .review-answers { display: flex; gap: 6px; flex: none; }
 .deposit-review .review-answers button { padding: 6px 10px; min-height: 0; }
-@media (max-width: 760px) { .deposit-review .row { flex-wrap: wrap; } .deposit-review .review-answers { flex-basis: 100%; justify-content: flex-end; } }
+/* On a phone the words take the whole line and the buttons sit beneath them. Without the full-width basis
+   the words were squeezed into a sliver beside the buttons, one or two to a line (his screenshot, 2026-11-24). */
+@media (max-width: 760px) { .deposit-review .row { flex-wrap: wrap; } .deposit-review .row > .grow { flex: 1 1 100%; } .deposit-review .row > button { flex: none; } .deposit-review .review-answers { flex-basis: 100%; justify-content: flex-end; } }
 
 /* The first screen of a family copy: choosing how to sign in from now on. */
 .signin .first-note { display: block; margin: 8px 0 4px; color: var(--ink2); }
