@@ -124,7 +124,7 @@ function OneGig({ g, ha, took }: { g: any; ha: { id: string; name: string }[]; t
                       <option value="">{busy === 'calendar' ? 'Reading it…' : 'Choose a calendar…'}</option>
                       {ha.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
-                    <small>Home Assistant already has these, so there is nothing to paste. Ledger only reads the one you choose. <button type="button" className="link" onClick={() => setByLink(true)}>Use a calendar link instead</button></small></label>
+                    <small>Home Assistant already has these, so there is nothing to paste. Ledger only reads the one you choose, and keeps the times of its events (their titles too, only if you filter by words below). <button type="button" className="link" onClick={() => setByLink(true)}>Use a calendar link instead</button></small></label>
                 </div>
               )}
               {(ha.length === 0 || byLink) && (
@@ -138,7 +138,7 @@ function OneGig({ g, ha, took }: { g: any; ha: { id: string; name: string }[]; t
             </>
           )}
           <h4>Past what is booked</h4>
-          <p className="sub">A calendar only knows a few weeks ahead. After your last booked session, the forecast uses an estimate so it doesn't fall to nothing.</p>
+          <p className="sub">A calendar only knows a few weeks ahead. After your last booked session, the forecast uses an estimate so it doesn't fall to nothing.{!g.estimate ? <b> There is nothing to estimate from yet, so the forecast stops at your last booked session: add a rough figure here to cover the weeks your calendar doesn't show.</b> : null}</p>
           {roughFields}
         </div>
       )}

@@ -24,7 +24,7 @@ import net from 'node:net';
 import http from 'node:http';
 import https from 'node:https';
 import { db, iso, getSetting, setSetting } from './db.js';
-import { gig, extraGigs } from './gig.js';
+import { gig, extraGigs, gigCategoryFor } from './gig.js';
 import { haOffered, haCalendars, haCalendarEvents } from './haai.js';
 
 db.exec(`CREATE TABLE IF NOT EXISTS gig_sessions (uid TEXT PRIMARY KEY, start TEXT NOT NULL, minutes INTEGER NOT NULL, summary TEXT NOT NULL DEFAULT '');
@@ -165,8 +165,10 @@ function refused(ip) {
   const inner = a ? (a[0] === 172 && a[1] === 30 && (a[2] === 32 || a[2] === 33)) || a[0] === 127 || a[0] === 0 : six === '::1' || six === '::';
   if (ADDON() && inner) return true;
   if (!HOSTED()) return false;
-  if (a) return a[0] === 10 || a[0] === 127 || a[0] === 0 || (a[0] === 169 && a[1] === 254) || (a[0] === 192 && a[1] === 168) || (a[0] === 172 && a[1] >= 16 && a[1] <= 31) || (a[0] === 100 && a[1] >= 64 && a[1] <= 127) || a[0] >= 224;
-  return six === '::1' || six === '::' || /^f[cd]/.test(six) || /^fe[89ab]/.test(six);
+  if (a) return a[0] === 10 || a[0] === 127 || a[0] === 0 || (a[0] === 169 && a[1] === 254) || (a[0] === 192 && a[1] === 168) || (a[0] === 172 && a[1] >= 16 && a[1] <= 31) || (a[0] === 100 && a[1] >= 64 && a[1] <= 127)
+    || (a[0] === 198 && (a[1] === 18 || a[1] === 19)) || (a[0] === 192 && a[1] === 0 && a[2] === 0) || a[0] >= 224;
+  // (64:ff9b::/96 carries an IPv4 address inside it, which could be a private one.)
+  return six === '::1' || six === '::' || /^f[cd]/.test(six) || /^fe[89ab]/.test(six) || /^64:ff9b:/.test(six);
 }
 const NOT_ALLOWED = "That address isn't one Ledger can read from here. Use the calendar's own iCal address on the internet.";
 
@@ -269,7 +271,10 @@ export async function syncSessions(id = 0) {
     // session that was held is still owed, even if the event is later deleted from the calendar.
     db.prepare('DELETE FROM gig_sessions WHERE gig = ? AND start >= ?').run(id, nowIso);
     const add = db.prepare('INSERT OR IGNORE INTO gig_sessions (uid, gig, start, minutes, summary) VALUES (?,?,?,?,?)');
-    for (const e of mine) add.run(`${id}:${e.uid}`, id, e.start, e.minutes, e.summary);
+    // A title is kept only when there is a word filter that needs it. Without one, a family calendar's
+    // every event title would sit in this copy's database (and its backups) for no purpose.
+    for (const e of mine) add.run(`${id}:${e.uid}`, id, e.start, e.minutes, words.length ? e.summary : '');
+    if (!words.length) db.prepare("UPDATE gig_sessions SET summary = '' WHERE gig = ?").run(id);
     db.prepare('DELETE FROM gig_sessions WHERE gig = ? AND start < ?').run(id, new Date(now - 100 * DAY).toISOString());
     db.exec('COMMIT');
   } catch (e) { db.exec('ROLLBACK'); throw e; }
@@ -377,8 +382,20 @@ export function expectedGigPay(today, limit) {
 
 const near = (job, amount) => Math.abs(job.amount - amount) <= Math.max(3, job.amount * 0.05);
 const inWindow = (job, date) => date >= addDays(job.date, -10) && date <= addDays(job.date, 45);
-const unseenDeposits = (g) => (g.categoryId ? db.prepare(`SELECT id, date, merchant, amount FROM transactions WHERE category_id = ? AND amount > 0 AND waiting = 0 AND date >= ?
-  AND id NOT IN (SELECT tx_id FROM gig_seen) ORDER BY date, id`).all(g.categoryId, addDays(iso(new Date()), -75)) : []);
+// Which deposits could be a gig's pay: anything filed under the gig, and also money in that carries the gig's
+// words but was typed in under plain Income or "Other deposits" (cash in hand, or a household with no bank
+// connection picks a category by hand, and without this their jobs never matched: found by the NAS
+// session's test, 2026-11-24). Entries still waiting for the bank are left until the bank's own arrives.
+const unseenDeposits = (g) => (g.categoryId ? db.prepare(`SELECT t.id, t.date, t.merchant, t.amount, t.category_id FROM transactions t JOIN categories c ON c.id = t.category_id
+  WHERE t.amount > 0 AND t.waiting = 0 AND t.date >= ? AND t.split_of IS NULL AND (t.category_id = ? OR c.kind = 'income' OR COALESCE(c.key, c.name) = 'Deposit')
+  AND t.id NOT IN (SELECT tx_id FROM gig_seen) ORDER BY t.date, t.id`).all(addDays(iso(new Date()), -75), g.categoryId)
+  .filter((t) => t.category_id === g.categoryId || gigCategoryFor(t.merchant, t.amount) === g.categoryId) : []);
+/** A deposit that turns out to be a job's pay is the gig's income, whatever it was first filed as. */
+const fileUnderGig = (txId, jobId) => {
+  const cat = db.prepare('SELECT g.gig FROM gig_jobs g WHERE g.id = ?').get(jobId);
+  const g = cat && gigs().find((x) => x.id === cat.gig);
+  if (g?.categoryId) db.prepare('UPDATE transactions SET category_id = ? WHERE id = ?').run(g.categoryId, txId);
+};
 
 /**
  * Ticks a job off when one deposit, and only one, could be its pay, and that deposit could be for no other
@@ -395,6 +412,7 @@ function settleJobs(g) {
     cand[0].settled = true; t.used = true;
     db.prepare('UPDATE gig_jobs SET done = 1, paid_tx = ? WHERE id = ?').run(t.id, cand[0].id);
     db.prepare('INSERT OR IGNORE INTO gig_seen (tx_id, job) VALUES (?, ?)').run(t.id, cand[0].id);
+    fileUnderGig(t.id, cand[0].id);
   }
 }
 /** Deposits that might be a job's pay but where Ledger can't be sure which: for the household to answer. */
@@ -408,7 +426,8 @@ function asksFor(g) {
 async function view() {
   const today = iso(new Date());
   const list = gigs();
-  const ha = haOffered() ? await haCalendars().catch(() => []) : [];
+  // Home Assistant is only asked for its calendars once there is a gig that could use one.
+  const ha = haOffered() && list.some((g) => !g.vipkid && gigPayMode(g.id) === 'sessions') ? await haCalendars().catch(() => []) : [];
   const out = list.map((g) => {
     const c = cfg(g.id), mode = gigPayMode(g.id);
     if (mode === 'jobs') settleJobs(g);
@@ -513,7 +532,7 @@ export function installGigPay(app) {
     const job = req.body?.job == null ? null : db.prepare('SELECT * FROM gig_jobs WHERE id = ? AND done = 0').get(Number(req.body.job));
     if (req.body?.job != null && !job) return res.status(404).json({ error: "That job isn't waiting to be paid any more." });
     db.prepare('INSERT OR REPLACE INTO gig_seen (tx_id, job) VALUES (?, ?)').run(tx.id, job ? job.id : null);
-    if (job) db.prepare('UPDATE gig_jobs SET done = 1, paid_tx = ? WHERE id = ?').run(tx.id, job.id);
+    if (job) { db.prepare('UPDATE gig_jobs SET done = 1, paid_tx = ? WHERE id = ?').run(tx.id, job.id); fileUnderGig(tx.id, job.id); }
     res.json(await view());
   });
 

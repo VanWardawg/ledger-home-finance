@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.13
+
+- A job is now matched to money you typed in yourself, such as cash in hand: a deposit that carries the gig's words counts even when it was filed as plain Income, and is moved under the gig once matched.
+- Reading a calendar with no word filter no longer keeps its events' titles, only their times.
+- Home Assistant is asked for your calendars only while a gig is set to "By booked sessions".
+- Clearer message when a chosen Home Assistant calendar can't be read, and a note when the forecast has nothing to estimate from.
+- The notes say how to switch on Watchdog.
+
 ## 0.1.12
 
 - Every side gig can now say how it pays (Settings, "Side gig"): the average of its deposits as before; about the same each week or month; booked sessions read from a calendar at your own rate; or jobs you type in with what you expect and when.

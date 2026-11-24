@@ -50,7 +50,7 @@ export const haIsClaude = () => /claude|anthropic/i.test(`${haEntity()} ${getSet
 /** What to call the AI in the app: Claude when Ledger talks to Claude, otherwise a plain word. */
 export const aiName = () => (viaHa() && !haIsClaude() ? 'your AI' : 'Claude');
 
-async function call(method, path, body) {
+async function call(method, path, body, check = 'Check that its AI is set up under Settings, Devices & services.') {
   if (!PATHS.has(`${method} ${path}`) && !CALENDAR_PATH.test(`${method} ${path}`)) throw new Error('Ledger does not make that call to Home Assistant.');
   const res = await fetch(`${BASE()}${path}`, {
     method, signal: AbortSignal.timeout(120_000),
@@ -58,7 +58,7 @@ async function call(method, path, body) {
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
   if (res.status === 401 || res.status === 403) throw new Error("Home Assistant didn't let Ledger in. The add-on needs its permission to use Home Assistant: reinstall or update it, then try again.");
-  if (!res.ok) throw new Error(`Home Assistant answered with an error (${res.status}). Check that its AI is set up under Settings, Devices & services.`);
+  if (!res.ok) throw new Error(`Home Assistant answered with an error (${res.status}). ${check}`);
   // Whatever comes back is read here and never passed on as it is: an answer that isn't JSON would otherwise
   // carry a piece of Home Assistant's own text into the error the page shows.
   try { return await res.json(); } catch { throw new Error("Home Assistant gave an answer Ledger couldn't read. Try again."); }
@@ -91,7 +91,7 @@ export async function haCalendarEvents(entity, from, to) {
   if (!haOffered()) throw new Error("This copy of Ledger isn't running inside Home Assistant.");
   if (!CALENDAR.test(String(entity))) throw new Error("Choose one of your Home Assistant calendars.");
   let out;
-  try { out = await call('GET', `/calendars/${entity}?start=${encodeURIComponent(from.toISOString())}&end=${encodeURIComponent(to.toISOString())}`); } catch (e) {
+  try { out = await call('GET', `/calendars/${entity}?start=${encodeURIComponent(from.toISOString())}&end=${encodeURIComponent(to.toISOString())}`, undefined, 'Check that the calendar still exists there, and choose it again.'); } catch (e) {
     throw e?.name === 'TimeoutError' || e instanceof TypeError ? new Error("Ledger couldn't reach Home Assistant.") : e;
   }
   return Array.isArray(out) ? out.slice(0, 5000) : [];

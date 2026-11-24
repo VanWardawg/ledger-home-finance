@@ -42,6 +42,11 @@ only if you choose them: that AI Task, and reading one of your Home Assistant ca
 by booked sessions (Settings, "Side gig"). It lists your AI Tasks and calendars, asks the AI Task, and
 reads the calendar you picked. It changes nothing in Home Assistant.
 
+## If it ever stops
+
+On the add-on's Info tab, switch on **Watchdog**. Home Assistant then starts Ledger again by itself if it
+stops answering. It is off until you switch it on.
+
 ## Using it outside the sidebar
 
 To add Ledger to a phone's home screen or post purchases to it from a Shortcut, give it a port under
