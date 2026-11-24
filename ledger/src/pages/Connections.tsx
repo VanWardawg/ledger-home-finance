@@ -1707,6 +1707,11 @@ export default function Connections({ onChanged }: { onChanged: () => void }) {
             <p className="sub" style={{ marginTop: 14 }}>Add a Ledger password as a spare key. It is your way back in if the sign-in at the web address ever can't be confirmed, and it lets you give each adult a sign-in of their own:</p>
             <PasswordForm mode="setup" onDone={refresh} />
           </>
+        ) : auth.ingress ? (
+          <>
+            <p className="sub first">Home Assistant signs you in, so Ledger needs no password of its own here. Add one only if you also want to open Ledger outside Home Assistant, at its own address: that address stays closed until a password is set.</p>
+            <PasswordForm mode="setup" onDone={refresh} />
+          </>
         ) : auth.thisMac ? (
           <>
             <p className="sub first">

@@ -122,7 +122,7 @@ export function installAuth(app) {
     // On a family copy behind Cloudflare: who Cloudflare says this is, and whether that alone signs them in here.
     const offered = setupCode() !== '' && accessConfigured();
     const who = offered ? await accessIdentity(req) : null;
-    res.json({ passwordSet: passwordSet(), signedIn: awaitingSetupCode() ? false : !claimed() || signedIn(req),
+    res.json({ ingress: viaIngress(req), passwordSet: passwordSet(), signedIn: awaitingSetupCode() ? false : !claimed() || signedIn(req),
       access: offered ? { email: who?.email || null, login: accessLogin() } : null, needsSetupCode: awaitingSetupCode(), setupDone: getSetting('setup_done', '1') !== '0', thisMac: isThisMac(req), passkeyOrigins: passkeyOrigins(),
       // The look a device starts with before anyone chooses one in Settings: plain Onyx on a family copy
       // (The owner's choice, 2026-11-18), the holiday scenes on his own. Family copies are the ones with a setup code.

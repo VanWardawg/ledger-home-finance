@@ -1093,11 +1093,15 @@ installLogoFinder(app);
 // ---- Bank connection (SimpleFIN) --------------------------------------------
 
 const ACCOUNT_TYPES = ['checking', 'savings', 'credit', 'investment', 'hsa', 'auto', 'mortgage', 'loan', 'insurance'];
-app.get('/api/simplefin', (_req, res) => res.json({ ...simplefin.status(), passwordSet: passwordSet(), networkOpen: HOST !== '127.0.0.1' }));
+// Whether anyone on the network could open this copy with no password. As a Home Assistant add-on nobody
+// can: Home Assistant signs people in, and any other address is refused until a Ledger password is set
+// (server/auth.js). So no password is asked for there before the bank connection and the rest of Settings.
+const openToNetwork = () => HOST !== '127.0.0.1' && process.env.LEDGER_INGRESS !== '1';
+app.get('/api/simplefin', (_req, res) => res.json({ ...simplefin.status(), passwordSet: passwordSet(), networkOpen: openToNetwork() }));
 
 app.post('/api/simplefin/connect', async (req, res) => {
   // Real bank data shouldn't sit on an app anyone on the Wi-Fi can open.
-  if (!passwordSet() && HOST !== '127.0.0.1') return res.status(400).json({ error: 'Set a password first, since other devices on your network can open this app.' });
+  if (!passwordSet() && openToNetwork()) return res.status(400).json({ error: 'Set a password first, since other devices on your network can open this app.' });
   try {
     await simplefin.connect(req.body?.token);
     res.json({ ok: true, result: await simplefin.sync() });
