@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.11
+
+- With no debts recorded, the recap no longer mentions a debt-free date or a mortgage.
+- The basic CFO sees the Cash account in the same list as your other accounts.
+
 ## 0.1.10
 
 - The basic CFO now sees your Cash account as well, so what it says agrees with the Accounts page.

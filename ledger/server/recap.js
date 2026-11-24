@@ -71,10 +71,15 @@ export function buildFacts(month, { summaryFor, debtPlan, taxEstimate }) {
   if (s.isCurrent) {
     const d = debtPlan();
     const order = d.debts.filter((x) => x.status === 'ok' && x.order).sort((a, b) => a.order - b.order);
-    facts.debt = {
+    // A household with no debts is told so in as many words, with no payoff date and no mention of a
+    // mortgage: given "debt free except mortgage: this month" for an empty copy, the recap spoke of a
+    // mortgage that didn't exist (found by the NAS session on the add-on, 2026-11-24).
+    const owing = d.debts.filter((x) => x.balance > 0);
+    const mortgage = owing.some((x) => x.type === 'mortgage');
+    facts.debt = !owing.length ? { none: 'This household has no debts recorded in Ledger. Say nothing about debt or payoff dates.' } : {
       total_owed: d.totals.balance, monthly_excess_available: d.excess.amount, typical_monthly_income: d.excess.income,
       next_to_pay_off: order[0] ? { name: order[0].name, balance: order[0].balance, rate: order[0].apr } : null,
-      debt_free_except_mortgage: d.totals.debtFreeMonths != null ? monthsAhead(d.totals.debtFreeMonths) : null,
+      [mortgage ? 'debt_free_except_mortgage' : 'debt_free']: d.totals.debtFreeMonths != null && order.length ? monthsAhead(d.totals.debtFreeMonths) : null,
       debts_missing_details: d.debts.filter((x) => x.status === 'missing').map((x) => x.name),
     };
     // Changes and pressure points that totals alone don't show.

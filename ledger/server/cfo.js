@@ -477,7 +477,12 @@ async function askPlain(convo, question, deps) {
     try { facts[label] = runTool(tool, {}, deps, convo); } catch { /* that part is left out */ }
   }
   // The full CFO's account list leaves cash out; here it is given too, so the answer agrees with the Accounts page.
-  try { facts.cash_kept_by_hand = db.prepare("SELECT name, balance FROM accounts WHERE type = 'cash' ORDER BY name").all(); } catch { /* left out */ }
+  // (As one list, so it never reads as "no accounts" beside a cash balance.)
+  try {
+    const cash = db.prepare("SELECT name, institution, type, balance FROM accounts WHERE type = 'cash' ORDER BY name").all();
+    const listed = Array.isArray(facts.accounts) ? facts.accounts : Array.isArray(facts.accounts?.accounts) ? facts.accounts.accounts : null;
+    if (listed) listed.push(...cash.map((r) => ({ name: r.name, held_at: 'kept by hand', type: 'cash', balance: r.balance }))); else facts.cash_kept_by_hand = cash;
+  } catch { /* left out */ }
   convo.plain = convo.plain || [];
   const earlier = convo.plain.slice(-4).map((t) => `They asked: ${t.q}\nYou answered: ${t.a}`).join('\n\n');
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
