@@ -1172,6 +1172,9 @@ if (process.env.NODE_ENV === 'production') {
   // its scripts and styles have the build in their names and can be kept.
   const fresh = (res) => res.setHeader('Cache-Control', 'no-cache');
   app.use(express.static(path.join(root, 'dist'), { setHeaders: (res, file) => { if (file.endsWith('.html')) fresh(res); } }));
+  // An address under /api that no route answers is a mistake, not a page: say so, so a wrong call in the
+  // page shows up as an error and is not handed the app's front page (found by the NAS session's add-on test).
+  app.use('/api', (_req, res) => res.status(404).json({ error: "Ledger has nothing at that address." }));
   app.use((_req, res) => { fresh(res); res.sendFile(page); });
 } else {
   const { createServer } = await import('vite');
