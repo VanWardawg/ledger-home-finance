@@ -13,8 +13,9 @@ services:
     ports:
       - "4317:4317"
     environment:
-      # Dates and "today" follow Arkansas time, not the container's default.
-      TZ: America/Chicago
+      # Your time zone, so "today", paydays and the email's hour are right. The default here is US Central;
+      # set TZ in a .env file beside this one (for example TZ=Europe/London) to use yours.
+      TZ: ${TZ:-America/Chicago}
     volumes:
       # Your finances: one SQLite database on the NAS's own disk.
       - ./data:/data

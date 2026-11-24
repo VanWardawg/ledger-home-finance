@@ -28,7 +28,7 @@ type Stop = {
   clip?: string;          // a short silent film of the thing being done, offered as "Watch it" in the card (files in public/tour)
 };
 
-const STOPS: Stop[] = [
+const ALL_STOPS: Stop[] = [
   { title: 'A quick look around', text: "This takes about two minutes and shows where everything is. It only points things out: nothing you press during the tour changes anything. You can leave at any point, and take it again from About." },
   { at: '.sidebar', atPhone: '.pmenu-btn', title: 'The menu', text: 'Every page is one click away here. The tour visits each of them in turn.', phoneText: 'Menu opens every page, with Ask your CFO in the middle. The tour visits each of them in turn.' },
   { page: 'dashboard', at: '.strip, .page-title', title: 'Dashboard', text: "Your home page: what's left before payday, what's in checking, and how spending is going against your budgets. It fills in as your money comes in." },
@@ -109,6 +109,11 @@ export default function Tour() {
   const card = useRef<HTMLDivElement>(null);
   // Whether this copy's AI is switched on, asked when the tour opens (the CFO stop is worded to match).
   const [ai, setAi] = useState(true);
+  // Inside Home Assistant the stop about putting Ledger on a phone's home screen is left out: there it is
+  // opened from the Home Assistant app.
+  const [inHa, setInHa] = useState(false);
+  useEffect(() => { fetch('/api/auth/status').then((r) => (r.ok ? r.json() : null)).then((d) => { if (d?.ingress) setInHa(true); }).catch(() => {}); }, []);
+  const STOPS = inHa ? ALL_STOPS.filter((s) => s.clip !== 'home') : ALL_STOPS;
   // The stop's short film, when it has one and "Watch it" was pressed. Put away on moving to another stop.
   const [clip, setClip] = useState(false);
   useEffect(() => { setClip(false); }, [n]);

@@ -117,6 +117,11 @@ export function checkingEstimate() {
   // Every checking account is kept by hand (no bank connection): there is no bank figure, pending total or waiting.
   const byHand = accounts.length > 0 && accounts.every((a) => a.manual);
   const ids = accounts.map((a) => a.id).join(',') || 0;
+  // Days are worked out here, by the app's own clock (which follows TZ), and handed to the database as text.
+  // The database's 'localtime' is plain UTC inside the container, which carries no time zone files, so after
+  // six in the evening Central it would already be on tomorrow (found 2026-11-24).
+  const since = addDays(iso(new Date()), -WAITING_DAYS);
+  const fileFrom = accounts.filter((a) => !a.manual && a.balance_at).map((a) => `(t.account_id = ${Number(a.id)} AND t.date >= '${iso(new Date(a.balance_at))}')`).join(' OR ') || '0';
   const posted = round(accounts.reduce((a, x) => a + x.balance, 0));
   const available = round(accounts.reduce((a, x) => a + (x.available ?? x.balance), 0));
   const bankPending = round(posted - available);
@@ -124,7 +129,7 @@ export function checkingEstimate() {
   // entered (a transfer from savings) is in neither figure, so it is added on its own.
   const w = db.prepare(`SELECT COALESCE(-SUM(CASE WHEN amount < 0 THEN amount END), 0) total, COALESCE(SUM(CASE WHEN amount > 0 THEN amount END), 0) incoming,
       COUNT(CASE WHEN amount < 0 THEN 1 END) n, COUNT(CASE WHEN amount > 0 THEN 1 END) nIn FROM transactions
-    WHERE waiting = 1 AND account_id IN (${ids}) AND date >= date('now', 'localtime', '-${WAITING_DAYS} days')`).get();
+    WHERE waiting = 1 AND account_id IN (${ids}) AND date >= '${since}'`).get();
   // Rows brought in from the bank's own export file since its last reading, which the connection hasn't
   // delivered yet (2026-11-24): the bank's posted balance is from before them, so they stand beside the
   // waiting entries as things Ledger knows about and the bank's figures here don't. Like those, they overlap
@@ -132,9 +137,8 @@ export function checkingEstimate() {
   // They drop out by themselves when the connection delivers them and brings a newer balance.
   const f = db.prepare(`SELECT COALESCE(-SUM(CASE WHEN t.amount < 0 THEN t.amount END), 0) out, COALESCE(SUM(CASE WHEN t.amount > 0 THEN t.amount END), 0) money_in, COUNT(*) n
     FROM transactions t JOIN accounts a ON a.id = t.account_id
-    WHERE t.account_id IN (${ids}) AND a.manual = 0 AND a.balance_at IS NOT NULL AND t.waiting = 0 AND t.pending = 0
-      AND (t.sfin_id LIKE 'csv:%' OR t.split_of IN (SELECT id FROM transactions WHERE sfin_id LIKE 'csv:%'))
-      AND t.date >= date(a.balance_at / 1000, 'unixepoch', 'localtime')`).get();
+    WHERE t.waiting = 0 AND t.pending = 0 AND (${fileFrom})
+      AND (t.sfin_id LIKE 'csv:%' OR t.split_of IN (SELECT id FROM transactions WHERE sfin_id LIKE 'csv:%'))`).get();
   const fileOut = round(f.out), fileIn = round(f.money_in);
   const waiting = round(w.total), incoming = round(w.incoming + fileIn);
   // The bank's pending total is net: a transfer in that the bank is already processing
@@ -142,7 +146,7 @@ export function checkingEstimate() {
   // transfer came from. Those transfers are put back, so the bank's figure is its
   // pending money out alone and the transfer isn't counted once there and again below.
   const seen = db.prepare(`SELECT a.balance - a.available hold, COALESCE((SELECT -SUM(t.amount) FROM transactions t
-      WHERE t.account_id = a.id AND t.waiting = 1 AND t.amount < 0 AND t.date >= date('now', 'localtime', '-${WAITING_DAYS} days')), 0) sent
+      WHERE t.account_id = a.id AND t.waiting = 1 AND t.amount < 0 AND t.date >= '${since}'), 0) sent
     FROM accounts a WHERE a.type = 'savings' AND a.available IS NOT NULL AND a.balance - a.available > 0.005`).all();
   const transfersSeen = round(Math.min(incoming, seen.reduce((a, x) => a + Math.min(x.hold, x.sent), 0)));
   const bankOut = round(bankPending + transfersSeen);

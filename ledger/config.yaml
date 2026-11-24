@@ -1,6 +1,6 @@
 # Ledger as a Home Assistant add-on. Home Assistant builds it on your own machine from this folder.
 name: Ledger
-version: "0.1.1"
+version: "0.1.2"
 slug: ledger
 description: A private household budget, bills, debt and tax-estimate app that keeps its data on your own machine
 url: "https://github.com/moeckjeremy/ledger-home-finance"
@@ -22,4 +22,5 @@ environment:
   LEDGER_INGRESS: "1"
   LEDGER_FRESH: "1"
 # The database lives in the add-on's own /data folder and is part of Home Assistant's backups.
-backup: hot
+# Cold: Home Assistant stops Ledger for the few seconds a backup takes, so the database is copied whole.
+backup: cold

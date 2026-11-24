@@ -1821,7 +1821,7 @@ export default function Connections({ onChanged }: { onChanged: () => void }) {
 
       {needsPassword ? null : <h3 className="group-title">Extras</h3>}
       {/* Not on a family copy: a phone's report can't pass the Cloudflare sign-in in front of its address. */}
-      {needsPassword || auth.canErase ? null : <Fold id="applepay" title="Apple Pay purchases" note="An iPhone reports each purchase as you pay, including Apple Card"><ApplePay /></Fold>}
+      {needsPassword || auth.canErase || auth.ingress ? null : <Fold id="applepay" title="Apple Pay purchases" note="An iPhone reports each purchase as you pay, including Apple Card"><ApplePay /></Fold>}
       {needsPassword ? null : <Fold id="allowance" title="Allowances" note="A notebook of what you hold for each child"><AllowanceSwitch /></Fold>}
       {needsPassword ? null : <Fold id="email" title="Summary email" note="A short summary sent on the days you choose"><WeeklyEmail /></Fold>}
       {needsPassword ? null : <Fold id="alerts" title="Alerts" note="Emails when checking runs low, a bill is due or a budget tips over, and the pay stub reminder"><Alerts /></Fold>}
