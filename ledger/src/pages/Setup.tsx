@@ -114,10 +114,10 @@ function Accounts() {
             This uses SimpleFIN Bridge, a separate service that costs $1.50 a month or $15 a year, paid to them. Your bank passwords are entered on their site and never reach Ledger.
             It is optional. <b>Good to know:</b> SimpleFIN visits each bank about once a day, so balances and purchases can be up to 24 hours behind your bank's own app.
           </p>
-          <p className="sub">Create an account there, connect your banks, then make a setup token for a new app and paste it here.</p>
+          <p className="sub">Create an account there, connect your banks, then make a setup token for a new app, copy it, and paste it into the box below marked "SimpleFIN setup token". You can also do this later in Settings, "Bank connection (SimpleFIN)".</p>
           <p><a className="button-link" href="https://bridge.simplefin.org/" target="_blank" rel="noreferrer">Open SimpleFIN in a new tab</a></p>
           <form onSubmit={connect} noValidate className="token-form">
-            <label className="field grow"><span>Setup token</span><input type="text" value={token} autoComplete="off" placeholder="Paste the token from SimpleFIN" onChange={(e) => { setToken(e.target.value); setErr(''); }} /></label>
+            <label className="field grow"><span>SimpleFIN setup token</span><input type="text" value={token} autoComplete="off" placeholder="Paste the long token from SimpleFIN here" onChange={(e) => { setToken(e.target.value); setErr(''); }} /></label>
             <button type="submit" className="primary" disabled={!!busy}>Connect</button>
           </form>
         </>

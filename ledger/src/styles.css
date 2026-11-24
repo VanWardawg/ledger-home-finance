@@ -250,6 +250,9 @@ button.link:focus-visible { outline: 2px solid var(--accent); outline-offset: 1p
 .signin .brand { padding: 0 0 6px; }
 .pw-form, .token-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: end; margin: 12px 0 8px; }
 .pw-form .error, .token-form .error { grid-column: 1 / -1; margin: 0; }
+/* The SimpleFIN token is long: its box takes the full width and Connect sits beneath it, so the box can't be missed. */
+.token-form { grid-template-columns: minmax(0, 1fr); }
+.token-form > button { justify-self: start; min-width: 160px; }
 .stack.narrow { max-width: 820px; }
 .card > .sub.first, .sub.first { margin: 0 0 4px; }
 .topbar-right { display: flex; align-items: center; gap: 8px; }

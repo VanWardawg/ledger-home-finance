@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.20
+
+- Settings, "Bank connection" is now "Bank connection (SimpleFIN)", with numbered steps and a full-width box plainly marked "SimpleFIN setup token".
+
 ## 0.1.19
 
 - Sensors: the page and these notes now say plainly that a sensor you switch on can be read by every Home Assistant login, not only administrators.

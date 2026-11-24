@@ -1832,28 +1832,34 @@ export default function Connections({ onChanged }: { onChanged: () => void }) {
       </div>
 
       <h3 className="group-title">Banks and accounts</h3>
-      <Fold id="bank" title="Bank connection" note={s.connected ? 'Connected' : 'Not connected yet'} startOpen={!s.connected}>
+      <Fold id="bank" title="Bank connection (SimpleFIN)" note={s.connected ? 'Connected' : 'Not connected yet: your SimpleFIN setup token goes here'} startOpen={!s.connected}>
       <section className="card">
-        <div className="card-head"><h2>Bank connection</h2>{s.connected && <span className="good">Connected</span>}</div>
+        <div className="card-head"><h2>Bank connection (SimpleFIN)</h2>{s.connected && <span className="good">Connected</span>}</div>
         {!s.connected ? (
           <>
             <p className="sub first">
               Ledger reads your banks through SimpleFIN Bridge, a separate service that costs $1.50 a month or $15 a year, paid to them. Your bank passwords are entered on their site and never reach Ledger.
               It is optional: without it you can still add purchases yourself or import files from your bank.
-              Create an account there, connect your banks, then make a setup token for a new app and paste it here. The token works once.
               {s.sampleData ? ' Your first sync replaces the sample data with your real accounts; your categories, budgets, and tax settings stay.' : ''}
             </p>
+            <div className="key-guide">
+              <ol>
+                <li><b>Open SimpleFIN and make an account.</b> <a className="button" href="https://bridge.simplefin.org/" target="_blank" rel="noreferrer">Open SimpleFIN in a new tab</a></li>
+                <li><b>Connect your banks there.</b> You sign in to each bank on SimpleFIN's site, not here.</li>
+                <li><b>Still in SimpleFIN, make a setup token</b> for a new app, and copy it. It is one long line of letters and numbers, and it works once.</li>
+                <li><b>Come back here and paste it into the box below</b>, marked "SimpleFIN setup token", then press Connect.</li>
+              </ol>
+            </div>
             <p className="sub">
               <b>Good to know before you sign up:</b> SimpleFIN visits each bank about once a day, so balances and new purchases can be up to 24 hours behind your bank's own app.
               Ledger shows when the bank's figures were last updated, and anything you add yourself counts straight away.
             </p>
-            <p><a className="button-link" href="https://bridge.simplefin.org/" target="_blank" rel="noreferrer">Open SimpleFIN in a new tab</a></p>
             {needsPassword ? (
-              <p className="advice">Set a password in the box above first. The place to paste your token appears here once you have.</p>
+              <p className="advice">Set a password in the box above first. The box for your SimpleFIN setup token appears here once you have.</p>
             ) : (
               <form onSubmit={connect} noValidate className="token-form">
-                <label className="field"><span>Setup token</span>
-                  <input type="text" value={token} autoComplete="off" spellCheck={false} placeholder="Paste the token from SimpleFIN" disabled={!!busy} onChange={(e) => { setToken(e.target.value); setErr(''); }} />
+                <label className="field"><span>SimpleFIN setup token</span>
+                  <input type="text" value={token} autoComplete="off" spellCheck={false} placeholder="Paste the long token from SimpleFIN here" disabled={!!busy} onChange={(e) => { setToken(e.target.value); setErr(''); }} />
                 </label>
                 <button type="submit" className="primary" disabled={!!busy}>Connect</button>
               </form>
