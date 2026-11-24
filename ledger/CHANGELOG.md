@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.16
+
+- The first Ledger password can only be set from inside Home Assistant. A port you open yourself can never be used to claim the copy.
+
 ## 0.1.15
 
 - Setup guide, first step: on a computer the Save button lines up with its boxes, and the closing sentence reads correctly.

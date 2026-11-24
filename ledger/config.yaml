@@ -1,6 +1,6 @@
 # Ledger as a Home Assistant add-on. Home Assistant builds it on your own machine from this folder.
 name: Ledger
-version: "0.1.15"
+version: "0.1.16"
 slug: ledger
 description: A private household budget, bills, debt and tax-estimate app that keeps its data on your own machine
 url: "https://github.com/moeckjeremy/ledger-home-finance"

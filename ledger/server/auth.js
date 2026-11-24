@@ -152,7 +152,11 @@ export function installAuth(app) {
     if (awaitingSetupCode()) {
       if (tooManyFailures(req)) return res.status(429).json({ error: 'Too many wrong tries. Wait 15 minutes and try again.' });
       if (!sameText(String(req.body?.code || '').trim(), setupCode())) { noteFailure(req); return res.status(401).json({ error: "That setup code isn't right. It's the one you were given with the link." }); }
-    } else if (!isThisMac(req) && !viaIngress(req)) return res.status(403).json({ error: 'Set the password from the Mac that runs Ledger.' });
+    } else if (INGRESS) {
+      // As an add-on, the first password is set from inside Home Assistant and nowhere else: "this machine"
+      // means nothing useful inside a container, and an opened port must never be a way to claim the copy.
+      if (!viaIngress(req)) return res.status(403).json({ error: 'Set the password from Ledger inside Home Assistant: Settings, Password.' });
+    } else if (!isThisMac(req)) return res.status(403).json({ error: 'Set the password from the Mac that runs Ledger.' });
     const password = String(req.body?.password || '');
     if (password.length < 8) return res.status(400).json({ error: 'Use at least 8 characters.' });
     setPassword(password);
