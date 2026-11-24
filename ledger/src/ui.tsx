@@ -398,7 +398,7 @@ export const isPhone = () => typeof matchMedia === 'function' && matchMedia('(ma
  * A titled section that shows only its title until opened; which ones are open is remembered on the
  * device (localStorage `ledger-folds`). Settings is built from these, and on a phone so is Taxes.
  */
-export function Fold({ id, title, note, startOpen = false, plain = false, children }: { id: string; title: string; note?: string; startOpen?: boolean; plain?: boolean; children: React.ReactNode }) {
+export function Fold({ id, title, note, startOpen = false, plain = false, children }: { id: string; title: React.ReactNode; note?: string; startOpen?: boolean; plain?: boolean; children: React.ReactNode }) {
   const [open, setOpen] = useState(() => {
     try { const saved = JSON.parse(localStorage.getItem('ledger-folds') || '{}'); return id in saved ? !!saved[id] : startOpen; } catch { return startOpen; }
   });

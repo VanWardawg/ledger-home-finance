@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.22
+
+- The bank section in Settings is now "SimpleFIN Sync", with SimpleFIN's logo beside it.
+
 ## 0.1.21
 
 - On a phone, the "filed under Other" card on Transactions no longer squeezes its words into a narrow strip.

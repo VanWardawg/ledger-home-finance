@@ -1833,9 +1833,9 @@ export default function Connections({ onChanged }: { onChanged: () => void }) {
       </div>
 
       <h3 className="group-title">Banks and accounts</h3>
-      <Fold id="bank" title="Bank connection (SimpleFIN)" note={s.connected ? 'Connected' : 'Not connected yet: your SimpleFIN setup token goes here'} startOpen={!s.connected}>
+      <Fold id="bank" title={<span className="sf-title"><img src={at('/logos/simplefin.png')} alt="" />SimpleFIN Sync</span>} note={s.connected ? 'Your banks are connected' : 'For your banks. Paste your setup token here'} startOpen={!s.connected}>
       <section className="card">
-        <div className="card-head"><h2>Bank connection (SimpleFIN)</h2>{s.connected && <span className="good">Connected</span>}</div>
+        <div className="card-head"><h2 className="sf-title"><img src={at('/logos/simplefin.png')} alt="" />SimpleFIN Sync</h2>{s.connected && <span className="good">Connected</span>}</div>
         {!s.connected ? (
           <>
             <p className="sub first">
