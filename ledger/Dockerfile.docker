@@ -1,0 +1,23 @@
+# Ledger, packaged to run on the NAS.
+# Stage 1 builds the web pages; stage 2 is the small image that actually runs.
+FROM node:24-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY index.html vite.config.ts tsconfig.json ./
+COPY public ./public
+COPY src ./src
+RUN npm run build
+
+FROM node:24-alpine
+WORKDIR /app
+ENV NODE_ENV=production HOST=0.0.0.0 PORT=4317 LEDGER_DATA_DIR=/data
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev && npm cache clean --force
+COPY server ./server
+COPY --from=build /app/dist ./dist
+# The database lives in /data, which compose.yaml maps to a folder on the NAS.
+VOLUME /data
+EXPOSE 4317
+USER node
+CMD ["node", "server/index.js"]

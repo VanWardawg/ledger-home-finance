@@ -1,0 +1,20 @@
+# Runs Ledger on the NAS. From this folder on the NAS:
+#   docker compose up -d --build
+services:
+  ledger:
+    build:
+      context: .
+      dockerfile: Dockerfile.docker
+    container_name: ledger
+    restart: unless-stopped
+    labels:
+      # Built from local source, so there is nothing for Watchtower to pull.
+      com.centurylinklabs.watchtower.enable: "false"
+    ports:
+      - "4317:4317"
+    environment:
+      # Dates and "today" follow Arkansas time, not the container's default.
+      TZ: America/Chicago
+    volumes:
+      # Your finances: one SQLite database on the NAS's own disk.
+      - ./data:/data

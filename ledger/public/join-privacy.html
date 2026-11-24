@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Ledger: privacy</title>
+<!-- Ledger's privacy statement (served at /privacy by server/join.js). Added 2026-11-18 with
+     join-about.html, because Google asks every published sign-in app for both. It must stay true:
+     when what Ledger keeps or sends changes, change it here and in About's privacy topic in the app. -->
+<style>
+  :root { color-scheme: dark; --ink: #f2f2f5; --ink2: rgba(242, 242, 245, 0.74); --line: rgba(255, 255, 255, 0.14); --accent: #4a93ea; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body { font: clamp(17px, 1.15vw, 22px)/1.55 -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif; color: var(--ink); background: radial-gradient(60em 40em at 18% 8%, rgba(74, 147, 234, 0.16), transparent 60%), #0e0f13; }
+  main { min-height: 100dvh; display: flex; align-items: flex-start; justify-content: center; padding: 2.4em 16px 3em; }
+  .card { width: 100%; max-width: 40em; padding: 1.9em 2.1em 2.1em; border-radius: 1.5em; border: 1px solid var(--line); background: rgba(23, 25, 31, 0.66); -webkit-backdrop-filter: blur(22px) saturate(1.2); backdrop-filter: blur(22px) saturate(1.2); }
+  h1 { font-family: 'New York', 'Iowan Old Style', Georgia, serif; font-size: 2.1em; line-height: 1.12; margin: 0 0 0.5em; letter-spacing: -0.01em; }
+  h2 { font-family: 'New York', 'Iowan Old Style', Georgia, serif; font-size: 1.25em; margin: 1.5em 0 0.4em; }
+  p, li { color: var(--ink2); }
+  p { margin: 0 0 0.9em; }
+  ul { margin: 0 0 0.9em; padding-left: 1.2em; }
+  li { margin-bottom: 0.35em; }
+  a { color: var(--accent); }
+  .foot { margin-top: 1.8em; padding-top: 1em; border-top: 1px solid var(--line); font-size: 0.88em; }
+  .wordmark { display: block; height: 4.6em; width: auto; overflow: visible; color: var(--ink); margin: 0 0 1em -0.5em; }
+  .wordmark .bar { fill: #4a93ea; }
+  .wordmark .ell, .wordmark .ink { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+  .wordmark .ell { stroke-width: 11; } .wordmark .ink { stroke-width: 4.6; }
+</style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <svg class="wordmark" viewBox="0 0 216 100" role="img" aria-label="Ledger">
+      <rect class="bar" x="10" y="52" width="11" height="26" rx="5.5" />
+      <rect class="bar" x="29" y="36" width="11" height="42" rx="5.5" />
+      <path class="ell" d="M53.5 72.5V14" />
+      <path class="ell" d="M53.5 72.5H206" />
+      <path class="ink" d="M66 52H86A10 10 0 1 0 83.1 59.1" />
+      <path class="ink" d="M113 52a10 10 0 1 0-20 0a10 10 0 1 0 20 0M113 24V62" />
+      <path class="ink" d="M143 52a10 10 0 1 0-20 0a10 10 0 1 0 20 0M143 42V80A10 10 0 0 1 125 88" />
+      <path class="ink" d="M152 52H172A10 10 0 1 0 169.1 59.1" />
+      <path class="ink" d="M181 42V62M181 52A10 10 0 0 1 197.5 44.5" />
+    </svg>
+    <h1>Privacy</h1>
+    <p>Ledger is a private finance app that one family runs on a computer in their home and shares by invitation. This page says what information it handles and what happens to it. Last changed November 18, 2026.</p>
+
+    <h2>If you ask for a copy</h2>
+    <p>The request page asks for your name and email address. They are kept so the person who invited you can recognise you, approve or decline the request, and send you your link. They are not used for anything else. The page also uses a check from Cloudflare that a person, not a program, is filling it in; that check looks at your browser, not at what you type.</p>
+
+    <h2>Signing in with Google or an emailed code</h2>
+    <p>Each household's copy sits behind a sign-in check run by Cloudflare. You can pass it with a code emailed to you or with your Google account.</p>
+    <ul>
+      <li>If you choose Google, Google tells Cloudflare your email address and basic profile (your name and picture) so it can confirm who you are.</li>
+      <li>The only thing checked is whether your email address is on the list of people invited to that copy.</li>
+      <li>Ledger does not receive your Google password, and it does not read your Gmail, contacts, calendar, files or anything else in your Google account. It asks Google for nothing beyond your identity.</li>
+      <li>Your Google information is not sold, not shared with anyone else, not used for advertising, and not used to train AI.</li>
+    </ul>
+
+    <h2>What you put in your copy</h2>
+    <ul>
+      <li>Your accounts, transactions, budgets, bills, goals, any allowances you record for your children (their first names and the amounts), investment holdings, tax figures, any receipt pictures you choose to keep and, only if you switch that on, the tax documents you add (which can carry Social Security and account numbers) are stored in your household's own database on the home server of the person who invited you. It is separate from every other household's.</li>
+      <li>That person looks after the server and its backups. They can see when your copy was last used, whether setup was finished, whether a bank is connected, how many devices are signed in, and what its AI features have cost. Ledger does not show them what is in it: not your balances, purchases, budgets or the questions you ask. As with any service, the person who runs the server could in principle open its files, so use a copy only if you trust them with that. Your copy also keeps the list of email addresses approved to open it.</li>
+      <li>If you set a Ledger password, it is stored only in scrambled form. Nobody can read it back. If you choose to open your copy with the sign-in check alone, Ledger confirms Cloudflare's signed note about who you are on each sign-in and keeps only your email address beside that device's sign-in. If you give another adult a sign-in of their own, their name is kept with it.</li>
+    </ul>
+
+    <h2>Services Ledger uses on your behalf</h2>
+    <ul>
+      <li><b>Bank connection (optional).</b> If you connect a bank, it goes through SimpleFIN Bridge, a separate service you sign up for yourself. Your bank password is typed on their site and never reaches Ledger. The connection is read-only.</li>
+      <li><b>AI features (optional).</b> The written recap, Ask your CFO and the readers for receipts, pay stubs and pay calendars send what each job needs to Claude, made by Anthropic: for example a month's figures, or the picture you chose. Anthropic states that information sent this way is not used to train its models. You can switch these features off.</li>
+      <li><b>Logos.</b> To show a shop's logo, Ledger looks up the shop's website name with Logo.dev, Google's icon service or DuckDuckGo's. Only the website name is sent, never a purchase or an amount.</li>
+      <li><b>Investment prices (optional, off unless you switch it on).</b> If you list investments and turn on price look-ups, Ledger asks Yahoo Finance for the price of each ticker symbol you hold. Only the symbols are sent, never how many shares you have, what they are worth, or who you are.</li>
+      <li><b>Email.</b> Messages such as your welcome email or a password reset code are sent from the inviting person's own email account.</li>
+    </ul>
+
+    <h2>What Ledger does not do</h2>
+    <ul>
+      <li>It has no advertising and no tracking or analytics from outside companies.</li>
+      <li>It does not sell or rent anyone's information.</li>
+      <li>It cannot move money. It only reads and records.</li>
+    </ul>
+
+    <h2>Keeping, correcting and deleting</h2>
+    <p>You can download every transaction from Settings in your copy at any time. You can delete your copy and everything in it yourself, at any time, from Settings in your copy ("Delete everything"); the person who runs the server is told only that it is now empty. To have a request removed, ask the person who invited you. Backups of the server that include your copy age out within about a month.</p>
+
+    <h2>Children</h2>
+    <p>Ledger is for adults managing a household's money. It is not offered to children.</p>
+
+    <p class="foot"><a href="/about">What Ledger is</a>. Questions about your information go to the person who invited you; they run the server it is kept on.</p>
+  </div>
+</main>
+</body>
+</html>

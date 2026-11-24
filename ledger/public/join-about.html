@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Ledger</title>
+<!-- What Ledger is, for anyone who lands here (served at /about by server/join.js). Added 2026-11-18:
+     Google asks every published sign-in app for a home page and a privacy page. Public, so it says
+     nothing about any household. Keep it in step with join-privacy.html. -->
+<style>
+  :root { color-scheme: dark; --ink: #f2f2f5; --ink2: rgba(242, 242, 245, 0.74); --line: rgba(255, 255, 255, 0.14); --accent: #4a93ea; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body { font: clamp(17px, 1.15vw, 22px)/1.55 -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif; color: var(--ink); background: radial-gradient(60em 40em at 18% 8%, rgba(74, 147, 234, 0.16), transparent 60%), #0e0f13; }
+  main { min-height: 100dvh; display: flex; align-items: flex-start; justify-content: center; padding: 2.4em 16px 3em; }
+  .card { width: 100%; max-width: 40em; padding: 1.9em 2.1em 2.1em; border-radius: 1.5em; border: 1px solid var(--line); background: rgba(23, 25, 31, 0.66); -webkit-backdrop-filter: blur(22px) saturate(1.2); backdrop-filter: blur(22px) saturate(1.2); }
+  h1 { font-family: 'New York', 'Iowan Old Style', Georgia, serif; font-size: 2.1em; line-height: 1.12; margin: 0 0 0.5em; letter-spacing: -0.01em; }
+  h2 { font-family: 'New York', 'Iowan Old Style', Georgia, serif; font-size: 1.25em; margin: 1.5em 0 0.4em; }
+  p, li { color: var(--ink2); }
+  p { margin: 0 0 0.9em; }
+  ul { margin: 0 0 0.9em; padding-left: 1.2em; }
+  li { margin-bottom: 0.35em; }
+  a { color: var(--accent); }
+  .foot { margin-top: 1.8em; padding-top: 1em; border-top: 1px solid var(--line); font-size: 0.88em; }
+  .wordmark { display: block; height: 4.6em; width: auto; overflow: visible; color: var(--ink); margin: 0 0 1em -0.5em; }
+  .wordmark .bar { fill: #4a93ea; }
+  .wordmark .ell, .wordmark .ink { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+  .wordmark .ell { stroke-width: 11; } .wordmark .ink { stroke-width: 4.6; }
+</style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <svg class="wordmark" viewBox="0 0 216 100" role="img" aria-label="Ledger">
+      <rect class="bar" x="10" y="52" width="11" height="26" rx="5.5" />
+      <rect class="bar" x="29" y="36" width="11" height="42" rx="5.5" />
+      <path class="ell" d="M53.5 72.5V14" />
+      <path class="ell" d="M53.5 72.5H206" />
+      <path class="ink" d="M66 52H86A10 10 0 1 0 83.1 59.1" />
+      <path class="ink" d="M113 52a10 10 0 1 0-20 0a10 10 0 1 0 20 0M113 24V62" />
+      <path class="ink" d="M143 52a10 10 0 1 0-20 0a10 10 0 1 0 20 0M143 42V80A10 10 0 0 1 125 88" />
+      <path class="ink" d="M152 52H172A10 10 0 1 0 169.1 59.1" />
+      <path class="ink" d="M181 42V62M181 52A10 10 0 0 1 197.5 44.5" />
+    </svg>
+    <h1>A private home for a household's money</h1>
+    <p>Ledger is a personal finance app. It shows a household where its money goes and what is coming: what is left before the next paycheck, the bills on their way, spending against a budget, savings goals, debts, and an estimate of the year's income tax.</p>
+    <p>It is not a company or a service you can sign up for. One family built it for themselves and shares it, by invitation, with relatives and friends. Each household that is invited gets its own separate copy, with its own password and its own data.</p>
+
+    <h2>What it does</h2>
+    <ul>
+      <li>Brings in purchases and deposits from a bank connection, a phone, a receipt photo, or by hand.</li>
+      <li>Forecasts the checking balance through the next paydays.</li>
+      <li>Tracks budgets, recurring bills, savings goals and a plan for paying off debts.</li>
+      <li>Estimates federal and state income tax for planning. It is not tax advice.</li>
+      <li>Answers questions about a household's own figures using Claude, an AI made by Anthropic.</li>
+    </ul>
+
+    <h2>Signing in</h2>
+    <p>An invited person's copy sits behind a sign-in check. They can confirm who they are with a code sent to their email address, or with their Google account. Either way, the only thing checked is that their email address is one that was invited. After that, each household chooses: that check alone opens their copy, or Ledger also asks for a password of its own, Face ID or a fingerprint.</p>
+
+    <h2>Asking for a copy</h2>
+    <p>If someone who uses Ledger has invited you, they will have sent you a link to the request page. Requests are only accepted while that person has the page open for you, and each one is approved by hand.</p>
+
+    <p class="foot">Read how Ledger handles information in the <a href="/privacy">privacy statement</a>. If you were invited and have a question, ask the person who invited you.</p>
+  </div>
+</main>
+</body>
+</html>
