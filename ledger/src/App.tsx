@@ -20,6 +20,7 @@ import Setup from './pages/Setup';
 import About from './pages/About';
 import Tour from './Tour';
 import { NewsNotice, allNewsSeen, useUnseenNews } from './News';
+import { UpdateNotice } from './UpdateNotice';
 
 const PAGES = [
   { id: 'dashboard', label: 'Dashboard', short: 'Dashboard', icon: 'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z' },
@@ -726,6 +727,7 @@ function Shell({ onAuthChanged }: { onAuthChanged: () => void }) {
         {page === 'dashboard' && <StubReminder r={stubs?.remind} />}
         {page === 'dashboard' && <StatementReminder due={stmts?.due} />}
         {page === 'dashboard' && <OwedNotice />}
+        {page === 'dashboard' && <UpdateNotice />}
         {page === 'dashboard' && <SignInTip />}
         {page === 'dashboard' && <NewsNotice mark={<Logo />} />}
         <header className="topbar">

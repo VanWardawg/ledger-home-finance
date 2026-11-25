@@ -91,6 +91,10 @@ jobs:
           push: true
           provenance: false
           tags: ${{ needs.check.outputs.image }}:${{ needs.check.outputs.version }}-${{ matrix.hass }}
+          # The plain image knows its own version and where it came from, so it can say when a newer one is out.
+          build-args: |
+            LEDGER_RELEASE=${{ needs.check.outputs.version }}
+            LEDGER_REPO=${{ github.repository }}
           labels: |
             org.opencontainers.image.version=${{ needs.check.outputs.version }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}

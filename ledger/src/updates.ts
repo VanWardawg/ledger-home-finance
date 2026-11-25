@@ -21,6 +21,9 @@ export const JUST_ADDED: [title: string, text: string, more?: { date: string; go
 ];
 
 export const UPDATES: [date: string, items: string[]][] = [
+  ['2026-11-25', [
+    'If you run Ledger yourself with Docker, it now tells you on the dashboard when a newer version is out, with what changed and the two lines that update it. It looks once a day and sends nothing about you; Settings, "Updates" switches it off.',
+  ]],
   ['2026-11-24', [
     'An account can be left out of the budget: on the Accounts page, "Leave out of the budget" keeps its balance in view but stops counting its spending. Made for personal "fun money" accounts and children\'s accounts.',
     'Ledger run with plain Docker and no time zone set now takes its time zone from the first browser that opens it, so purchases land on the right day.',

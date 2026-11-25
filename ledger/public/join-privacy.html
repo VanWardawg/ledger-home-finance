@@ -73,6 +73,7 @@
       <li><b>A booking calendar (optional).</b> If you tell Ledger a side job is paid by booked sessions and give it your calendar's private iCal address, Ledger reads that calendar every few hours to work out the pay to expect. It keeps the address, and the times and titles of the events it finds, in your household's database. It never changes the calendar and sends it nothing.</li>
       <li><b>Logos.</b> To show a shop's logo, Ledger looks up the shop's website name with Logo.dev, Google's icon service or DuckDuckGo's. Only the website name is sent, never a purchase or an amount.</li>
       <li><b>Investment prices (optional, off unless you switch it on).</b> If you list investments and turn on price look-ups, Ledger asks Yahoo Finance for the price of each ticker symbol you hold. Only the symbols are sent, never how many shares you have, what they are worth, or who you are.</li>
+      <li><b>Checking for a newer version (only where you run Ledger yourself with Docker).</b> Once a day such a copy reads the latest version number and the list of changes from Ledger's public project page on GitHub. Nothing about your household is sent; GitHub sees that computer's internet address, as it did when Ledger was installed. It can be switched off in Settings, "Updates". A copy someone hosts for you, or one inside Home Assistant, does not do this.</li>
       <li><b>Email.</b> Messages such as your welcome email or a password reset code are sent from the inviting person's own email account.</li>
     </ul>
 

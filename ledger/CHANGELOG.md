@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.27
+
+- Ledger run with plain Docker now says on the dashboard when a newer version is out, with what changed
+  and the two lines that update it. It looks at this project's page on GitHub once a day, sends nothing
+  about your household, and can be switched off in Settings, "Updates". Nothing changes inside Home
+  Assistant, which already offers updates itself.
+
 ## 0.1.26
 
 - An account can be left out of the budget (Accounts page, "Leave out of the budget"): its balance still

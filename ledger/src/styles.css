@@ -1740,6 +1740,14 @@ form.forgot { text-align: left; }
 
 /* Steps for making an Anthropic key of your own (Settings, AI recap), shown on a copy whose host doesn't supply AI. */
 .key-guide { display: grid; gap: 10px; }
+/* "A newer version is available": the pop-up's list of changes and the two lines to copy. */
+.update-notes { display: grid; gap: 8px; margin: 0 0 14px; }
+.update-notes h3, .update-steps + h3 { margin: 0; }
+.update-notes ul { margin: 2px 0 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14px; line-height: 1.45; }
+.update-steps { margin: 8px 0 12px; padding-left: 22px; display: grid; gap: 10px; line-height: 1.45; }
+.update-line { display: flex; align-items: center; gap: 10px; margin-top: 6px; padding: 9px 12px; border-radius: 10px; background: var(--field, rgba(127,127,127,.14)); }
+.update-line code { flex: 1 1 auto; min-width: 0; font: 12.5px/1.45 ui-monospace, "SF Mono", Menlo, Consolas, monospace; overflow-wrap: anywhere; user-select: all; }
+.update-line .button-link { flex: none; }
 .key-guide ol { margin: 0; padding-left: 22px; display: grid; gap: 10px; font-size: 14px; line-height: 1.45; }
 .mail-guide { margin: 4px 0 14px; }
 .mail-guide small { color: var(--ink2); }

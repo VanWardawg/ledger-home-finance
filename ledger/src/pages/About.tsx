@@ -366,6 +366,7 @@ export default function About() {
         <p><b>Who pays for the AI.</b> On most copies the person who set Ledger up for you includes it, up to a small amount each month. If yours doesn't, or you'd like no monthly limit, you can add your own Anthropic key: Settings, "AI recap and logos" lists the steps, and Ledger checks the key before saving it. You then pay Anthropic directly for what you use, usually well under a dollar a month for a household.</p>
         <p><b>Investment prices</b>, if you switch them on, are asked of Yahoo Finance by ticker symbol only: never your share counts or values.</p>
         <p><b>Company logos</b> are fetched by the company's web address only, never with anything about your purchases. <a href="https://logo.dev" target="_blank" rel="noreferrer">Logos provided by Logo.dev</a>.</p>
+        <p><b>Checking for a newer version.</b> If you run Ledger yourself with Docker, it looks at its public project page on GitHub once a day for a newer version, and tells you on the dashboard when there is one. Nothing about your household is sent. Settings, "Updates" switches it off. A copy hosted for you, or one inside Home Assistant, doesn't do this: those are updated another way.</p>
       </>,
       <>
         <p>The AI features have a monthly allowance. If it runs out they pause until the 1st of the next month; nothing else is affected.</p>

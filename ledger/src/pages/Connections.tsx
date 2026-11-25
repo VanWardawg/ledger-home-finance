@@ -1,4 +1,5 @@
 import { GigPay } from './GigPay';
+import { UpdateSettings } from '../UpdateNotice';
 import { useTaxes, setTaxes } from '../lib';
 import { AllowanceSwitch } from './Allowance';
 import { at } from '../base';
@@ -1839,6 +1840,7 @@ export default function Connections({ onChanged }: { onChanged: () => void }) {
   const gig = useGig();
   const { data: family } = useData('/api/family');
   const { data: repoStats } = useData<any>('/api/repo');
+  const { data: update } = useData<any>('/api/update');
   const [token, setToken] = useState('');
   const [busy, setBusy] = useState('');
   const [err, setErr] = useState('');
@@ -2025,6 +2027,7 @@ export default function Connections({ onChanged }: { onChanged: () => void }) {
           ) : null}
         </section>
       </Fold>}
+      {needsPassword || !update?.offered ? null : <Fold id="updates" title="Updates" note={!update.on ? 'Checking is switched off' : update.newer ? `Ledger ${update.latest} is available` : `Running Ledger ${update.current}`}><UpdateSettings /></Fold>}
       {needsPassword || !auth.canErase ? null : <Fold id="erase" title="Delete everything" note="Wipe your copy of Ledger for good"><EraseEverything hasPassword={!!auth.passwordSet} /></Fold>}
       {needsPassword ? null : <Fold id="paydays" title="Paydays" note="When each paycheck arrives and how much it is"><Paydays /></Fold>}
       {needsPassword ? null : <Fold id="gig" title="Side gig" note={gig.on ? `${gig.name}: income with no tax taken out` : 'Income with no tax taken out, such as tutoring or deliveries'}><SideGig /></Fold>}

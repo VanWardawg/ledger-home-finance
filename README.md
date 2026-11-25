@@ -43,7 +43,8 @@ connection or import replaces it. Your data is kept in the Docker volume `ledger
 On your own computer Ledger only works while the computer is on and awake: bank syncs, the summary
 email and alerts wait until it is.
 
-To update to a newer version:
+Ledger looks at this page once a day and says on its dashboard when a newer version is out (nothing about
+you is sent, and Settings, "Updates" switches it off). To update to a newer version:
 
 ```bash
 docker pull ghcr.io/moeckjeremy/ledger-home-finance:latest && docker rm -f ledger
