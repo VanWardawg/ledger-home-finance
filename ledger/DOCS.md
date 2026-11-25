@@ -5,7 +5,7 @@ a debt payoff plan and a running estimate of federal and state income tax.
 
 ## Starting
 
-1. Install the add-on and start it. The first build takes a few minutes, longer on a small computer.
+1. Install the add-on and start it. It arrives ready-made, so this takes about a minute.
 2. Open **Ledger** from the sidebar. A short setup guide asks about your household, accounts and paydays.
    You can skip it and come back to it from Settings.
 

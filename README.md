@@ -26,14 +26,33 @@ personal project, shared as it is. It is not a product, and nobody is on call fo
 
 ## Running it
 
-### Docker
+### Docker (a NAS, a home server, or your own computer)
+
+Ledger is published ready-made, for ordinary PCs and Macs (amd64) and for ARM machines such as a
+Raspberry Pi or an Apple-silicon Mac (arm64). Nothing needs building. With
+[Docker](https://www.docker.com/products/docker-desktop/) installed, one line starts it:
 
 ```bash
-docker compose up -d --build
+docker run -d --name ledger --restart unless-stopped -p 4317:4317 -v ledger-data:/data ghcr.io/moeckjeremy/ledger-home-finance:latest
 ```
 
-Then open `http://<your server>:4317`. The database is created in `./data`. A new copy starts with
-sample data so you can look around; your first bank connection or import replaces it.
+Then open `http://localhost:4317` on that machine, or `http://<its address>:4317` from another device
+on your network. A new copy starts with sample data so you can look around; your first bank
+connection or import replaces it. Your data is kept in the Docker volume `ledger-data`.
+
+On your own computer Ledger only works while the computer is on and awake: bank syncs, the summary
+email and alerts wait until it is.
+
+To update to a newer version:
+
+```bash
+docker pull ghcr.io/moeckjeremy/ledger-home-finance:latest && docker rm -f ledger
+```
+
+and run the first line again. Your data stays in the volume. If you prefer Compose,
+[`ledger/compose.yaml`](ledger/compose.yaml) does the same
+(`docker compose up -d`; add `TZ=Your/Zone` to a `.env` file there for your time zone).
+For the one-line form, add `-e TZ=Your/Zone` before the image's name.
 
 Set a password in Settings before the port is reachable by anyone you would not show your finances
 to. Ledger has no TLS of its own: put it behind a reverse proxy, a VPN such as Tailscale, or a
@@ -55,6 +74,8 @@ switch it on in Ledger's Settings) so your automations can react to a bill due t
 It cannot write anything else. The code is in `ledger/server/haai.js`.
 
 ### From source
+
+To build the image yourself: `docker build -f ledger/Dockerfile.docker -t ledger ledger`. Or without Docker:
 
 ```bash
 npm ci

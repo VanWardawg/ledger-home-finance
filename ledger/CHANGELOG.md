@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.24
+
+- Ledger now arrives ready-made. Home Assistant downloads a finished image in place of building it on
+  your own machine, so installing and updating take about a minute, not ten or more on a small computer.
+- For plain Docker there is a ready-made image too, started with one line (see the README).
+
+## 0.1.23
+
+- A page left open from before an update no longer goes blank: it reloads itself once when its files have been replaced.
+
 ## 0.1.22
 
 - The bank section in Settings is now "SimpleFIN Sync", with SimpleFIN's logo beside it.

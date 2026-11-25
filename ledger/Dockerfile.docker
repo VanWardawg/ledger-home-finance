@@ -17,7 +17,9 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY server ./server
 COPY --from=build /app/dist ./dist
-# The database lives in /data, which compose.yaml maps to a folder on the NAS.
+# The database lives in /data, which compose.yaml maps to a folder on the NAS. The folder is made here and
+# given to the user Ledger runs as, so a volume Docker makes by itself can be written to as well.
+RUN mkdir -p /data && chown node:node /data
 VOLUME /data
 EXPOSE 4317
 USER node

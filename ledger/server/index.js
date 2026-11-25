@@ -1210,6 +1210,10 @@ if (process.env.NODE_ENV === 'production') {
   // An address under /api that no route answers is a mistake, not a page: say so, so a wrong call in the
   // page shows up as an error and is not handed the app's front page (found by the NAS session's add-on test).
   app.use('/api', (_req, res) => res.status(404).json({ error: "Ledger has nothing at that address." }));
+  // A script or style file that no longer exists (its name changes with every build) must say so. Until
+  // 2026-11-24 it was answered with the page itself, so a phone holding the page from before an update got
+  // the page in place of its script and its styles and showed a blank white screen (his phone, that evening).
+  app.use('/assets', (_req, res) => { fresh(res); res.status(404).type('text/plain').send('Not here any more.'); });
   app.use((_req, res) => { fresh(res); res.sendFile(page); });
 } else {
   const { createServer } = await import('vite');

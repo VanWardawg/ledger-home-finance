@@ -1,0 +1,107 @@
+# Builds Ledger's ready-made images, so nobody has to build it on their own machine.
+#
+#   ghcr.io/<owner>/<repository>-addon   what Home Assistant pulls (the tag is the add-on's version)
+#   ghcr.io/<owner>/<repository>         for plain Docker (the version, and "latest")
+#
+# It runs when the branch "build" is pushed. The publisher pushes there first, waits for this to finish,
+# and only then moves "main" on, so a version is never offered before its image exists. A version that
+# has already been built is never built again: an image, once published under a tag, stays as it is.
+name: Build images
+
+on:
+  push:
+    branches: [build]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      image: ${{ steps.v.outputs.image }}
+      needed: ${{ steps.v.outputs.needed }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: v
+        run: |
+          VERSION="$(sed -nE 's/^version: *"?([^"]+)"?.*/\1/p' ledger/config.yaml | head -1)"
+          [ -n "$VERSION" ] || { echo "No version in ledger/config.yaml"; exit 1; }
+          IMAGE="ghcr.io/$(echo "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
+          NEEDED=true
+          if docker manifest inspect "$IMAGE-addon:$VERSION" >/dev/null 2>&1 && docker manifest inspect "$IMAGE:$VERSION" >/dev/null 2>&1; then NEEDED=false; fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+          echo "needed=$NEEDED" >> "$GITHUB_OUTPUT"
+          echo "Version $VERSION, images at $IMAGE, build needed: $NEEDED"
+
+  build:
+    needs: check
+    if: needs.check.outputs.needed == 'true'
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { docker: amd64, hass: amd64, runner: ubuntu-latest }
+          - { docker: arm64, hass: aarch64, runner: ubuntu-24.04-arm }
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: The Home Assistant image
+        uses: docker/build-push-action@v6
+        with:
+          context: ledger
+          file: ledger/Dockerfile
+          platforms: linux/${{ matrix.docker }}
+          push: true
+          provenance: false
+          tags: ${{ needs.check.outputs.image }}-addon:${{ needs.check.outputs.version }}-${{ matrix.hass }}
+          labels: |
+            io.hass.version=${{ needs.check.outputs.version }}
+            io.hass.arch=${{ matrix.hass }}
+            io.hass.type=app
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+      - name: The plain Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ledger
+          file: ledger/Dockerfile.docker
+          platforms: linux/${{ matrix.docker }}
+          push: true
+          provenance: false
+          tags: ${{ needs.check.outputs.image }}:${{ needs.check.outputs.version }}-${{ matrix.hass }}
+          labels: |
+            org.opencontainers.image.version=${{ needs.check.outputs.version }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+
+  # One name for both kinds of machine: Docker picks the right one.
+  manifest:
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+          I="${{ needs.check.outputs.image }}"; V="${{ needs.check.outputs.version }}"
+          docker buildx imagetools create -t "$I-addon:$V" "$I-addon:$V-amd64" "$I-addon:$V-aarch64"
+          docker buildx imagetools create -t "$I:$V" -t "$I:latest" "$I:$V-amd64" "$I:$V-aarch64"
+          docker buildx imagetools inspect "$I-addon:$V"
+          docker buildx imagetools inspect "$I:$V"
