@@ -1006,6 +1006,7 @@ export default function Transactions({ month, review = false, start = '' }: { mo
                     {t.merchant}
                     {t.waiting ? <i className="pulse" role="img" aria-label="Waiting for the bank" /> : null}
                     {t.left_out ? <em className="left-out-tag">left out</em> : null}
+                    {!t.left_out && t.acct_out ? <em className="left-out-tag" title="This account is left out of the budget (Accounts page). Choose a category to count this one purchase.">account left out</em> : null}
                     {!t.waiting && t.settled_at && Date.now() - t.settled_at < 3 * 86400000 ? <i className="matched" role="img" aria-label="The bank's entry matched the one you added">✓</i> : null}
                   </span>
                   <small>

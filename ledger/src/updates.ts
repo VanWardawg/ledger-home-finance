@@ -13,15 +13,16 @@
 // device remembers what it has seen.
 export type NewsGo = { page: string; fold?: string; at?: string };
 export const JUST_ADDED: [title: string, text: string, more?: { date: string; go?: NewsGo }][] = [
+  ['Leave an account out of the budget', 'For "fun money" accounts, a child\'s account, or anything you want to see but not count. On the Accounts page, choose "Leave out of the budget" on an account: its balance still shows, and its spending stops counting toward your budgets and totals.', { date: '2026-11-24', go: { page: 'accounts' } }],
   ['Hand your CFO a bank screenshot', 'The paperclip in Ask your CFO takes a screenshot of your bank\'s recent activity, or its CSV export, and adds what Ledger is missing. You tick the rows first, and nothing is counted twice when the bank catches up.', { date: '2026-11-24' }],
   ['Allowances', 'A notebook of what you hold for each child: a weekly allowance that adds itself, money for chores, and what they spend, with spend, save and give jars if you like. Switch it on in Settings, "Allowances".', { date: '2026-11-24', go: { page: 'connections', fold: 'allowance', at: '[data-fold="allowance"]' } }],
   ['Give every dollar a job', 'A second way to budget, at the foot of the Budgets page under "Choose your budgeting method". Pay that arrives waits to be assigned, and you hand it out to categories until none is left. Switch it off any time.', { date: '2026-11-23', go: { page: 'budgets', at: '[data-fold="budget-zero"]' } }],
   ['Upload debt statements', 'On the Debt page, "Upload debt" reads one statement or several at once: balance, payment, interest and rate, with a warning when a promotional rate is ending. Nothing is saved until you say so.', { date: '2026-11-23', go: { page: 'debt', at: '[data-news="upload-debt"]' } }],
-  ['Sort out "Other"', 'When purchases pile up under Other, Transactions offers "Suggest categories": Claude suggests where each shop belongs from its name, and you tick the ones that are right.', { date: '2026-11-23', go: { page: 'transactions', at: '.other-review' } }],
 ];
 
 export const UPDATES: [date: string, items: string[]][] = [
   ['2026-11-24', [
+    'An account can be left out of the budget: on the Accounts page, "Leave out of the budget" keeps its balance in view but stops counting its spending. Made for personal "fun money" accounts and children\'s accounts.',
     'Ledger run with plain Docker and no time zone set now takes its time zone from the first browser that opens it, so purchases land on the right day.',
     'The bank section in Settings is now called "SimpleFIN Sync" and carries SimpleFIN\'s logo, so it is easier to spot.',
     'Settings, "Bank connection" is now "Bank connection (SimpleFIN)", with numbered steps and a box plainly marked for the SimpleFIN setup token.',

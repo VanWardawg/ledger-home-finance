@@ -114,7 +114,7 @@ export function payDates(rule, from, to, scheduleId) {
  * Money in that you've recorded (a transfer from savings) is added on top.
  */
 export function checkingEstimate() {
-  const accounts = db.prepare("SELECT id, name, balance, available, balance_at, manual FROM accounts WHERE type = 'checking'").all();
+  const accounts = db.prepare("SELECT id, name, balance, available, balance_at, manual FROM accounts WHERE type = 'checking' AND COALESCE(off_budget, 0) = 0").all();
   // Every checking account is kept by hand (no bank connection): there is no bank figure, pending total or waiting.
   const byHand = accounts.length > 0 && accounts.every((a) => a.manual);
   const ids = accounts.map((a) => a.id).join(',') || 0;
@@ -279,7 +279,7 @@ export function outlook() {
   const billNames = [...new Set(out.map((o) => o.name))];
   const spend = db.prepare(`
     SELECT COALESCE(-SUM(t.amount), 0) total FROM transactions t JOIN categories c ON c.id = t.category_id JOIN accounts a ON a.id = t.account_id
-    WHERE c.kind = 'expense' AND a.type = 'checking' AND t.amount < 0 AND t.amount > -1000 AND t.date >= ?
+    WHERE c.kind = 'expense' AND a.type = 'checking' AND COALESCE(a.off_budget, 0) = 0 AND t.amount < 0 AND t.amount > -1000 AND t.date >= ?
       AND t.merchant NOT IN (SELECT merchant FROM bill_history) ${billNames.length ? `AND t.merchant NOT IN (${billNames.map(() => '?').join(',')})` : ''}`)
     .get(addDays(today, -60), ...billNames).total;
   const perDay = round(spend / 60);
@@ -336,7 +336,7 @@ export function installCashflow(app) {
     const name = String(req.body?.name || '').trim().slice(0, 120);
     const amount = round(Math.abs(Number(req.body?.amount)));
     if (!name || !(amount > 0) || amount > 1e6) return res.status(400).json({ error: "That bill can't be marked." });
-    const checking = db.prepare("SELECT id, manual FROM accounts WHERE type = 'checking' ORDER BY manual, id LIMIT 1").get();
+    const checking = db.prepare("SELECT id, manual FROM accounts WHERE type = 'checking' AND COALESCE(off_budget, 0) = 0 ORDER BY manual, id LIMIT 1").get();
     if (!checking) return res.status(400).json({ error: 'There is no checking account to put it on.' });
     const today = iso(new Date());
     if (!db.prepare("SELECT 1 FROM transactions WHERE account_id = ? AND waiting = 1 AND merchant = ? AND abs(amount + ?) < 0.005 AND date >= date(?, '-10 days')").get(checking.id, name, amount, today) && !(checking.manual && db.prepare("SELECT 1 FROM transactions WHERE account_id = ? AND merchant = ? AND abs(amount + ?) < 0.005 AND date = ?").get(checking.id, name, amount, today))) {

@@ -41,6 +41,7 @@ import { installStatements } from './statements.js';
 import { installStatementRemind } from './statementremind.js';
 import { installCatSuggest } from './catsuggest.js';
 import { installOwners, ownerWhere } from './owners.js';
+import { installOffBudget } from './offbudget.js';
 import { installPrices } from './prices.js';
 import { installZero, zeroFor } from './zero.js';
 import { installAllowance } from './allowance.js';
@@ -102,7 +103,7 @@ export const NEEDS_REVIEW = "(c.name = 'Other' OR (c.kind = 'transfer' AND (t.me
 const TX_SELECT = `
   SELECT t.id, t.date, t.merchant, t.amount, t.notes, t.category_id, t.account_id, t.manual, t.pending, t.waiting, t.settled_at, t.deduct_pct, t.deduct_kind,
          -- A split purchase (server/splits.js): how many parts it has, and the whole amount the bank charged.
-         t.split_of, (SELECT COUNT(*) FROM transactions k WHERE k.split_of = t.id) parts, t.left_out IS NOT NULL left_out,
+         t.split_of, (SELECT COUNT(*) FROM transactions k WHERE k.split_of = t.id) parts, t.left_out IS NOT NULL left_out, (t.acct_out IS NOT NULL AND t.acct_out != t.category_id) acct_out, a.off_budget acct_off,
          (SELECT 1 FROM receipts r WHERE r.transaction_id = COALESCE(t.split_of, t.id)) receipt,
          (SELECT ROUND(p.amount + COALESCE((SELECT SUM(k.amount) FROM transactions k WHERE k.split_of = p.id), 0), 2) FROM transactions p WHERE p.id = COALESCE(t.split_of, t.id)) whole,
          c.name category, c.icon, c.color, c.kind, c.key cat_key, a.name account
@@ -297,6 +298,9 @@ app.get('/api/transactions', (req, res) => {
 if (!db.prepare('PRAGMA table_info(transactions)').all().some((c) => c.name === 'left_out')) db.exec('ALTER TABLE transactions ADD COLUMN left_out INTEGER');
 // Purchases a merchant-wide change may touch: not split ones, and not ones left out of spending on purpose.
 const NOT_SPLIT = 'split_of IS NULL AND left_out IS NULL AND id NOT IN (SELECT split_of FROM transactions WHERE split_of IS NOT NULL)';
+// A change made for every purchase from a shop doesn't reach into an account left out of the budget
+// (server/offbudget.js): those purchases stay out unless one is filed by hand.
+const IN_BUDGET = 'account_id NOT IN (SELECT id FROM accounts WHERE off_budget = 1)';
 
 // Recategorize one or many transactions. With applyToMerchant, every
 // transaction from that merchant changes and a rule remembers it for later.
@@ -325,7 +329,7 @@ app.post('/api/transactions/categorize', (req, res) => {
   for (const id of ids) { const r = one.get(Number(id)); if (r) before.set(r.id, r.category_id); }
   let rule = null;
   if (applyToMerchant) {
-    for (const r of db.prepare(`SELECT id, category_id FROM transactions WHERE merchant = ? AND ${NOT_SPLIT}`).all(applyToMerchant)) if (!before.has(r.id)) before.set(r.id, r.category_id);
+    for (const r of db.prepare(`SELECT id, category_id FROM transactions WHERE merchant = ? AND ${NOT_SPLIT} AND ${IN_BUDGET}`).all(applyToMerchant)) if (!before.has(r.id)) before.set(r.id, r.category_id);
     rule = { merchant: applyToMerchant, previous: db.prepare('SELECT category_id FROM rules WHERE merchant = ?').get(applyToMerchant)?.category_id ?? null };
   }
   let changed = 0;
@@ -335,7 +339,7 @@ app.post('/api/transactions/categorize', (req, res) => {
   // Filed as income by hand: that is the household's answer, so the deposit review doesn't ask about it.
   if (db.prepare("SELECT 1 FROM categories WHERE id = ? AND kind = 'income'").get(category_id)) for (const id of ids) db.prepare('UPDATE transactions SET income_ok = 1 WHERE id = ? AND amount > 0').run(Number(id));
   if (applyToMerchant) {
-    changed = db.prepare(`UPDATE transactions SET category_id = ? WHERE merchant = ? AND ${NOT_SPLIT}`).run(category_id, applyToMerchant).changes;
+    changed = db.prepare(`UPDATE transactions SET category_id = ? WHERE merchant = ? AND ${NOT_SPLIT} AND ${IN_BUDGET}`).run(category_id, applyToMerchant).changes;
     db.prepare('INSERT INTO rules (merchant, category_id) VALUES (?, ?) ON CONFLICT(merchant) DO UPDATE SET category_id = excluded.category_id')
       .run(applyToMerchant, category_id);
   }
@@ -1091,6 +1095,7 @@ installStatements(app);
 installStatementRemind(app);
 installCatSuggest(app);
 installOwners(app);
+installOffBudget(app);
 installPrices(app);
 installZero(app);
 installAllowance(app);

@@ -20,6 +20,9 @@ const GROUPS = [
 function AccountRow({ a, onChanged }: { a: any; onChanged: () => void }) {
   const owners = useOwners();
   const setOwner = async (owner: string) => { try { await api(`/api/accounts/${a.id}/owner`, { method: 'PATCH', body: { owner } }); onChanged(); owners.reload(); dispatchEvent(new CustomEvent('ledger-refresh')); } catch { /* the row stays as it was */ } };
+  // "Leave out of the budget" (server/offbudget.js): its spending stops counting; the balance still shows.
+  const canLeaveOut = ['checking', 'savings', 'credit'].includes(a.type);
+  const setOut = async (out: boolean) => { try { await api(`/api/accounts/${a.id}/budget`, { method: 'PATCH', body: { out } }); onChanged(); dispatchEvent(new CustomEvent('ledger-refresh')); } catch { /* the row stays as it was */ } };
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(a.name);
   const [err, setErr] = useState('');
@@ -62,7 +65,9 @@ function AccountRow({ a, onChanged }: { a: any; onChanged: () => void }) {
             {owners.list.length > 1 && <> · <select className="owner-pick" aria-label={`Whose account ${a.name} is`} value={a.owner || 'joint'} onChange={(e) => setOwner(e.target.value)}>{owners.list.map((w) => <option key={w} value={w}>{owners.possessive(w)}</option>)}</select></>}
             {byHand && <> · <button className="link" onClick={() => { setBal(Math.abs(a.balance).toFixed(2)); setErr(''); setSetting(!setting); }}>Set balance</button> · <button className="link" onClick={remove}>Remove</button></>}
             {checkable && <> · <button className="link" onClick={() => setChecking(!checking)}>Check a statement</button></>}
+            {canLeaveOut && <> · <button className="link" title={a.off_budget ? 'Count its spending in your budgets and totals again' : "Keep showing its balance, but don't count its spending in your budgets and totals"} onClick={() => setOut(!a.off_budget)}>{a.off_budget ? 'Count in the budget' : 'Leave out of the budget'}</button></>}
           </span></small>
+          {a.off_budget ? <small className="sub off-budget-note">Left out of the budget: its spending isn't counted, its balance still is.</small> : null}
           {checkable && a.checked && !checking && <small className={a.checked.gap === 0 ? 'good' : 'sub'}>{a.checked.gap === 0 ? `✓ Matches the statement to ${dayShort(a.checked.end)}` : `The statement to ${dayShort(a.checked.end)} was ${cents(Math.abs(a.checked.gap))} out when last checked`}</small>}
           {byHand && setting && (
             <form className="rename set-balance" onSubmit={saveBalance}>
@@ -81,6 +86,9 @@ function AccountRow({ a, onChanged }: { a: any; onChanged: () => void }) {
         { label: 'Rename', run: () => { setName(a.name); setEditing(true); } },
         ...owners.list.filter((w) => w !== (a.owner || 'joint')).map((w) => ({ label: `Mark as ${owners.possessive(w).toLowerCase() === 'shared' ? 'shared' : owners.possessive(w)}`, hint: 'Whose account this is', run: () => setOwner(w) })),
         { label: 'Change the icon', run: () => dispatchEvent(new CustomEvent('ledger-logo-edit', { detail: { key: `account ${a.id}`, label: a.name } })) },
+        canLeaveOut && (a.off_budget
+          ? { label: 'Count in the budget', hint: 'Its spending counts in your budgets and totals again', run: () => setOut(false) }
+          : { label: 'Leave out of the budget', hint: "Its balance still shows; its spending isn't counted", run: () => setOut(true) }),
         checkable && { label: 'Check a statement', hint: 'Compare a stretch with what the bank printed', run: () => setChecking(true) },
         byHand && { label: 'Set balance', hint: 'Correct what is in it today', run: () => { setBal(Math.abs(a.balance).toFixed(2)); setErr(''); setSetting(true); } },
         byHand && { label: 'Remove', danger: true, run: remove },

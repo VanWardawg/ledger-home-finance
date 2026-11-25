@@ -371,7 +371,7 @@ function carryOut(action) {
     return `Done: it is filed${action.make ? ` under the new category "${action.make.name}"` : ''}.`;
   }
   if (action.kind === 'recategorize') {
-    const n = db.prepare('UPDATE transactions SET category_id = ? WHERE merchant = ? COLLATE NOCASE AND date >= ? AND date <= ? AND left_out IS NULL').run(action.category_id, action.merchant, ...action.range).changes;
+    const n = db.prepare('UPDATE transactions SET category_id = ? WHERE merchant = ? COLLATE NOCASE AND date >= ? AND date <= ? AND left_out IS NULL AND account_id NOT IN (SELECT id FROM accounts WHERE off_budget = 1)').run(action.category_id, action.merchant, ...action.range).changes;
     if (action.remember) db.prepare('INSERT INTO rules (merchant, category_id) VALUES (?, ?) ON CONFLICT(merchant) DO UPDATE SET category_id = excluded.category_id').run(action.merchant, action.category_id);
     return `Done: ${n} transaction${n === 1 ? '' : 's'} moved.`;
   }

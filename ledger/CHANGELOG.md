@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.26
+
+- An account can be left out of the budget (Accounts page, "Leave out of the budget"): its balance still
+  shows, and its spending stops counting toward budgets and totals. Made for personal "fun money"
+  accounts and children's accounts.
+
 ## 0.1.25
 
 - Ledger started with plain Docker and no time zone now takes its time zone from the first browser that
