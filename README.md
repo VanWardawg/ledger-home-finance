@@ -61,7 +61,8 @@ tunnel with its own sign-in if you want to reach it from outside your home.
 ### Home Assistant add-on
 
 Add this repository to the add-on store (Settings, Add-ons, Add-on Store, ⋮, Repositories), install
-**Ledger**, start it, and open it from the sidebar. See [the add-on's notes](ledger/DOCS.md).
+**Ledger**, start it, and open it from the sidebar. It arrives ready-made for 64-bit machines (ARM and
+PC); a 32-bit Home Assistant, such as one on an older Raspberry Pi, will not list it. See [the add-on's notes](ledger/DOCS.md).
 
 The add-on asks for permission to call Home Assistant's API. Home Assistant offers no narrower permission
 than that, so here is exactly what Ledger does with it: nothing at all unless you choose "The AI in your

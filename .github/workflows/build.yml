@@ -23,7 +23,8 @@ jobs:
     outputs:
       version: ${{ steps.v.outputs.version }}
       image: ${{ steps.v.outputs.image }}
-      needed: ${{ steps.v.outputs.needed }}
+      addon: ${{ steps.v.outputs.addon }}
+      plain: ${{ steps.v.outputs.plain }}
     steps:
       - uses: actions/checkout@v4
       - uses: docker/login-action@v3
@@ -36,16 +37,20 @@ jobs:
           VERSION="$(sed -nE 's/^version: *"?([^"]+)"?.*/\1/p' ledger/config.yaml | head -1)"
           [ -n "$VERSION" ] || { echo "No version in ledger/config.yaml"; exit 1; }
           IMAGE="ghcr.io/$(echo "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
-          NEEDED=true
-          if docker manifest inspect "$IMAGE-addon:$VERSION" >/dev/null 2>&1 && docker manifest inspect "$IMAGE:$VERSION" >/dev/null 2>&1; then NEEDED=false; fi
+          # Each image is looked at by itself: one that is already published under this version is left
+          # exactly as it is, even if the other is missing and has to be built.
+          ADDON=true; PLAIN=true
+          if docker manifest inspect "$IMAGE-addon:$VERSION" >/dev/null 2>&1; then ADDON=false; fi
+          if docker manifest inspect "$IMAGE:$VERSION" >/dev/null 2>&1; then PLAIN=false; fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
-          echo "needed=$NEEDED" >> "$GITHUB_OUTPUT"
-          echo "Version $VERSION, images at $IMAGE, build needed: $NEEDED"
+          echo "addon=$ADDON" >> "$GITHUB_OUTPUT"
+          echo "plain=$PLAIN" >> "$GITHUB_OUTPUT"
+          echo "Version $VERSION, images at $IMAGE. To build: Home Assistant image $ADDON, plain image $PLAIN"
 
   build:
     needs: check
-    if: needs.check.outputs.needed == 'true'
+    if: needs.check.outputs.addon == 'true' || needs.check.outputs.plain == 'true'
     strategy:
       fail-fast: true
       matrix:
@@ -62,6 +67,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: The Home Assistant image
+        if: needs.check.outputs.addon == 'true'
         uses: docker/build-push-action@v6
         with:
           context: ledger
@@ -76,6 +82,7 @@ jobs:
             io.hass.type=app
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
       - name: The plain Docker image
+        if: needs.check.outputs.plain == 'true'
         uses: docker/build-push-action@v6
         with:
           context: ledger
@@ -101,7 +108,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - run: |
           I="${{ needs.check.outputs.image }}"; V="${{ needs.check.outputs.version }}"
-          docker buildx imagetools create -t "$I-addon:$V" "$I-addon:$V-amd64" "$I-addon:$V-aarch64"
-          docker buildx imagetools create -t "$I:$V" -t "$I:latest" "$I:$V-amd64" "$I:$V-aarch64"
+          if [ "${{ needs.check.outputs.addon }}" = "true" ]; then
+            docker buildx imagetools create -t "$I-addon:$V" "$I-addon:$V-amd64" "$I-addon:$V-aarch64"
+          fi
+          if [ "${{ needs.check.outputs.plain }}" = "true" ]; then
+            docker buildx imagetools create -t "$I:$V" -t "$I:latest" "$I:$V-amd64" "$I:$V-aarch64"
+          fi
           docker buildx imagetools inspect "$I-addon:$V"
           docker buildx imagetools inspect "$I:$V"

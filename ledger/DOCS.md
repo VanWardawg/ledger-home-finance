@@ -6,6 +6,8 @@ a debt payoff plan and a running estimate of federal and state income tax.
 ## Starting
 
 1. Install the add-on and start it. It arrives ready-made, so this takes about a minute.
+   Ledger runs on 64-bit machines only (a Raspberry Pi 4 or 5 or another 64-bit ARM board, or an ordinary
+   64-bit PC). On a 32-bit system, such as an older Pi, Home Assistant does not list it in the store.
 2. Open **Ledger** from the sidebar. A short setup guide asks about your household, accounts and paydays.
    You can skip it and come back to it from Settings.
 
