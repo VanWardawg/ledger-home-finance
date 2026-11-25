@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.25
+
+- Ledger started with plain Docker and no time zone now takes its time zone from the first browser that
+  opens it, so "today" is your today and not world time. Home Assistant already gives Ledger the house's
+  time zone, so nothing changes there.
+
 ## 0.1.24
 
 - Ledger now arrives ready-made. Home Assistant downloads a finished image in place of building it on

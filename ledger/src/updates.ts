@@ -22,6 +22,7 @@ export const JUST_ADDED: [title: string, text: string, more?: { date: string; go
 
 export const UPDATES: [date: string, items: string[]][] = [
   ['2026-11-24', [
+    'Ledger run with plain Docker and no time zone set now takes its time zone from the first browser that opens it, so purchases land on the right day.',
     'The bank section in Settings is now called "SimpleFIN Sync" and carries SimpleFIN\'s logo, so it is easier to spot.',
     'Settings, "Bank connection" is now "Bank connection (SimpleFIN)", with numbered steps and a box plainly marked for the SimpleFIN setup token.',
     'Inside Home Assistant, Ledger can offer sensors for your automations, such as "a bill is due tomorrow" or "checking is forecast to run low". Each one is off until you switch it on in Settings, "Home Assistant sensors".',

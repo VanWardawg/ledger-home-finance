@@ -603,6 +603,20 @@ function Shell({ onAuthChanged }: { onAuthChanged: () => void }) {
   // The part after a slash picks a view within a page, as in #transactions/review.
   const [view, setView] = useState(() => location.hash.split('/')[1] ?? '');
   const shown = useRef(pageKey(page, view));
+  // A copy started with no time zone runs on world time until a browser says where it is (server/db.js).
+  // Asked once per load; the server only takes the first answer.
+  useEffect(() => {
+    (async () => {
+      try {
+        const c = await (await fetch('/api/clock')).json();
+        if (!c?.needs) return;
+        const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (!zone) return;
+        const r = await fetch('/api/clock', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ zone }) });
+        if (r.ok && (await r.json()).changed) window.dispatchEvent(new Event('ledger-refresh'));
+      } catch { /* the clock stays as it was */ }
+    })();
+  }, []);
   const { data: months, reload: reloadMonths } = useData<string[]>('/api/months');
   const { data: bank, reload: reloadBank } = useData('/api/simplefin');
   const { data: stubs } = useData<{ remind?: StubNeed }>('/api/paystub');

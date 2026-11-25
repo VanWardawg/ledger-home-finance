@@ -52,7 +52,9 @@ docker pull ghcr.io/moeckjeremy/ledger-home-finance:latest && docker rm -f ledge
 and run the first line again. Your data stays in the volume. If you prefer Compose,
 [`ledger/compose.yaml`](ledger/compose.yaml) does the same
 (`docker compose up -d`; add `TZ=Your/Zone` to a `.env` file there for your time zone).
-For the one-line form, add `-e TZ=Your/Zone` before the image's name.
+Without a time zone, Ledger takes
+its own from the first browser that opens it; to fix one yourself, add `-e TZ=Your/Zone` before the
+image's name.
 
 Set a password in Settings before the port is reachable by anyone you would not show your finances
 to. Ledger has no TLS of its own: put it behind a reverse proxy, a VPN such as Tailscale, or a
@@ -92,7 +94,7 @@ Node 24 or newer (it uses Node's built-in SQLite).
 |---|---|
 | `LEDGER_DATA_DIR` | Folder for the database. `/data` in the container. |
 | `PORT`, `HOST` | Where to listen. 4317 and all addresses in the container. |
-| `TZ` | Your time zone, so "today" and paydays are right. |
+| `TZ` | Your time zone, so "today" and paydays are right. If it is not set, Ledger uses the time zone of the first browser that opens it. |
 | `LEDGER_FRESH=1` | Start empty with the setup guide, in place of sample data. |
 | `LEDGER_INGRESS=1` | Home Assistant add-on mode: trust requests from the Supervisor, allow framing. |
 | `LEDGER_SETUP_CODE` | For a copy you host for another household: a one-time code they use to claim it. |

@@ -187,6 +187,18 @@ export const getSetting = (key, fallback = '') => db.prepare('SELECT value FROM 
 export const setSetting = (key, value) =>
   db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run(key, String(value));
 
+// Which clock this copy runs by. A container started with no TZ runs on UTC, so "today" turns over in the
+// early evening in the Americas and purchases land on the wrong day. Where whoever started Ledger gave a
+// time zone (TZ: the NAS's compose file, Home Assistant, `-e TZ=...`), that stands and nothing here applies.
+// Where none was given, the first browser to open the copy says which zone it is in (PUT /api/clock), it is
+// kept as setting `time_zone`, and from then on the copy runs by it.
+export const tzGiven = !!process.env.TZ;
+export const validZone = (z) => {
+  if (typeof z !== 'string' || z.length > 64 || !/^[A-Za-z][A-Za-z0-9_+-]*(\/[A-Za-z0-9_+-]+){0,2}$/.test(z)) return false;
+  try { new Intl.DateTimeFormat('en-US', { timeZone: z }); return true; } catch { return false; }
+};
+if (!tzGiven) { const z = getSetting('time_zone'); if (validZone(z)) process.env.TZ = z; }
+
 // No state is assumed for the tax estimate any more (server/states.js). A copy that was already in use when
 // that changed had been shown Arkansas all along, so it keeps Arkansas; a new copy, or one nobody has claimed
 // yet, has no state until its household chooses. Done once.

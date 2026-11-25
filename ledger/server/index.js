@@ -7,7 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
-import { db, iso, getSetting, setSetting } from './db.js';
+import { db, iso, getSetting, setSetting, tzGiven, validZone } from './db.js';
 import { WAITING_DAYS } from './waiting.js';
 import { estimateTax, TAX_YEAR } from './tax.js';
 import { stateChosen, stateList, stateOf, STATES } from './states.js';
@@ -1118,7 +1118,21 @@ installLogoFinder(app);
 const ACCOUNT_TYPES = ['checking', 'savings', 'credit', 'investment', 'hsa', 'auto', 'mortgage', 'loan', 'insurance'];
 // The clock Ledger is working by. "Today", paydays and the email's hour all follow the server's time zone
 // (the TZ setting of its container), so this is the way to see which one it really has.
-app.get('/api/clock', (_req, res) => { const now = new Date(); res.json({ zone: Intl.DateTimeFormat().resolvedOptions().timeZone, tz: process.env.TZ || null, today: iso(now), now: now.toString() }); });
+// `needs`: nobody gave this copy a time zone and it has not taken one from a browser yet (server/db.js).
+const clock = () => { const now = new Date(); return { zone: Intl.DateTimeFormat().resolvedOptions().timeZone, tz: process.env.TZ || null, today: iso(now), now: now.toString(), given: tzGiven, needs: !tzGiven && !getSetting('time_zone') }; };
+app.get('/api/clock', (_req, res) => res.json(clock()));
+// The page offers its own zone when `needs` is true. A zone given at start-up always stands; one already
+// taken from a browser is only replaced when asked for outright (`change`), so a visitor in another zone
+// doesn't move the household's clock.
+app.put('/api/clock', (req, res) => {
+  const zone = req.body?.zone;
+  if (tzGiven) return res.status(409).json({ error: 'This copy was started with a time zone, which is set where Ledger is run.' });
+  if (!validZone(zone)) return res.status(400).json({ error: 'That is not a time zone Ledger knows.' });
+  if (getSetting('time_zone') && !req.body?.change) return res.json({ ...clock(), changed: false });
+  setSetting('time_zone', zone);
+  process.env.TZ = zone;
+  res.json({ ...clock(), changed: true });
+});
 
 // Whether anyone on the network could open this copy with no password. As a Home Assistant add-on nobody
 // can: Home Assistant signs people in, and any other address is refused until a Ledger password is set
