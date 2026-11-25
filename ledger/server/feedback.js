@@ -17,6 +17,11 @@ db.exec(`CREATE TABLE IF NOT EXISTS feedback (
 const KINDS = ['idea', 'problem', 'question'];
 const hostCopy = () => getSetting('join_url') !== '' && getSetting('join_key') !== '';
 const familyCopy = () => !!process.env.LEDGER_FEEDBACK_URL && !!process.env.LEDGER_FEEDBACK_KEY;
+// A copy someone runs for themselves has nobody to pass a report to. The published images know the
+// repository they came from (LEDGER_REPO, baked in by addon/build.yml), so the page sends the person to
+// that project's issues on GitHub instead of saving words nobody will read (2026-11-25).
+const repo = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(process.env.LEDGER_REPO || '') ? process.env.LEDGER_REPO : '';
+const selfHosted = () => !!repo && !hostCopy() && !familyCopy() && !process.env.LEDGER_SETUP_CODE;
 
 async function deliver(kind, text) {
   const body = JSON.stringify({ kind, text, source: hostCopy() ? 'host' : process.env.LEDGER_HOUSEHOLD || 'a family copy' });
@@ -30,7 +35,8 @@ async function deliver(kind, text) {
 export function installFeedback(app) {
   // Who a report goes to, so the page can say so.
   app.get('/api/feedback', (_req, res) => res.json({
-    goesTo: hostCopy() ? 'you' : familyCopy() ? 'host' : 'nowhere',
+    goesTo: hostCopy() ? 'you' : familyCopy() ? 'host' : selfHosted() ? 'github' : 'nowhere',
+    ...(selfHosted() ? { page: `https://github.com/${repo}/issues` } : {}),
     sent: db.prepare('SELECT id, at, kind, text, delivered FROM feedback ORDER BY id DESC LIMIT 10').all(),
   }));
 

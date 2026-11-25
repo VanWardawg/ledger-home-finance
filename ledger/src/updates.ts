@@ -22,6 +22,7 @@ export const JUST_ADDED: [title: string, text: string, more?: { date: string; go
 
 export const UPDATES: [date: string, items: string[]][] = [
   ['2026-11-25', [
+    'On a copy you run yourself, About, "Ask for something or report a problem" now opens Ledger\'s project page on GitHub, where reports are read. Before, what you typed there was saved on your own copy and reached nobody.',
     'If you run Ledger yourself with Docker, it now tells you on the dashboard when a newer version is out, with what changed and the two lines that update it. It looks once a day and sends nothing about you; Settings, "Updates" switches it off.',
   ]],
   ['2026-11-24', [

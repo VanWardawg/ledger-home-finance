@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.28
+
+- About, "Ask for something or report a problem": on a copy you run yourself, this now opens this
+  project's issues page on GitHub, where reports are read. Before, what you typed was saved on your own
+  copy and reached nobody. Nothing is sent from Ledger; the button only opens the page.
+
 ## 0.1.27
 
 - Ledger run with plain Docker now says on the dashboard when a newer version is out, with what changed

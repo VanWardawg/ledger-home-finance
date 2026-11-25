@@ -157,6 +157,30 @@ function Feedback() {
     } catch (e: any) { setErr(e.message); }
     setBusy(false);
   };
+  const earlier = data.sent.length > 0 && (
+    <>
+      <div className="group-head"><span>{data.goesTo === 'github' ? 'Saved on this copy earlier' : "What you've sent"}</span></div>
+      {data.goesTo === 'github' && <p className="sub">These were only ever saved here and reached nobody. If one still matters, report it on GitHub.</p>}
+      {data.sent.map((f: any) => <div key={f.id} className="row"><span className="grow wrap">{f.text}<small>{f.kind === 'problem' ? 'A problem' : f.kind === 'question' ? 'A question' : 'An idea'} · {new Date(f.at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}{f.delivered || data.goesTo === 'github' ? '' : ' · not passed on yet'}</small></span></div>)}
+    </>
+  );
+  // A copy you run yourself: there is no host to send to, so ideas and problems go to the project's page.
+  if (data.goesTo === 'github' && /^https:\/\/github\.com\//.test(data.page || '')) return (
+    <>
+      <p className="sub first">If something doesn't work, is confusing, or is missing, the place to say so is Ledger's project page on GitHub, where the person who maintains it sees every report.</p>
+      <div className="add-actions">
+        <a className="button-link strong" href={`${data.page}/new`} target="_blank" rel="noreferrer">Report it on GitHub</a>
+        <a className="link" href={data.page} target="_blank" rel="noreferrer">See what others have reported</a>
+      </div>
+      <ul className="sub github-notes">
+        <li>You need a GitHub account, which is free.</li>
+        <li><b>What you write there is public.</b> Leave out your figures, account numbers, passwords and anything else private. A screenshot shows your figures too: crop or cover them first.</li>
+        <li>Say what you were doing and what you expected; for a problem, name the page you were on and the version (Settings, "Updates" shows it; inside Home Assistant, the add-on's Info tab).</li>
+        <li>Nothing is sent from Ledger. The button only opens the page.</li>
+      </ul>
+      {earlier}
+    </>
+  );
   return (
     <>
       <p className="sub first">If something doesn't work, is confusing, or is missing, say so here. It goes to {to}. Say what you were doing and what you expected; for a problem, the page you were on helps.</p>
@@ -176,12 +200,7 @@ function Feedback() {
       {err && <p className="error" role="alert">{err}</p>}
       {note && <p className="good" role="status">{note}</p>}
       <p className="sub">Please don't put passwords or account numbers in here.</p>
-      {data.sent.length > 0 && (
-        <>
-          <div className="group-head"><span>What you've sent</span></div>
-          {data.sent.map((f: any) => <div key={f.id} className="row"><span className="grow wrap">{f.text}<small>{f.kind === 'problem' ? 'A problem' : f.kind === 'question' ? 'A question' : 'An idea'} · {new Date(f.at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}{f.delivered ? '' : ' · not passed on yet'}</small></span></div>)}
-        </>
-      )}
+      {earlier}
     </>
   );
 }

@@ -1748,6 +1748,8 @@ form.forgot { text-align: left; }
 .update-line { display: flex; align-items: center; gap: 10px; margin-top: 6px; padding: 9px 12px; border-radius: 10px; background: var(--field, rgba(127,127,127,.14)); }
 .update-line code { flex: 1 1 auto; min-width: 0; font: 12.5px/1.45 ui-monospace, "SF Mono", Menlo, Consolas, monospace; overflow-wrap: anywhere; user-select: all; }
 .update-line .button-link { flex: none; }
+a.button-link.strong { background: var(--ink); color: var(--bg); border-color: transparent; }
+.github-notes { margin: 12px 0 0; padding-left: 20px; display: grid; gap: 6px; }
 .key-guide ol { margin: 0; padding-left: 22px; display: grid; gap: 10px; font-size: 14px; line-height: 1.45; }
 .mail-guide { margin: 4px 0 14px; }
 .mail-guide small { color: var(--ink2); }

@@ -76,6 +76,8 @@ jobs:
           push: true
           provenance: false
           tags: ${{ needs.check.outputs.image }}-addon:${{ needs.check.outputs.version }}-${{ matrix.hass }}
+          build-args: |
+            LEDGER_REPO=${{ github.repository }}
           labels: |
             io.hass.version=${{ needs.check.outputs.version }}
             io.hass.arch=${{ matrix.hass }}

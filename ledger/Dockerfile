@@ -14,6 +14,9 @@ RUN npm run build
 FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5
 WORKDIR /app
 ENV NODE_ENV=production HOST=0.0.0.0 PORT=4317 LEDGER_DATA_DIR=/data
+# The repository this image was published from, so "report a problem" can point at its issues page.
+ARG LEDGER_REPO=""
+ENV LEDGER_REPO=$LEDGER_REPO
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY server ./server
