@@ -489,6 +489,97 @@ function ImportFile({ sampleData, onDone }: { sampleData: boolean; onDone: () =>
   );
 }
 
+// How the published project is doing on GitHub. Shown only on a copy that names a repository (the publisher's).
+function RepoStats() {
+  const { data: r, reload } = useData<any>('/api/repo');
+  const [tok, setTok] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  // When this device last looked, read once; the newest activity is then written down for next time.
+  const [seenAt] = useState(() => { try { return localStorage.getItem('ledger-repo-seen') || ''; } catch { return ''; } });
+  const newest = (r?.issues || []).reduce((a: string, i: any) => (i.updated > a ? i.updated : a), '');
+  useEffect(() => { if (newest) { try { localStorage.setItem('ledger-repo-seen', newest); } catch { /* private window */ } } }, [newest]);
+  if (!r?.offered) return null;
+  const send = async (path: string, method: string, body?: object) => {
+    setBusy(true); setErr('');
+    try { await api(path, { method, body }); setTok(''); forgetLoaded(); reload(); } catch (e: any) { setErr(e.message); }
+    setBusy(false);
+  };
+  const days: any[] = (r.days || []).slice(-14);
+  const top = Math.max(1, ...days.map((d) => d.clones));
+  const issues: any[] = r.issues || [];
+  // "New" is anything that has moved since this device last had the section open.
+  const fresh = (i: any) => !!seenAt && i.updated > seenAt;
+  const when = r.at ? new Date(r.at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+  return (
+    <section className="card repo-stats">
+      <div className="card-head"><h2>On GitHub</h2><span className="sub">{r.repo}</span></div>
+      {r.error ? <p className="error" role="alert">{r.error}</p> : null}
+      {r.facts ? (
+        <div className="repo-tiles">
+          <div><b>{r.facts.stars}</b><small>stars</small></div>
+          <div><b>{r.facts.forks}</b><small>forks</small></div>
+          <div><b>{r.facts.watchers}</b><small>watching</small></div>
+          <div><b>{r.facts.issues}</b><small>open issues</small></div>
+        </div>
+      ) : null}
+      <h3 className="setup-sub">What people have written</h3>
+      {issues.length === 0 ? <p className="sub">Nothing yet. Bug reports, questions and suggestions that people post on GitHub will show here, newest first.</p> : (
+        <div className="repo-issues">
+          {issues.map((i) => (
+            <a key={i.number} className="row" href={i.url || undefined} target="_blank" rel="noreferrer">
+              <span className="grow wrap">{fresh(i) ? <em className="tag">new</em> : null}{i.title}
+                <small>{i.pull ? 'Offered change' : 'Report or question'} #{i.number} · {i.open ? 'open' : 'closed'} · from {i.by || 'someone'} on {i.opened}{i.comments ? ` · ${i.comments} repl${i.comments === 1 ? 'y' : 'ies'}` : ''}{i.labels.length ? ` · ${i.labels.join(', ')}` : ''}</small></span>
+              {i.url ? <span className="sub">Open ›</span> : null}
+            </a>
+          ))}
+          <p className="sub">Tapping one opens it on GitHub, where you reply. GitHub also emails you about these at your GitHub address.</p>
+        </div>
+      )}
+      {r.traffic ? (
+        <>
+          <h3 className="setup-sub">The last 14 days</h3>
+          <div className="repo-tiles">
+            <div><b>{r.traffic.clones}</b><small>downloads of the code</small></div>
+            <div><b>{r.traffic.cloners}</b><small>different sources</small></div>
+            <div><b>{r.traffic.views}</b><small>page views</small></div>
+            <div><b>{r.traffic.viewers}</b><small>visitors</small></div>
+          </div>
+          {days.length > 0 && (
+            <div className="repo-bars" role="img" aria-label="Downloads of the code by day">
+              {days.map((d) => <span key={d.day} title={`${d.day}: ${d.clones} downloads from ${d.cloners}, ${d.views} views`}><i style={{ height: `${Math.round((d.clones / top) * 100)}%` }} /><small>{Number(d.day.slice(8))}</small></span>)}
+            </div>
+          )}
+          {r.since?.first ? <p className="sub">Since Ledger began keeping count on {r.since.first}: {r.since.clones} downloads and {r.since.views} page views.</p> : null}
+        </>
+      ) : null}
+      {r.trafficError ? <p className="error" role="alert">{r.trafficError}</p> : null}
+      <p className="sub">Stars, forks and issues are public. A download is counted each time a machine fetches the code, which installing or updating the Home Assistant add-on does, so <b>your own installs are in the count</b>. "Different sources" is the nearer guess at how many people. GitHub runs about a day behind and never says who.</p>
+      {!r.hasToken ? (
+        <div className="key-guide">
+          <small>Downloads and page views are only shown to the repository's owner, so GitHub wants a token for them. One that can only read is enough:</small>
+          <ol>
+            <li><b>Open GitHub's token page.</b> <a className="button" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noreferrer">Make a fine-grained token</a></li>
+            <li><b>Repository access:</b> "Only select repositories", and choose this one.</li>
+            <li><b>Repository permissions:</b> set "Administration" to "Read-only". Leave everything else alone.</li>
+            <li><b>Generate it, copy it, and paste it below.</b> It is kept on this copy and never shown again.</li>
+          </ol>
+          <form className="token-form" noValidate onSubmit={(e) => { e.preventDefault(); if (tok.trim()) send('/api/repo', 'PUT', { token: tok.trim() }); }}>
+            <label className="field"><span>GitHub token</span><input type="password" value={tok} autoComplete="off" spellCheck={false} placeholder="Paste the token here" disabled={busy} onChange={(e) => { setTok(e.target.value); setErr(''); }} /></label>
+            <button type="submit" className="primary" disabled={busy || !tok.trim()}>{busy ? 'Checking…' : 'Save'}</button>
+          </form>
+        </div>
+      ) : null}
+      {err && <p className="error" role="alert">{err}</p>}
+      <div className="add-actions">
+        <button disabled={busy} onClick={() => send('/api/repo/refresh', 'POST')}>{busy ? 'Checking…' : 'Check now'}</button>
+        {r.hasToken ? <button className="link" disabled={busy} onClick={() => send('/api/repo', 'PUT', { token: '' })}>Forget the token</button> : null}
+        {when ? <span className="sub">Last checked {when}</span> : null}
+      </div>
+    </section>
+  );
+}
+
 // ---- Family requests (the host's copy only) ---------------------------------------------------
 const when = (ms: number) => new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
@@ -1747,6 +1838,7 @@ export default function Connections({ onChanged }: { onChanged: () => void }) {
   const taxesOn = useTaxes();
   const gig = useGig();
   const { data: family } = useData('/api/family');
+  const { data: repoStats } = useData<any>('/api/repo');
   const [token, setToken] = useState('');
   const [busy, setBusy] = useState('');
   const [err, setErr] = useState('');
@@ -1937,8 +2029,9 @@ export default function Connections({ onChanged }: { onChanged: () => void }) {
       {needsPassword ? null : <Fold id="paydays" title="Paydays" note="When each paycheck arrives and how much it is"><Paydays /></Fold>}
       {needsPassword ? null : <Fold id="gig" title="Side gig" note={gig.on ? `${gig.name}: income with no tax taken out` : 'Income with no tax taken out, such as tutoring or deliveries'}><SideGig /></Fold>}
 
-      {needsPassword || !family?.configured ? null : <h3 className="group-title">Sharing</h3>}
+      {needsPassword || !(family?.configured || repoStats?.offered) ? null : <h3 className="group-title">Sharing</h3>}
       {needsPassword || !family?.configured ? null : <Fold id="family" title="Family requests" note={family.open ? 'The request page is open' : 'Requests from family for their own copy'}><FamilyRequests /></Fold>}
+      {needsPassword || !repoStats?.offered ? null : <Fold id="repo" title="On GitHub" note={repoStats.facts ? `${repoStats.facts.stars} stars, ${(repoStats.issues || []).filter((i: any) => i.open).length} open reports${repoStats.traffic ? `, ${repoStats.traffic.clones} downloads in 14 days` : ''}` : 'How the published copy is doing'}><RepoStats /></Fold>}
 
       {needsPassword ? null : <h3 className="group-title">Extras</h3>}
       {/* Not on a family copy: a phone's report can't pass the Cloudflare sign-in in front of its address. */}

@@ -1105,6 +1105,10 @@ installSetup(app);
 installGoals(app);
 installSplits(app);
 installFamily(app);
+// The publisher's own look at the project on GitHub (server/repostats.js) is not part of the public copy.
+// Where the file is absent the page is told there is nothing to offer, and Settings shows no such section.
+try { (await import('./repostats.js')).installRepoStats(app); }
+catch (e) { if (e?.code !== 'ERR_MODULE_NOT_FOUND') throw e; app.get('/api/repo', (_req, res) => res.json({ offered: false })); }
 installFeedback(app);
 installLogos(app);
 installLogoFinder(app);
