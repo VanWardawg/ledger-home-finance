@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.31
+
+- Fixed for plain Docker: a new copy could never set its password. Settings said to open Ledger "on the
+  Mac that runs it", and with no password most of Settings stayed hidden, including the bank connection,
+  the AI key and Updates. A browser on the computer that runs Docker, or on the same home network, can
+  now set the first password. Nothing changes inside Home Assistant or on a copy that already has one.
+
 ## 0.1.30
 
 - Currency: Settings, "Currency" (and the setup guide's first step) lets a household choose the money it

@@ -3,6 +3,7 @@
 import { currency } from './money.js';
 import crypto from 'node:crypto';
 import os from 'node:os';
+import fs from 'node:fs';
 import { db, getSetting, setSetting } from './db.js';
 import { installPasskeyLogin, passkeyOrigins } from './passkeys.js';
 import { hostAi } from './ai.js';
@@ -98,9 +99,26 @@ function startSession(res, req, person = 0, who = '') {
 
 // A request is from this Mac if it comes from localhost or from one of the
 // Mac's own network addresses (as when you open the .local address here).
+//
+// Inside a container that test can never pass: a browser on the very computer that runs Docker reaches
+// Ledger through Docker's own network, so it arrives from an address that is neither localhost nor one of
+// the container's own. Found on 2026-11-25 on a Windows PC: a plain Docker install said "open Ledger on
+// the Mac that runs it" and could never set a password, which also kept most of Settings hidden. So in a
+// container, a request from a private address (the home network, Docker's bridge, a Tailscale address)
+// counts: whoever opens a brand-new copy first sets its password, as on other self-hosted apps. This only
+// ever matters while no password exists. An add-on and a hosted copy have stricter rules of their own.
+const inContainer = fs.existsSync('/.dockerenv') || !!process.env.LEDGER_RELEASE;
+const privateAddress = (from) => {
+  if (from === '::1' || /^f[cd][0-9a-f]{2}:/i.test(from) || /^fe80:/i.test(from)) return true;
+  const m = /^(\d+)\.(\d+)\.\d+\.\d+$/.exec(from);
+  if (!m) return false;
+  const a = Number(m[1]), b = Number(m[2]);
+  return a === 127 || a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127);
+};
 const isThisMac = (req) => {
   const from = String(req.socket.remoteAddress || '').replace(/^::ffff:/, '');
   if (from === '127.0.0.1' || from === '::1') return true;
+  if (inContainer && privateAddress(from)) return true;
   return Object.values(os.networkInterfaces()).flat().some((n) => n && n.address === from);
 };
 
@@ -158,7 +176,7 @@ export function installAuth(app) {
       // As an add-on, the first password is set from inside Home Assistant and nowhere else: "this machine"
       // means nothing useful inside a container, and an opened port must never be a way to claim the copy.
       if (!viaIngress(req)) return res.status(403).json({ error: 'Set the password from Ledger inside Home Assistant: Settings, Password.' });
-    } else if (!isThisMac(req)) return res.status(403).json({ error: 'Set the password from the Mac that runs Ledger.' });
+    } else if (!isThisMac(req)) return res.status(403).json({ error: 'Set the password from the computer that runs Ledger, or from a device on the same home network.' });
     const password = String(req.body?.password || '');
     if (password.length < 8) return res.status(400).json({ error: 'Use at least 8 characters.' });
     setPassword(password);

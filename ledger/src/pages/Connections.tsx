@@ -1914,13 +1914,13 @@ export default function Connections({ onChanged }: { onChanged: () => void }) {
             <p className="sub first">
               {s.networkOpen
                 ? "Other devices on your Wi-Fi can open Ledger right now. Set a password before connecting your bank, so only you can see it."
-                : 'Only this Mac can open Ledger right now. A password is needed before you open it to your phone.'}
+                : 'Only this computer can open Ledger right now. A password is needed before you open it to your phone.'}
             </p>
             <PasswordForm mode="setup" onDone={refresh} />
-            <small>There's no reset: if you forget it, the password has to be cleared from the Mac. Choose something you'll remember or save it in your password manager.</small>
+            <small>There's no reset: if you forget it, the password has to be cleared on the computer that runs Ledger. Choose something you'll remember or save it in your password manager.</small>
           </>
         ) : (
-          <p className="sub first">No password is set yet. Open Ledger on the Mac that runs it to create one.</p>
+          <p className="sub first">No password is set yet. Open Ledger on the computer that runs it, or on a device on the same home network, to create one.</p>
         )}
       </section>
       {s.passwordSet && <Passkeys />}
