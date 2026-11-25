@@ -21,6 +21,7 @@ import About from './pages/About';
 import Tour from './Tour';
 import { NewsNotice, allNewsSeen, useUnseenNews } from './News';
 import { UpdateNotice } from './UpdateNotice';
+import { GO, jump } from './go';
 
 const PAGES = [
   { id: 'dashboard', label: 'Dashboard', short: 'Dashboard', icon: 'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z' },
@@ -428,7 +429,7 @@ function BankAttention({ a }: { a?: { again: string[]; stale: string[]; failed: 
         try { await api('/api/simplefin/sync', { method: 'POST' }); } catch { /* the notice will say if it failed */ }
         setChecking(false); dispatchEvent(new CustomEvent('ledger-refresh'));
       }}>{checking ? 'Checking…' : 'Check again'}</button>
-      <a href="#connections">Details</a>
+      <a href="#connections" onClick={jump(GO.bank)}>Details</a>
       <button className="link" onClick={() => { try { localStorage.setItem('ledger-bank-attention', JSON.stringify({ key, until: Date.now() + 7 * 86400000 })); } catch { /* private window */ } redraw((n) => n + 1); }}>Hide for a week</button>
     </div>
   );
@@ -719,7 +720,7 @@ function Shell({ onAuthChanged }: { onAuthChanged: () => void }) {
           <span>Ask your</span>
           <CfoSeal size={84} />
         </a>
-        {bank?.sampleData && <div className="sample-note">Sample data. <a href="#connections">Connect your bank</a> to see your own.</div>}
+        {bank?.sampleData && <div className="sample-note">Sample data. <a href="#connections" onClick={jump(GO.bank)}>Connect your bank</a> to see your own.</div>}
       </nav>
 
       <main className="main" data-page={page}>
@@ -774,7 +775,7 @@ function Shell({ onAuthChanged }: { onAuthChanged: () => void }) {
             {page === 'reports' && <Reports />}
           </>
         ) : months ? (
-          <p className="sub">No transactions yet. <a href="#connections">Connect your bank</a> or add one by hand.</p>
+          <p className="sub">No transactions yet. <a href="#connections" onClick={jump(GO.bank)}>Connect your bank</a> or add one by hand.</p>
         ) : null}
         </div>
       </main>

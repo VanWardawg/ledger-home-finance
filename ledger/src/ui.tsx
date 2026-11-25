@@ -1,3 +1,5 @@
+import { Hint } from './GoLinks';
+import { goTo } from './go';
 import { at as under } from './base';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -282,7 +284,7 @@ export function CategoryPicker({ cats, value, onChange, label, blank, allowNew =
             <h2>New category</h2>
             <label className="field"><span>Name</span><input type="text" value={f.name} maxLength={40} placeholder="Haircuts" autoFocus onChange={(e) => { setF({ ...f, name: e.target.value }); setErr(''); }} /></label>
             <EmojiPick value={f.icon} onChange={(v) => setF({ ...f, icon: v })} />
-            {err && <p className="bad" role="alert">{err}</p>}
+            {err && <p className="bad" role="alert"><Hint text={err} /></p>}
             <div className="dialog-actions"><button type="submit" className="primary" disabled={busy}>Create</button><button type="button" onClick={() => setMaking(false)}>Cancel</button></div>
           </form>
         </div>,
@@ -316,7 +318,7 @@ export function IconDialog() {
         <p className="sub">The name and icon of this category, everywhere in Ledger.</p>
         <label className="field"><span>Name</span><input type="text" value={name} maxLength={40} onChange={(e) => { setName(e.target.value); setErr(''); }} /></label>
         <EmojiPick value={icon} onChange={(v) => { setIcon(v); setErr(''); }} />
-        {err && <p className="bad" role="alert">{err}</p>}
+        {err && <p className="bad" role="alert"><Hint text={err} /></p>}
         <div className="dialog-actions"><button className="primary" onClick={save}>Save</button><button onClick={() => setCat(null)}>Cancel</button></div>
       </div>
     </div>
@@ -367,7 +369,7 @@ function LogoForm({ name, onClose }: { name: string; onClose: () => void }) {
           {drawing && <button type="button" disabled={busy} onClick={async () => { try { await save({ image: await drawingToPicture(drawing) }); } catch { setErr("That drawing couldn't be turned into a picture. Try drawing another."); } }}>Use this</button>}
         </form>
       )}
-      {err && <span className="bad" role="alert">{err}</span>}
+      {err && <span className="bad" role="alert"><Hint text={err} /></span>}
     </span>
   );
 }
@@ -510,17 +512,7 @@ export function pickReceipt(id: number, done: (error?: string) => void) {
  * Opens a folded section and brings it (or something inside it, by selector) into view: for a line elsewhere
  * on the page that says "go here". The section is remembered as open, as if it had been tapped.
  */
-export function openFold(id: string, at?: string) {
-  try { localStorage.setItem('ledger-folds', JSON.stringify({ ...JSON.parse(localStorage.getItem('ledger-folds') || '{}'), [id]: true })); } catch { /* private window */ }
-  dispatchEvent(new CustomEvent('ledger-fold-open', { detail: id }));
-  let tries = 0;
-  const look = () => {
-    const el = (at && document.querySelector(at)) || document.querySelector(`[data-fold="${id}"]`);
-    if (el && (!at || el.matches(at))) el.scrollIntoView({ block: 'start' });
-    else if (++tries < 20) { if (el && tries === 1) el.scrollIntoView({ block: 'start' }); setTimeout(look, 150); }
-  };
-  setTimeout(look, 120);
-}
+export function openFold(id: string, at?: string) { goTo({ fold: id, at }); }
 
 /**
  * A pop-up for one small job that is finished and closed (adding a pay stub, reading an email before it is

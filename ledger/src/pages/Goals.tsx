@@ -1,5 +1,6 @@
 // Savings goals (server/goals.js): the full card on the Accounts page, where goals are made and
 // changed, and a short version for the dashboard that appears once there is a goal.
+import { GO, jump } from '../go';
 import { useEffect, useState } from 'react';
 import { api, forgetLoaded, money, useData } from '../lib';
 import { celebrate, once } from '../celebrate';
@@ -43,7 +44,7 @@ export function GoalsMini() {
   if (!data || !data.goals.length) return null;
   return (
     <section className="card">
-      <div className="card-head"><h2>Savings goals</h2><a href="#accounts">Manage</a></div>
+      <div className="card-head"><h2>Savings goals</h2><a href="#accounts" onClick={jump(GO.goals)}>Manage</a></div>
       {data.goals.map((g: any) => <GoalRow key={g.id} g={g} />)}
     </section>
   );
@@ -73,7 +74,7 @@ export function GoalsCard() {
   };
   const remove = async (g: any) => { if (!confirm(`Remove the goal "${g.name}"? Your money isn't touched.`)) return; await api(`/api/goals/${g.id}`, { method: 'DELETE' }); forgetLoaded(); reload(); };
   return (
-    <section className="card">
+    <section className="card" data-go="goals">
       <div className="card-head"><h2>Savings goals</h2></div>
       {data.goals.length === 0 && editing == null && <p className="sub first">Something you're saving toward: an emergency fund, a holiday, a car. Give it an amount, and a date if you have one, and Ledger shows how far along you are and how much to put away each month.</p>}
       {data.goals.map((g: any) => (

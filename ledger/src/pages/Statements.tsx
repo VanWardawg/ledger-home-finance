@@ -1,3 +1,4 @@
+import { Hint } from '../GoLinks';
 import { useRef, useState } from 'react';
 import { api, cents, useData } from '../lib';
 import { Modal, shrinkPicture } from '../ui';
@@ -59,7 +60,7 @@ export function StatementReader({ onClose, onSaved, forAccount, forImport }: { o
       <div className="statement-reader">
         {forImport && <p className="sub first">For an account the bank connection can't reach, when all you have is the statement: a PDF, or a photo of a paper one. Claude lists its transactions, you choose the account, and any already in Ledger are skipped. A CSV export is more exact when your bank offers one.</p>}
         {!forImport && <p className="sub first">Choose one statement or several at once: PDFs from your bank, card or lender, or photos of paper ones. Ledger reads the balance, payment, interest and rate from each, for debts already on this page. Each is sent to Claude to be read and isn't kept. You see what was read, and nothing is saved until you say so.</p>}
-        {info && !info.canRead ? <p className="error">{info.why}</p> : (
+        {info && !info.canRead ? <p className="error"><Hint text={info.why} /></p> : (
           <div className="add-actions">
             <button type="button" className="primary" disabled={!!busy} onClick={() => box.current?.click()}>{rows.length ? 'Add more statements' : 'Choose statements'}</button>
             <input ref={box} type="file" accept="application/pdf,image/*" multiple onChange={pick} hidden />
@@ -111,7 +112,7 @@ export function StatementReader({ onClose, onSaved, forAccount, forImport }: { o
             </div>
           </div>
         )}
-        {err && <p className="error" role="alert">{err}</p>}
+        {err && <p className="error" role="alert"><Hint text={err} /></p>}
       </div>
     </Modal>
   );

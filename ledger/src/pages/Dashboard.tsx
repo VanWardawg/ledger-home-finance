@@ -1,3 +1,4 @@
+import { GO, jump } from '../go';
 import { Area, Bar, BarChart, CartesianGrid, ComposedChart, Line, ReferenceDot, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useEffect, useState } from 'react';
 import { api, cents, compact, dayShort, daysUntil, money, monthLong, monthShort, signed, useData, useGig, lastLoaded, noteLoaded } from '../lib';
@@ -34,7 +35,7 @@ function ClassGoal({ name }: { name: string }) {
       <section className="card">
         <div className="card-head"><h2>{name} class goal</h2></div>
         <p className="sub first">
-          Your goal is {g.target} class units a month, worth about {money(g.payAtGoal)}. <a href="#connections">Connect your {name} calendar</a> to track progress here.
+          Your goal is {g.target} class units a month, worth about {money(g.payAtGoal)}. <a href="#connections" onClick={jump(GO.classCalendar)}>Connect your {name} calendar</a> to track progress here.
         </p>
       </section>
     );
@@ -262,7 +263,7 @@ function Recap({ month }: { month: string }) {
         <small>
           {r.source === 'claude' ? 'Written by Claude' : r.source === 'ha' ? (r.by === 'Claude' ? 'Written by Claude, through Home Assistant' : "Written by your Home Assistant's AI") : 'Automatic summary'} · {new Date(r.at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
           {r.error ? <> · <span className="bad">{r.error}</span></> : null}
-          {!r.hasKey ? <> · <a href="#connections">Turn on AI</a> for a recap written by Claude</> : null}
+          {!r.hasKey ? <> · <a href="#connections" onClick={jump(GO.ai)}>Turn on AI</a> for a recap written by Claude</> : null}
         </small>
       )}
     </section>

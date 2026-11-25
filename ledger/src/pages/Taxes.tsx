@@ -1,3 +1,5 @@
+import { Hint } from '../GoLinks';
+import { goTo, jump } from '../go';
 import { setTaxes, useTaxes } from '../lib';
 const NOT_US = 'not-us';
 import { StateMap } from '../StateMap';
@@ -285,7 +287,7 @@ function PayCoverage({ c, onChange, onAdd }: { c: any; onChange: () => void; onA
           </div>
         );
       })}
-      {err && <p className="error" role="alert">{err}</p>}
+      {err && <p className="error" role="alert"><Hint text={err} /></p>}
     </div>
   );
 }
@@ -450,12 +452,12 @@ export function PayStub({ joint, onSaved }: { joint: boolean; onSaved: () => voi
             )}
           </div>
           {!mine.length && <p className="sub">Changed jobs this year? Add the last pay stub from each job, one after the other, and Ledger adds them together.</p>}
-          {err && <p className="error" role="alert">{err}</p>}
+          {err && <p className="error" role="alert"><Hint text={err} /></p>}
           <div className="add-actions"><button className="primary" disabled={!filled} onClick={use}>Use these figures</button><button type="button" onClick={() => setOpen(false)}>Cancel</button></div>
         </div>
         </Modal>
       )}
-      {err && !open && <p className="error" role="alert">{err}</p>}
+      {err && !open && <p className="error" role="alert"><Hint text={err} /></p>}
     </div>
   );
 }
@@ -484,7 +486,7 @@ function TaxTodo({ t, stubs, hints, pack }: { t: any; stubs: any; hints: any; pa
   if (noReceipt > 0) items.push({ text: <><b>{noReceipt} claimed {noReceipt === 1 ? 'purchase has' : 'purchases have'} no receipt kept.</b></>, fold: 'tax-pack', at: '.pack-receipts' });
   const go = (i: { fold?: string; at?: string }) => () => {
     if (i.fold) openFold(i.fold, i.at);
-    else if (i.at) document.querySelector(i.at)?.scrollIntoView({ block: 'center' });
+    else if (i.at) goTo({ at: i.at });
   };
   if (!items.length) return <p className="tax-todo none">Nothing on this page needs your attention right now.</p>;
   return (
@@ -533,7 +535,7 @@ function Deductions({ t, reload }: { t: any; reload: () => void }) {
         </label>
         <button type="submit" className="primary">Add deduction</button>
       </form>
-      {err && <p className="error" role="alert">{err}</p>}
+      {err && <p className="error" role="alert"><Hint text={err} /></p>}
 
       {KINDS.map((k) => {
         const items = t.deductions.filter((d: any) => d.kind === k.id);
@@ -604,7 +606,7 @@ export default function Taxes() {
           <h2>Choose your state</h2>
           <p className="sub first">Ledger works out an estimate of this year's federal and state income tax. It needs to know which state you live in before it shows anything here. You can change it later under "Your household".</p>
           <ChooseState onPick={(code) => save('tax_state')(code)} />
-          <p className="sub state-not-us">Not in the United States? Ledger's tax estimate only covers US federal and state income tax. <button type="button" className="link" onClick={() => { setTaxes(false); location.hash = '#dashboard'; }}>Switch the tax section off</button> and it leaves the menu; you can switch it back on in Settings.</p>
+          <p className="sub state-not-us">Not in the United States? Ledger's tax estimate only covers US federal and state income tax. <button type="button" className="link" onClick={() => { setTaxes(false); location.hash = '#dashboard'; }}>Switch the tax section off</button> and it leaves the menu; you can switch it back on in <a href="#connections" onClick={jump({ page: 'connections', fold: 'taxes-on' })}>Settings, "Tax section"</a>.</p>
         </section>
       </div>
     );

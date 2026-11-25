@@ -1138,7 +1138,7 @@ function AiRoute({ onChange }: { onChange: () => void }) {
     setBusy(false);
   };
   return (
-    <div className="ai-route">
+    <div className="ai-route" data-go="ai-route">
       <h3>Which AI Ledger uses</h3>
       <div className="budget-ways" role="radiogroup" aria-label="Which AI Ledger uses">
         <div className={`budget-way ${ha.on ? 'on' : ''}`}>
@@ -1215,7 +1215,7 @@ function AiRecap() {
         </div>
       )}
 
-      <div className="ai-choice">
+      <div className="ai-choice" data-go="ai-key">
         <span className="label">{inc ? 'Or use your own Anthropic key' : 'Your Anthropic key'}</span>
         {ai?.bringOwn ? (
           <div className="key-guide">
@@ -1952,7 +1952,7 @@ export default function Connections({ onChanged }: { onChanged: () => void }) {
             {needsPassword ? (
               <p className="advice">Set a password in the box above first. The box for your SimpleFIN setup token appears here once you have.</p>
             ) : (
-              <form onSubmit={connect} noValidate className="token-form">
+              <form onSubmit={connect} noValidate className="token-form" data-go="bank-token">
                 <label className="field"><span>SimpleFIN setup token</span>
                   <input type="text" value={token} autoComplete="off" spellCheck={false} placeholder="Paste the long token from SimpleFIN here" disabled={!!busy} onChange={(e) => { setToken(e.target.value); setErr(''); }} />
                 </label>

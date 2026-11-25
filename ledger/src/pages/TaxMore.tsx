@@ -1,3 +1,4 @@
+import { jump } from '../go';
 import { at } from '../base';
 import { useState } from 'react';
 import { api, cents, money, useData } from '../lib';
@@ -278,7 +279,7 @@ export function TaxPack({ year }: { year: number }) {
           <label className="field grow"><span>Email it to</span><input type="text" inputMode="email" autoCapitalize="none" value={to} placeholder={p.to || 'you@example.com'} onChange={(e) => { setTo(e.target.value); setErr(''); }} /></label>
           <button type="submit" className="primary" disabled={busy}>{busy ? 'Sending…' : 'Send'}</button>
         </form>
-      ) : <p className="sub">To email it, set up the summary email in Settings first.</p>}
+      ) : <p className="sub">To email it, set up the <a href="#connections" onClick={jump({ page: 'connections', fold: 'email' })}>summary email in Settings</a> first.</p>}
       <small className="sub">Leave the box empty to send it to yourself, or type your preparer's address. In January, once the year has ended, Ledger emails you a copy by itself if the summary email is switched on.</small>
       {note && <p className="good" role="status">{note}</p>}
       {err && <p className="error" role="alert">{err}</p>}

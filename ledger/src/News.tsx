@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { JUST_ADDED, type NewsGo } from './updates';
+import { goTo } from './go';
 
 // Telling people about something new (The owner, 2026-11-23). After an update, the dashboard shows one quiet
 // line naming the new features from "Just added" (src/updates.ts) that this device hasn't seen, each a link
@@ -37,20 +38,7 @@ export const newsSeen = (title: string) => save([...seen(), title]);
 export const allNewsSeen = () => save(JUST_ADDED.map(([t]) => t));
 
 /** Goes to where a feature lives: its page, with its section unfolded (on a phone) and brought into view. */
-export function goToNews(go: NewsGo) {
-  if (go.fold) { try { localStorage.setItem('ledger-folds', JSON.stringify({ ...JSON.parse(localStorage.getItem('ledger-folds') || '{}'), [go.fold]: true })); } catch { /* private window */ } }
-  location.hash = `#${go.page}`;
-  if (go.fold) dispatchEvent(new CustomEvent('ledger-fold-open', { detail: go.fold }));
-  if (!go.at) return;
-  // The page draws, then its data arrives: look for the section for a few seconds.
-  let tries = 0;
-  const look = () => {
-    const el = document.querySelector(go.at!);
-    if (el) el.scrollIntoView({ block: 'start' });
-    else if (++tries < 25) setTimeout(look, 200);
-  };
-  setTimeout(look, 350);
-}
+export function goToNews(go: NewsGo) { goTo(go); }
 
 /** Redraws whenever what has been seen changes. */
 export function useUnseenNews() {

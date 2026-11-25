@@ -1,3 +1,4 @@
+import { jump } from '../go';
 import { useEffect, useRef, useState } from 'react';
 import { api, cents, useData } from '../lib';
 import { Modal, pickReceipt } from '../ui';
@@ -197,7 +198,7 @@ function Questions({ h, send, reload, setErr, compose, fresh, clearFresh }: { h:
             <button type="button" onClick={async () => { await send('asked', {})(); setMail(null); clearFresh(); }}>I sent it</button>
             <button type="button" className="link" onClick={cancel}>{undo ? 'Cancel' : 'Close'}</button>
           </div>
-          {!h.canSend && <small>To send straight from Ledger, set up the summary email in Settings (it uses your own Gmail). Until then, "Open in my email app" starts the same message in your own mail program; receipts can't be attached that way.</small>}
+          {!h.canSend && <small>To send straight from Ledger, set up the <a href="#connections" onClick={jump({ page: 'connections', fold: 'email' })}>summary email in Settings</a> (it uses your own Gmail). Until then, "Open in my email app" starts the same message in your own mail program; receipts can't be attached that way.</small>}
         </div>
         </Modal>
       )}

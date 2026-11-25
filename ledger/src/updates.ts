@@ -11,17 +11,18 @@
 // its name leads: the page, the fold to open on a phone, and the part of the page to bring into view.
 // Leave the third part off for something not worth announcing. Titles must be unique: they are how a
 // device remembers what it has seen.
-export type NewsGo = { page: string; fold?: string; at?: string };
+export type NewsGo = { page?: string; fold?: string; at?: string; open?: 'cfo' };
 export const JUST_ADDED: [title: string, text: string, more?: { date: string; go?: NewsGo }][] = [
-  ['Leave an account out of the budget', 'For "fun money" accounts, a child\'s account, or anything you want to see but not count. On the Accounts page, choose "Leave out of the budget" on an account: its balance still shows, and its spending stops counting toward your budgets and totals.', { date: '2026-11-24', go: { page: 'accounts' } }],
-  ['Hand your CFO a bank screenshot', 'The paperclip in Ask your CFO takes a screenshot of your bank\'s recent activity, or its CSV export, and adds what Ledger is missing. You tick the rows first, and nothing is counted twice when the bank catches up.', { date: '2026-11-24' }],
-  ['Allowances', 'A notebook of what you hold for each child: a weekly allowance that adds itself, money for chores, and what they spend, with spend, save and give jars if you like. Switch it on in Settings, "Allowances".', { date: '2026-11-24', go: { page: 'connections', fold: 'allowance', at: '[data-fold="allowance"]' } }],
-  ['Give every dollar a job', 'A second way to budget, at the foot of the Budgets page under "Choose your budgeting method". Pay that arrives waits to be assigned, and you hand it out to categories until none is left. Switch it off any time.', { date: '2026-11-23', go: { page: 'budgets', at: '[data-fold="budget-zero"]' } }],
+  ['Leave an account out of the budget', 'For "fun money" accounts, a child\'s account, or anything you want to see but not count. On the Accounts page, choose "Leave out of the budget" on an account: its balance still shows, and its spending stops counting toward your budgets and totals.', { date: '2026-11-24', go: { page: 'accounts', at: '[data-go="off-budget"], [data-go~="account-row"] .more-btn' } }],
+  ['Hand your CFO a bank screenshot', 'The paperclip in Ask your CFO takes a screenshot of your bank\'s recent activity, or its CSV export, and adds what Ledger is missing. You tick the rows first, and nothing is counted twice when the bank catches up.', { date: '2026-11-24', go: { page: 'dashboard', open: 'cfo', at: '.cfo-attach, .cfo-idea-file' } }],
+  ['Allowances', 'A notebook of what you hold for each child: a weekly allowance that adds itself, money for chores, and what they spend, with spend, save and give jars if you like. Switch it on in Settings, "Allowances".', { date: '2026-11-24', go: { page: 'connections', fold: 'allowance', at: '[data-go="allowance-switch"]' } }],
+  ['Give every dollar a job', 'A second way to budget, at the foot of the Budgets page under "Choose your budgeting method". Pay that arrives waits to be assigned, and you hand it out to categories until none is left. Switch it off any time.', { date: '2026-11-23', go: { page: 'budgets', fold: 'budget-zero', at: '[data-go="zero-switch"]' } }],
   ['Upload debt statements', 'On the Debt page, "Upload debt" reads one statement or several at once: balance, payment, interest and rate, with a warning when a promotional rate is ending. Nothing is saved until you say so.', { date: '2026-11-23', go: { page: 'debt', at: '[data-news="upload-debt"]' } }],
 ];
 
 export const UPDATES: [date: string, items: string[]][] = [
   ['2026-11-25', [
+    'Links that point you to a setting now land on the setting itself: the section opens and the exact box or switch is ringed for a moment. That covers "Turn on AI", "Connect your bank", the messages that say a feature needs AI, and every "Show me" under What\'s new.',
     'On a copy you run yourself, About, "Ask for something or report a problem" now opens Ledger\'s project page on GitHub, where reports are read. Before, what you typed there was saved on your own copy and reached nobody.',
     'If you run Ledger yourself with Docker, it now tells you on the dashboard when a newer version is out, with what changed and the two lines that update it. It looks once a day and sends nothing about you; Settings, "Updates" switches it off.',
   ]],

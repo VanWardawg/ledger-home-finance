@@ -1,3 +1,5 @@
+import { Hint } from '../GoLinks';
+import { GO, jump } from '../go';
 import { at } from '../base';
 import { EmojiPick } from '../icons';
 import { useEffect, useMemo, useState } from 'react';
@@ -201,7 +203,7 @@ function OtherReview({ cats, onChanged }: { cats: any[]; onChanged: () => void }
         {!rows && data.canAsk && <button disabled={!!busy} onClick={ask}>{busy || 'Suggest categories'}</button>}
         {!rows && <button className="link" onClick={() => { try { localStorage.setItem('ledger-other-hide', String(Date.now() + 30 * 86400000)); } catch { /* private window */ } setHidden(true); }}>Hide for a month</button>}
       </div>
-      {!data.canAsk && <p className="sub">{data.why}</p>}
+      {!data.canAsk && <p className="sub"><Hint text={data.why} /></p>}
       {rows && rows.length > 0 && <>
         {rows.map((r) => (
           <div key={r.merchant} className="row">
@@ -418,7 +420,7 @@ function ScanForm({ cats, accounts, onAdded, onClose }: { cats: any[]; accounts:
     <section className="card add-form">
       <div className="card-head"><h2>Add from a receipt</h2></div>
       {ai && !ai.hasKey ? (
-        <p className="sub first">{ai.limitNote || <>This uses Claude to read the picture, so it needs an Anthropic API key. Add one on the <a href="#connections">Settings</a> page.</>}</p>
+        <p className="sub first">{ai.limitNote || <>This uses Claude to read the picture, so it needs an Anthropic API key. Add one in <a href="#connections" onClick={jump(GO.ai)}>Settings, "AI recap and logos"</a>.</>}</p>
       ) : (
         <>
           <p className="sub first">Photograph a paper receipt, or upload a picture you already have: a receipt, or a screenshot of your bank's list of pending or recent purchases. Claude reads it for you to check before anything is added. The picture is sent to Anthropic to be read. A receipt's picture is then kept with its purchase, in your own copy of Ledger, so you can look at it later; a bank screenshot isn't kept.</p>
@@ -946,7 +948,7 @@ export default function Transactions({ month, review = false, start = '' }: { mo
           </div>
           {est.byHand ? (
             <div className="estimate-how">
-              <small>You keep this account yourself, so this is the balance you gave it plus everything entered on it since. To correct it, use "Set balance" on the <a href="#accounts">Accounts</a> page.</small>
+              <small>You keep this account yourself, so this is the balance you gave it plus everything entered on it since. To correct it, use "Set balance" on the <a href="#accounts" onClick={jump(GO.setBalance)}>Accounts</a> page.</small>
             </div>
           ) : (
           <div className="estimate-how">
@@ -990,7 +992,7 @@ export default function Transactions({ month, review = false, start = '' }: { mo
         {!txs && !error && <div className="skel" aria-busy="true">{[72, 58, 80, 64, 76, 52].map((w, i) => <i key={i} style={{ width: `${w}%`, height: 16 }} />)}</div>}
         {txs && txs.length === 0 && (q || category || account || review
           ? <p className="sub">No transactions match. Try a different search or date range.</p>
-          : <p className="sub">Nothing here for this month yet. Add a purchase or a deposit with the + button, or connect your bank in <a href="#connections">Settings</a>.</p>)}
+          : <p className="sub">Nothing here for this month yet. Add a purchase or a deposit with the + button, or connect your bank in <a href="#connections" onClick={jump(GO.bank)}>Settings, "SimpleFIN Sync"</a>.</p>)}
         {txs?.length === 500 && <p className="sub">Showing the latest 500. Narrow the search to see older ones.</p>}
         {days.map((d) => (
           <div key={d.date}>

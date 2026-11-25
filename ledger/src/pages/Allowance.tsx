@@ -1,5 +1,6 @@
 // Allowances (server/allowance.js): a notebook of what the household holds for each child. The card sits on
 // the Accounts page once the feature is switched on in Settings; the switch is at the foot of this file.
+import { GO, jump } from '../go';
 import { useState } from 'react';
 import { api, cents, forgetLoaded, money, useData } from '../lib';
 import { Modal, MoneyInput } from '../ui';
@@ -156,8 +157,8 @@ export function AllowanceSwitch() {
     <section className="card">
       <div className="card-head"><h2>Allowances</h2>{data.on && <span className="good">On</span>}</div>
       <p className="sub first">Keep track of what you hold for each child: a weekly allowance that adds itself, money for chores or gifts, and what they spend, shared between spend, save and give if you like. It is a notebook only. The money stays wherever you keep it, and nothing else in Ledger counts it.</p>
-      <label className="row check"><span className="grow">Keep allowances</span><input type="checkbox" checked={!!data.on} onChange={(e) => put(e.target.checked)} /></label>
-      {data.on && <p className="sub">It is on the <a href="#accounts">Accounts page</a>, under savings goals. Switching this off hides it and stops the weekly amounts; what was recorded is kept.</p>}
+      <label className="row check" data-go="allowance-switch"><span className="grow">Keep allowances</span><input type="checkbox" checked={!!data.on} onChange={(e) => put(e.target.checked)} /></label>
+      {data.on && <p className="sub">It is on the <a href="#accounts" onClick={jump(GO.allowance)}>Accounts page</a>, under savings goals. Switching this off hides it and stops the weekly amounts; what was recorded is kept.</p>}
     </section>
   );
 }

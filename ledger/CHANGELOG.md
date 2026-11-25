@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.29
+
+- Links that say where a setting is now take you to the setting itself: the right section opens, the
+  exact box or switch is brought into view, and it is ringed for a moment so you can see which one is
+  meant. "Turn on AI", "Connect your bank", the "needs AI" messages and every "Show me" under What's
+  new all work this way.
+
 ## 0.1.28
 
 - About, "Ask for something or report a problem": on a copy you run yourself, this now opens this

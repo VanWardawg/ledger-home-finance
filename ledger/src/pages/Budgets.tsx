@@ -105,7 +105,7 @@ function ZeroSwitch({ z, onChanged }: { z: any; onChanged: () => void }) {
     <Fold id="budget-zero" title="Choose your budgeting method" note={z.on ? 'Every dollar gets a job' : 'A set amount for each category'}>
       <p className="sub first">Ledger can budget in two ways. <b>A set amount for each category</b> is the usual one: each category has a monthly figure and Ledger shows how you are doing against it. <b>Give every dollar a job</b> starts from the money instead: as pay arrives it waits to be assigned, and you hand it out to categories until none is left. A category can only spend what it has been given, and what it doesn't spend stays in it for later. <button className="link" onClick={() => setGuide(true)}>See how it works</button></p>
       {guide && <ZeroGuide onClose={() => setGuide(false)} />}
-      <label className="row check"><span className="grow">Give every dollar a job</span><input type="checkbox" checked={z.on} onChange={(e) => put({ on: e.target.checked })} /></label>
+      <label className="row check" data-go="zero-switch"><span className="grow">Give every dollar a job</span><input type="checkbox" checked={z.on} onChange={(e) => put({ on: e.target.checked })} /></label>
       {z.on ? <>
         <div className="add-grid">
           <label className="field"><span>Money you already had when you began</span>

@@ -1,6 +1,7 @@
 // How each side gig's coming pay is worked out (server/gigpay.js), shown inside Settings, "Side gig": the
 // average of its deposits, a rough figure typed in, booked sessions from a calendar at a rate you set, or
 // jobs typed in one by one. One block per gig; each keeps its own settings.
+import { GO, goTo } from '../go';
 import { useState } from 'react';
 import { api, cents, dayLong, dayShort, forgetLoaded, money, useData } from '../lib';
 import { Fold, MoneyInput } from '../ui';
@@ -156,7 +157,7 @@ function OneGig({ g, ha, took }: { g: any; ha: { id: string; name: string }[]; t
           ))}
 
           {owed.length > 0 && (
-            <div className="gig-owed">
+            <div className="gig-owed" data-go="gig-owed">
               <h4>Owed to you: {cents(g.owed.total)}</h4>
               <p className="sub">Past the day you expected them. They stay here until you say what happened; after two weeks they stop counting in the forecast.</p>
               {owed.map((j: any) => (
@@ -216,10 +217,7 @@ export function OwedNotice() {
   if (!data || !data.count) return null;
   const key = `${data.count}:${data.total}`;
   try { const h = JSON.parse(localStorage.getItem('ledger-owed-hide') || 'null'); if (h && h.key === key && h.until > Date.now()) return null; } catch { /* show it */ }
-  const go = () => {
-    try { const f = JSON.parse(localStorage.getItem('ledger-folds') || '{}'); f.gig = true; localStorage.setItem('ledger-folds', JSON.stringify(f)); } catch { /* it opens folded */ }
-    location.hash = '#connections';
-  };
+  const go = () => goTo(GO.gig);
   return (
     <div className="bank-attention" role="status">
       <span className="grow"><b>{cents(data.total)} is owed to you</b> for {data.count === 1 ? 'a job' : `${data.count} jobs`} past the day you expected the money{data.oldest ? `, the oldest since ${dayShort(data.oldest)}` : ''}.</span>

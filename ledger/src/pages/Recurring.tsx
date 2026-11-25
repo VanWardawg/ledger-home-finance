@@ -1,3 +1,4 @@
+import { GO, jump } from '../go';
 import { useState } from 'react';
 import { api, cents, dayShort, daysUntil, money, useData } from '../lib';
 import { CategoryPicker, Logo, LogoPicker, More, Skeleton, offerUndo } from '../ui';
@@ -123,7 +124,7 @@ export default function Recurring() {
           {yearlyOnes.length > 0 && (
             <>
               <div className="group-head"><span>Once-a-year bills</span><span className="num">{money(yearlyTotal)} a year</span></div>
-              <p className="sub">Putting <b>{money(yearlyTotal / 12)} a month</b> aside covers all {yearlyOnes.length} of them without a scramble when each comes round. The next is {yearlyNext.name}, {cents(yearlyNext.amount)}, due {dayShort(yearlyNext.next)}. A savings goal on the <a href="#accounts">Accounts</a> page is a good place to keep it.</p>
+              <p className="sub">Putting <b>{money(yearlyTotal / 12)} a month</b> aside covers all {yearlyOnes.length} of them without a scramble when each comes round. The next is {yearlyNext.name}, {cents(yearlyNext.amount)}, due {dayShort(yearlyNext.next)}. A savings goal on the <a href="#accounts" onClick={jump(GO.goals)}>Accounts</a> page is a good place to keep it.</p>
             </>
           )}
         </section>

@@ -1749,6 +1749,11 @@ form.forgot { text-align: left; }
 .update-line code { flex: 1 1 auto; min-width: 0; font: 12.5px/1.45 ui-monospace, "SF Mono", Menlo, Consolas, monospace; overflow-wrap: anywhere; user-select: all; }
 .update-line .button-link { flex: none; }
 a.button-link.strong { background: var(--ink); color: var(--bg); border-color: transparent; }
+/* "Take me there" (src/go.ts): the thing a link landed on is ringed for a moment. A plain outline and a
+   ring that fades outward twice: no blur, nothing moves, so it is light on a phone. */
+.spot { outline: 2px solid var(--accent) !important; outline-offset: 4px; animation: spot-pulse 1.2s ease-out 2; }
+@keyframes spot-pulse { from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); } to { box-shadow: 0 0 0 16px transparent; } }
+@media (prefers-reduced-motion: reduce) { .spot { animation: none; } }
 .github-notes { margin: 12px 0 0; padding-left: 20px; display: grid; gap: 6px; }
 .key-guide ol { margin: 0; padding-left: 22px; display: grid; gap: 10px; font-size: 14px; line-height: 1.45; }
 .mail-guide { margin: 4px 0 14px; }

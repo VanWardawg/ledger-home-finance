@@ -48,7 +48,7 @@ function AccountRow({ a, onChanged }: { a: any; onChanged: () => void }) {
   };
   return (
     <>
-    <div className="row">
+    <div className="row" data-go={[canLeaveOut ? 'account-row' : '', byHand ? 'by-hand' : ''].filter(Boolean).join(' ') || undefined}>
       <Logo edit as={`account ${a.id}`} also={[a.name, `${a.name} payment`]} name={`${a.institution} ${a.bank_name || a.name}`} fallback={a.institution[0]} />
       {editing ? (
         <form className="grow rename" onSubmit={(e) => { e.preventDefault(); save(name); }}>
@@ -63,9 +63,9 @@ function AccountRow({ a, onChanged }: { a: any; onChanged: () => void }) {
         <span className="grow">{a.name}
           <small>{a.institution}{a.bank_name ? ` · ${a.bank_name}` : ''}<span className="wide-only"> · <button className="link" onClick={() => { setName(a.name); setEditing(true); }}>Rename</button>
             {owners.list.length > 1 && <> · <select className="owner-pick" aria-label={`Whose account ${a.name} is`} value={a.owner || 'joint'} onChange={(e) => setOwner(e.target.value)}>{owners.list.map((w) => <option key={w} value={w}>{owners.possessive(w)}</option>)}</select></>}
-            {byHand && <> · <button className="link" onClick={() => { setBal(Math.abs(a.balance).toFixed(2)); setErr(''); setSetting(!setting); }}>Set balance</button> · <button className="link" onClick={remove}>Remove</button></>}
+            {byHand && <> · <button className="link" data-go="set-balance" onClick={() => { setBal(Math.abs(a.balance).toFixed(2)); setErr(''); setSetting(!setting); }}>Set balance</button> · <button className="link" onClick={remove}>Remove</button></>}
             {checkable && <> · <button className="link" onClick={() => setChecking(!checking)}>Check a statement</button></>}
-            {canLeaveOut && <> · <button className="link" title={a.off_budget ? 'Count its spending in your budgets and totals again' : "Keep showing its balance, but don't count its spending in your budgets and totals"} onClick={() => setOut(!a.off_budget)}>{a.off_budget ? 'Count in the budget' : 'Leave out of the budget'}</button></>}
+            {canLeaveOut && <> · <button className="link" data-go="off-budget" title={a.off_budget ? 'Count its spending in your budgets and totals again' : "Keep showing its balance, but don't count its spending in your budgets and totals"} onClick={() => setOut(!a.off_budget)}>{a.off_budget ? 'Count in the budget' : 'Leave out of the budget'}</button></>}
           </span></small>
           {a.off_budget ? <small className="sub off-budget-note">Left out of the budget: its spending isn't counted, its balance still is.</small> : null}
           {checkable && a.checked && !checking && <small className={a.checked.gap === 0 ? 'good' : 'sub'}>{a.checked.gap === 0 ? `✓ Matches the statement to ${dayShort(a.checked.end)}` : `The statement to ${dayShort(a.checked.end)} was ${cents(Math.abs(a.checked.gap))} out when last checked`}</small>}

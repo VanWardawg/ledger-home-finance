@@ -2,6 +2,7 @@
 // Claude answers it from the app's own figures. It can look things up but can't
 // change anything. The conversation lives on this page only: leaving the page or
 // pressing "New conversation" starts afresh.
+import { GO, jump } from '../go';
 import { useEffect, useRef, useState } from 'react';
 import { api, cents, dayShort, useAi, useData, useGig } from '../lib';
 import { shrinkPicture } from '../ui';
@@ -250,7 +251,7 @@ export default function Cfo() {
     return (
       <section className="card cfo-intro">
         <CfoOwl size={128} />
-        <p className="sub">{state.limitNote || <>The CFO is Claude, so it needs AI switched on. Add an Anthropic key under <a href="#connections">Settings</a>, "AI recap and logos".</>}</p>
+        <p className="sub">{state.limitNote || <>The CFO is Claude, so it needs AI switched on. Add an Anthropic key under <a href="#connections" onClick={jump(GO.ai)}>Settings, "AI recap and logos"</a>.</>}</p>
       </section>
     );
   }
@@ -260,7 +261,7 @@ export default function Cfo() {
         <section className="card cfo-intro">
           <CfoOwl size={128} />
           <h2>Ask about your money</h2>
-          {ai.plain ? <p className="sub">Your {ai.claude ? 'Claude' : 'Chief'} Financial Officer answers from this month's totals, your accounts, bills, debts and savings goals, using the AI set up in your Home Assistant. That is the basic CFO: it can't dig through single transactions, look up tax rules, read a screenshot or suggest changes. Those need an Anthropic key of your own, under Settings, "AI recap and logos". It explains your figures; it doesn't give financial or tax advice.</p> : <p className="sub">Your Claude Financial Officer looks through your accounts, bills, budgets and taxes to answer. It can look things up, read a bank screenshot or export file you hand it with the paperclip, and suggest a few changes (filing a transaction, a new category, a budget, a bill's name) that only happen when you tap Confirm. It is an AI and explains your figures; it doesn't give tax or investment advice.</p>}
+          {ai.plain ? <p className="sub">Your {ai.claude ? 'Claude' : 'Chief'} Financial Officer answers from this month's totals, your accounts, bills, debts and savings goals, using the AI set up in your Home Assistant. That is the basic CFO: it can't dig through single transactions, look up tax rules, read a screenshot or suggest changes. Those need an Anthropic key of your own, under <a href="#connections" onClick={jump(GO.ai)}>Settings, "AI recap and logos"</a>. It explains your figures; it doesn't give financial or tax advice.</p> : <p className="sub">Your Claude Financial Officer looks through your accounts, bills, budgets and taxes to answer. It can look things up, read a bank screenshot or export file you hand it with the paperclip, and suggest a few changes (filing a transaction, a new category, a budget, a bill's name) that only happen when you tap Confirm. It is an AI and explains your figures; it doesn't give tax or investment advice.</p>}
           <div className="cfo-ideas">
             {[...(ai.plain ? IDEAS.filter((q) => !/forecast change/.test(q)) : IDEAS), ...(gig.on && !ai.plain ? [gigIdea(gig.name)] : [])].map((s) => <button key={s} type="button" onClick={() => ask(s)}>{s}</button>)}
             {!ai.plain && <label htmlFor="cfo-file" className="cfo-idea-file" role="button" tabIndex={0}>📎 Catch Ledger up with my bank: here's a screenshot or file</label>}
