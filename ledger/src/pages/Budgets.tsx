@@ -81,7 +81,7 @@ function ZeroBar({ z, month, onChanged }: { z: any; month: string; onChanged: ()
     <section className={`card zero-bar ${left < -0.005 ? 'over' : left > 0.005 ? 'some' : 'done'}`}>
       <div className="zero-top">
         <div><div className="label">{left < -0.005 ? 'Assigned more than you have' : 'To be assigned'}</div><div className="value">{money(Math.abs(left))}</div></div>
-        <p className="sub">{left > 0.005 ? 'Money that has come in and has no job yet. Hand it out below until this reads $0.' : left < -0.005 ? 'The categories below have been given more than has come in. Lower some until this reads $0.' : 'Every dollar has a job.'} Income this month so far: {money(z.income)}; given out this month: {money(z.assignedMonth)}.</p>
+        <p className="sub">{left > 0.005 ? 'Money that has come in and has no job yet. Hand it out below until this reads zero.' : left < -0.005 ? 'The categories below have been given more than has come in. Lower some until this reads zero.' : 'Every dollar has a job.'} Income this month so far: {money(z.income)}; given out this month: {money(z.assignedMonth)}.</p>
       </div>
       <div className="add-actions">
         <button disabled={busy} onClick={() => fill('usual')}>Fill empty ones with my usual amounts</button>

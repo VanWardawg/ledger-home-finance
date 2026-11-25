@@ -7,12 +7,13 @@
 // to the summary email's addresses through its sender (server/mail.js), so they need that set up,
 // and only between 7 AM and 9 PM by the server's clock. Off until switched on in Settings,
 // Summary email. Settings: alerts_on, alert_low (dollars, 100 unless changed).
+import { cents } from './money.js';
 import { db, iso, getSetting, setSetting } from './db.js';
 import { outlook } from './cashflow.js';
 import { carryInto } from './rollover.js';
 import { canSendMail, sendNote } from './mail.js';
 
-const money = (n) => `${n < 0 ? '-' : ''}$${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const money = cents;
 const day = (d) => new Date(`${d}T12:00:00`).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 const state = () => ({ on: getSetting('alerts_on') === '1', low: Number(getSetting('alert_low', '100')) || 0, canSend: canSendMail() });
 

@@ -6,6 +6,7 @@
 //
 // The Claude version sends the facts below (category totals, bills, debt and tax
 // figures, a few merchant names) to Anthropic's API. Nothing else leaves the app.
+import { whole, currency, currencyNote } from './money.js';
 import Anthropic from '@anthropic-ai/sdk';
 import { db, iso, getSetting, setSetting } from './db.js';
 import { outlook } from './cashflow.js';
@@ -25,7 +26,7 @@ export const model = () => forcedModel() || (MODELS.some((m) => m.id === getSett
 /** The key in use: your own, else the included one while this month's allowance lasts. See server/ai.js. */
 export const apiKey = () => activeKey();
 
-const money = (n) => `$${Math.round(Math.abs(n)).toLocaleString('en-US')}`;
+const money = (n) => whole(Math.abs(n));
 const monthName = (ym) => new Date(`${ym}-15T12:00:00`).toLocaleDateString('en-US', { month: 'long' });
 const shortDate = (d) => new Date(`${d}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 const monthsAhead = (n) => { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() + n); return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }); };
@@ -193,7 +194,7 @@ async function writeWithClaude(facts) {
   const params = {
     model: id,
     max_tokens: 16000,
-    system: SYSTEM(),
+    system: SYSTEM() + (currencyNote() ? '\n\n' + currencyNote() : ''),
     // A short, routine summary: low effort keeps it quick and inexpensive.
     output_config: { effort: 'low' },
     messages: [{ role: 'user', content: `Today's figures:\n${JSON.stringify(facts, null, 1)}` }],
@@ -221,7 +222,7 @@ async function recap(month, deps, force) {
   const useHa = viaHa();
   const useClaude = !useHa && apiKey() !== '';
   // The leading number changes whenever the recap's ingredients do, so old cached text isn't reused.
-  const key = `2|${facts.month}|${facts.is_current_month ? facts.today : 'final'}|${useHa ? 'ha' : useClaude ? model() : 'rules'}`;
+  const key = `2|${facts.month}|${facts.is_current_month ? facts.today : 'final'}|${useHa ? 'ha' : useClaude ? model() : 'rules'}${currency() === 'USD' ? '' : `|${currency()}`}`;   // a recap written in another currency is not reused (dollar households keep their cached one)
   let cache = {};
   try { cache = JSON.parse(getSetting('recap_cache', '{}')); } catch { /* start fresh */ }
   if (!force && cache[key]) return cache[key];
@@ -230,7 +231,7 @@ async function recap(month, deps, force) {
     let result;
     if (useHa) {
       try {
-        const text = await haAsk('the dashboard recap', `${SYSTEM()}\n\nToday's figures:\n${JSON.stringify(facts, null, 1)}`, 'recap', "this month's totals by category, bills due soon, the five largest purchases, and your debt and checking figures");
+        const text = await haAsk('the dashboard recap', `${SYSTEM()}${currencyNote() ? '\n\n' + currencyNote() : ''}\n\nToday's figures:\n${JSON.stringify(facts, null, 1)}`, 'recap', "this month's totals by category, bills due soon, the five largest purchases, and your debt and checking figures");
         result = { text, source: 'ha', by: aiName(), at: Date.now() };
       } catch (e) {
         result = { text: writeFromRules(facts), source: 'automatic', error: e.message, at: Date.now() };

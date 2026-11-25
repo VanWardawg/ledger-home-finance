@@ -22,6 +22,7 @@ export const JUST_ADDED: [title: string, text: string, more?: { date: string; go
 
 export const UPDATES: [date: string, items: string[]][] = [
   ['2026-11-25', [
+    'You can choose your currency in Settings, "Currency": pounds, euros, Canadian or Australian dollars and eighteen more. Every amount is then written with its symbol. It only changes how amounts are written; nothing is converted.',
     'Links that point you to a setting now land on the setting itself: the section opens and the exact box or switch is ringed for a moment. That covers "Turn on AI", "Connect your bank", the messages that say a feature needs AI, and every "Show me" under What\'s new.',
     'On a copy you run yourself, About, "Ask for something or report a problem" now opens Ledger\'s project page on GitHub, where reports are read. Before, what you typed there was saved on your own copy and reached nobody.',
     'If you run Ledger yourself with Docker, it now tells you on the dashboard when a newer version is out, with what changed and the two lines that update it. It looks once a day and sends nothing about you; Settings, "Updates" switches it off.',

@@ -4,6 +4,7 @@
 //
 // It is sent through a Gmail account with an "app password", which is saved in
 // settings as mail_password and never sent back to the browser or printed.
+import { cents as moneyCents, whole } from './money.js';
 import { gig } from './gig.js';
 import nodemailer from 'nodemailer';
 import { db, getSetting, setSetting } from './db.js';
@@ -17,8 +18,8 @@ const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0
 const addDays = (date, n) => { const [y, m, d] = date.split('-').map(Number); return iso(new Date(y, m - 1, d + n)); };
 const dayLabel = (date) => { const [y, m, d] = date.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); };
 const weekday = (date) => { const [y, m, d] = date.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'long' }); };
-const cents = (n) => `${n < 0 ? '-' : ''}$${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const dollars = (n) => `${n < 0 ? '-' : ''}$${Math.round(Math.abs(n)).toLocaleString('en-US')}`;
+const cents = moneyCents;
+const dollars = whole;
 
 /** When to send, by the server's clock (Central time on the NAS): days of the week (0 is Sunday) and an hour. */
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];

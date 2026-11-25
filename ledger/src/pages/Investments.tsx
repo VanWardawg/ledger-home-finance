@@ -1,3 +1,4 @@
+import { currencySymbol } from '../lib';
 import { useState } from 'react';
 import { api, dayShort, forgetLoaded, money, useData } from '../lib';
 import { Logo, MoneyInput } from '../ui';
@@ -72,7 +73,7 @@ function Account({ a, reload }: { a: any; reload: () => void }) {
       {a.gain !== null && <p className="sub invest-gain">Against what was paid for {a.holdings.every((h: any) => h.cost !== null) ? 'these holdings' : 'the holdings with a cost'}: <b className={tone(a.gain)}>{signed(a.gain)}</b> on {money(a.cost)}.</p>}
       {shown.map((h: any) => form === h.id ? <HoldingForm key={h.id} account={a.id} holding={h} onDone={done} /> : (
         <div key={h.id} className="row holding">
-          <span className="grow wrap">{h.name}<small>{[h.symbol, h.price ? `$${Number(h.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} a share` : '', h.shares != null ? `${Number(h.shares).toLocaleString('en-US', { maximumFractionDigits: 4 })} shares` : '', a.balance > 0 ? `${Math.round((h.value / a.balance) * 100)}% of the account` : ''].filter(Boolean).join(' · ')}</small></span>
+          <span className="grow wrap">{h.name}<small>{[h.symbol, h.price ? `${currencySymbol()}${Number(h.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} a share` : '', h.shares != null ? `${Number(h.shares).toLocaleString('en-US', { maximumFractionDigits: 4 })} shares` : '', a.balance > 0 ? `${Math.round((h.value / a.balance) * 100)}% of the account` : ''].filter(Boolean).join(' · ')}</small></span>
           <span className="num">{money(h.value)}{h.gain !== null && <small className={tone(h.gain)}>{signed(h.gain)}{h.gainPct !== null ? ` (${h.gainPct >= 0 ? '+' : ''}${h.gainPct}%)` : ''}</small>}</span>
           {h.manual && <span className="holding-acts"><button className="link" onClick={() => setForm(h.id)}>Change</button><button className="link" onClick={() => remove(h)}>Remove</button></span>}
         </div>

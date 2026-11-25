@@ -9,6 +9,7 @@
 // A conversation is kept in memory only, whole, so follow-up questions have the
 // earlier ones for context. It is forgotten after two hours without a question
 // or when the server restarts; nothing of it is written to the database.
+import { cents as moneyCents, currencyNote } from './money.js';
 import Anthropic from '@anthropic-ai/sdk';
 import crypto from 'node:crypto';
 import { settleBudgets } from './rollover.js';
@@ -297,7 +298,7 @@ function runTool(name, input, deps, convo) {
 // conversation; the page shows it with Confirm and Cancel, and POST /api/cfo/act carries out a
 // confirmed one. Three kinds, all easy to undo by hand: refiling a merchant's purchases, a category's
 // budget, and a bill's name. Nothing here touches the settings table, sign-in, accounts or money.
-const dollars = (n) => `$${Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const dollars = moneyCents;
 function proposeChange(a, convo) {
   const cat = (name) => db.prepare('SELECT id, name, kind FROM categories WHERE name = ? COLLATE NOCASE').get(String(name || '').trim());
   let action;
@@ -409,7 +410,7 @@ async function ask(convo, question, deps) {
       const send = () => client.messages.create({
         model: model(),
         max_tokens: 8000,
-        system: `${SYSTEM}${web ? LOOKUP_SYSTEM : ''}${privateCats().length ? PRIVATE_NOTE : ''}\n\nToday is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} (${iso(new Date())}).`,
+        system: `${SYSTEM}${web ? LOOKUP_SYSTEM : ''}${privateCats().length ? PRIVATE_NOTE : ''}${currencyNote() ? '\n\n' + currencyNote() : ''}\n\nToday is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} (${iso(new Date())}).`,
         tools: web ? [...TOOLS, ...WEB_TOOLS] : TOOLS,
         messages,
       });

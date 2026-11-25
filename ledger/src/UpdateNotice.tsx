@@ -51,8 +51,8 @@ export function UpdateSteps({ u, onClose }: { u: Update; onClose: () => void }) 
       <h3>How to update</h3>
       <ol className="update-steps">
         <li>On the computer that runs Ledger, open Docker Desktop and click the small <b>&gt;_</b> at the bottom right.</li>
-        <li>Paste this line and press Enter:<Line text={`docker pull ${image} && docker rm -f ledger`} /></li>
-        <li>Then paste this one and press Enter:<Line text={`docker run -d --name ledger --restart unless-stopped -p 4317:4317 -v ledger-data:/data ${image}`} /></li>
+        <li>Paste this line and press Enter. It removes the old version; your data is kept:<Line text="docker rm -f ledger" /></li>
+        <li>Then paste this one and press Enter. It fetches the new version and starts it:<Line text={`docker run -d --pull always --name ledger --restart unless-stopped -p 4317:4317 -v ledger-data:/data ${image}`} /></li>
         <li>Ledger is back in a few seconds. Reload this page.</li>
       </ol>
       <p className="sub">These lines fit a copy started the way the instructions show. If you started yours differently (another name, port or folder, or with Compose), update it the way you started it. <a href={u.page} target="_blank" rel="noreferrer">The project's page</a> has the details.</p>

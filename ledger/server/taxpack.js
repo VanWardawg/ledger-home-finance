@@ -7,13 +7,14 @@
 // figures come from the same taxEstimate() the Taxes page shows, handed in by server/index.js.
 //
 // Settings: taxpack_sent (the tax year whose January copy has gone out).
+import { cents } from './money.js';
 import PDFDocument from 'pdfkit';
 import { db, getSetting, setSetting } from './db.js';
 import { canSendMail, sendWithFiles } from './mail.js';
 import './receipts.js';
 import { appendPdfs, docList, docsForPack, docsOn, installTaxDocs } from './taxdocs.js';
 
-const money = (n) => `${n < 0 ? '-' : ''}$${Math.abs(Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const money = cents;
 const FILING = { joint: 'Married filing jointly', separate: 'Married filing separately', single: 'Single', hoh: 'Head of household' };
 const csv = (v) => { const s = String(v ?? ''); return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
 

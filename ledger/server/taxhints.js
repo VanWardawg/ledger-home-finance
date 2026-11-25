@@ -18,6 +18,7 @@
 // squeezing joins the end of one word to the start of the next.
 // Bank names run words together ("NikePOS_US"), so names are squeezed to letters and digits before
 // matching and the words below are written the same way (no spaces).
+import { cents } from './money.js';
 import { db, getSetting, setSetting } from './db.js';
 import { TAX_YEAR } from './tax.js';
 import { gig } from './gig.js';
@@ -208,7 +209,7 @@ export function installTaxHints(app, more) {
   const draft = () => {
     const h = answer(), mine = h.asking;
     const who = more.names();
-    const money = (n) => `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const money = cents;
     const day = (d) => new Date(`${d}T12:00:00`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     const what = { teaching: 'a classroom (educator) expense', business: 'a business expense for self-employed work', care: 'child care toward the child care credit', giving: 'a charitable gift', medical: 'a medical expense', property_tax: 'property tax' };
     const lines = mine.map((q, i) => `${mine.length > 1 ? `${i + 1}. ` : ''}${q.merchant}, ${day(q.date)}, ${money(q.amount)}.${q.note ? ` It was for: ${q.note}.` : ''} Could this count as ${what[q.kind] || 'a deduction'}?`);

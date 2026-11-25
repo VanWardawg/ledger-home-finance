@@ -2,6 +2,7 @@
 // Shown in place of the app until it is finished or skipped (server/setup.js keeps the state),
 // and can be opened again from Settings. Every step saves as you go and can be skipped; nothing
 // here is the only place to set something, since each step reuses a section of Settings or Taxes.
+import { CurrencyPick } from '../Currency';
 import { useState } from 'react';
 import { api, cents, forgetLoaded, money, setTaxes, useData, useTaxes } from '../lib';
 import { MoneyInput, NumField } from '../ui';
@@ -42,6 +43,7 @@ function Household() {
       {!taxesOn && <p className="sub">You've said you are not in the United States, so Ledger's tax section is switched off: it only knows US federal and state income tax. Everything else works the same. Choosing a state here switches it back on.</p>}
       <div className="add-grid">
         <StatePick value={s.tax_state} onPick={(v) => save('tax_state')(v)} />
+        <CurrencyPick label="Your currency" />
         {taxesOn && <><label className="field"><span>How you file your taxes</span>
           <select value={s.filing_status} onChange={(e) => save('filing_status')(e.target.value)}>
             <option value="joint">Married, filing jointly</option>

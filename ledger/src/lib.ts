@@ -43,13 +43,37 @@ export function useData<T = any>(url: string) {
   return { data, error, reload };
 }
 
-const usd0 = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
-const usd2 = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
-export const money = (n: number) => usd0.format(Math.round(n));
-export const cents = (n: number) => usd2.format(n);
-export const signed = (n: number) => (n > 0 ? '+' : '') + usd2.format(n);
+// The household's currency (server/money.js). Display only: the symbol and how numbers are grouped. The
+// last one seen is kept on the device so the first screen is right before the server has answered. A
+// US-dollar household is drawn exactly as before; another currency follows this device's own language.
+let currencyNow = 'USD';
+try { const c = localStorage.getItem('ledger-currency'); if (c && /^[A-Z]{3}$/.test(c)) currencyNow = c; } catch { /* private window */ }
+let fmt0: Intl.NumberFormat, fmt2: Intl.NumberFormat;
+function buildMoney() {
+  const where = currencyNow === 'USD' ? 'en-US' : undefined;
+  const make = (extra: Intl.NumberFormatOptions) => {
+    try { return new Intl.NumberFormat(where, { style: 'currency', currency: currencyNow, currencyDisplay: 'narrowSymbol', ...extra }); }
+    catch { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', ...extra }); }
+  };
+  fmt0 = make({ maximumFractionDigits: 0 });
+  fmt2 = make({});
+}
+buildMoney();
+/** Called when the server says which currency the household uses. True when that changed what is drawn. */
+export function setCurrency(code?: string) {
+  if (!code || !/^[A-Z]{3}$/.test(code) || code === currencyNow) return false;
+  currencyNow = code;
+  try { localStorage.setItem('ledger-currency', code); } catch { /* private window */ }
+  buildMoney();
+  return true;
+}
+export const currencyCode = () => currencyNow;
+export const currencySymbol = () => fmt0.formatToParts(0).find((p) => p.type === 'currency')?.value || '$';
+export const money = (n: number) => fmt0.format(Math.round(n));
+export const cents = (n: number) => fmt2.format(n);
+export const signed = (n: number) => (n > 0 ? '+' : '') + fmt2.format(n);
 export const compact = (n: number) =>
-  Math.abs(n) >= 1000 ? `$${(n / 1000).toFixed(Math.abs(n) >= 10000 ? 0 : 1)}k` : `$${Math.round(n)}`;
+  Math.abs(n) >= 1000 ? `${currencySymbol()}${(n / 1000).toFixed(Math.abs(n) >= 10000 ? 0 : 1)}k` : `${currencySymbol()}${Math.round(n)}`;
 
 const parse = (s: string) => {
   const [y, m, d] = s.split('-').map(Number);

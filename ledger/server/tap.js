@@ -6,6 +6,7 @@
 // Each phone gets its own key (Settings, "Apple Pay purchases"). A key can only
 // add a purchase: it can't read anything or sign in. Only a hash of each key is
 // kept, so a key is shown once, when it is made.
+import { cents } from './money.js';
 import crypto from 'node:crypto';
 import { db, getSetting, setSetting } from './db.js';
 import { makeCategorizer } from './simplefin.js';
@@ -144,7 +145,7 @@ export function installTapEndpoint(app) {
       .run(account.id, date, merchant, -amount, makeCategorizer()(merchant, -amount, account.type), `Apple Pay, ${key.name}`, waiting);
     refreshBalances();
     noteTap('recorded', { phone: key.name, merchant, amount, detail: account.name });
-    res.json({ ok: true, added: true, message: `${merchant} $${amount.toFixed(2)} recorded on ${account.name}.` });
+    res.json({ ok: true, added: true, message: `${merchant} ${cents(amount)} recorded on ${account.name}.` });
   });
 }
 

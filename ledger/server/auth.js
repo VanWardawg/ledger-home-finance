@@ -1,5 +1,6 @@
 // Password protection. Once a password is set, every API request needs a
 // signed-in session cookie. The password is stored only as a salted hash.
+import { currency } from './money.js';
 import crypto from 'node:crypto';
 import os from 'node:os';
 import { db, getSetting, setSetting } from './db.js';
@@ -129,6 +130,7 @@ export function installAuth(app) {
       // Every other copy starts plain as well (2026-11-24, after he saw the add-on open on the holiday scenes:
       // "Ledger should be starting with standard background"). A copy starts on the scenes only where its
       // setting `start_look` says 'auto', which is set on the owner's own copy and nowhere else.
+      currency: currency(),
       look: !process.env.LEDGER_SETUP_CODE && getSetting('start_look') === 'auto' ? 'auto' : 'none',
       // A family copy's sign-in screen offers "Forgot your password?" (a reset code from whoever runs the copies).
       canReset: setupCode() !== '' && claimed(),

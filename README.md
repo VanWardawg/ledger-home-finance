@@ -1,7 +1,34 @@
+<p align="center"><img src="docs/readme/logo.svg" width="360" alt="Ledger"></p>
+
 # Ledger
 
 A household budget you run yourself. One small server, one SQLite file, no account with anyone:
 your finances stay on a machine you own.
+
+![Ledger's dashboard: what is left before payday, what is in checking, and spending against budget](docs/readme/dashboard.jpg)
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/readme/budgets.jpg" alt="The Budgets page, with suggestions for covering a category that has gone over"></td>
+    <td width="50%"><img src="docs/readme/debt.jpg" alt="The Debt page, with a payoff plan and a debt-free date"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Budgets, with a way to cover what has gone over</sub></td>
+    <td align="center"><sub>A payoff plan for what you owe</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/readme/christmas.jpg" alt="The dashboard with the Christmas scene behind it"></td>
+    <td><img src="docs/readme/light.jpg" alt="The dashboard in its light look"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Holiday scenes, if you want them</sub></td>
+    <td align="center"><sub>Light or dark</sub></td>
+  </tr>
+</table>
+
+<p align="center"><img src="docs/readme/phone.jpg" width="250" alt="Ledger on a phone"><br><sub>On a phone, added to the home screen</sub></p>
+
+Every figure in these pictures is made up: it is the sample household a new copy starts with.
 
 Ledger began as one family's replacement for a paid budgeting app and grew from there. It is a
 personal project, shared as it is. It is not a product, and nobody is on call for it.
@@ -44,13 +71,20 @@ On your own computer Ledger only works while the computer is on and awake: bank 
 email and alerts wait until it is.
 
 Ledger looks at this page once a day and says on its dashboard when a newer version is out (nothing about
-you is sent, and Settings, "Updates" switches it off). To update to a newer version:
+you is sent, and Settings, "Updates" switches it off). To update to a newer version, run these two lines one
+after the other:
 
 ```bash
-docker pull ghcr.io/moeckjeremy/ledger-home-finance:latest && docker rm -f ledger
+docker rm -f ledger
 ```
 
-and run the first line again. Your data stays in the volume. If you prefer Compose,
+```bash
+docker run -d --pull always --name ledger --restart unless-stopped -p 4317:4317 -v ledger-data:/data ghcr.io/moeckjeremy/ledger-home-finance:latest
+```
+
+The first removes the old version and the second fetches the new one and starts it. Your data stays in the
+volume. (They are two separate lines on purpose: the terminal in Docker Desktop on Windows does not accept
+`&&`.) If you prefer Compose,
 [`ledger/compose.yaml`](ledger/compose.yaml) does the same
 (`docker compose up -d`; add `TZ=Your/Zone` to a `.env` file there for your time zone).
 Without a time zone, Ledger takes

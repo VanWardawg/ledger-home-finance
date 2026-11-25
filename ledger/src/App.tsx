@@ -1,7 +1,7 @@
 import { OwedNotice } from './pages/GigPay';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { useTaxes, setTaxes } from './lib';
+import { useTaxes, setTaxes, setCurrency } from './lib';
 import { api, lastLoaded, monthLong, noteLoaded, useData, handoff, monthShort, busyFor, midSession } from './lib';
 import { IconDialog, LogoDialog, UndoToast, reducedMotion } from './ui';
 import { setFoundLogos } from './logos';
@@ -324,6 +324,7 @@ export default function App() {
 
 function Gate() {
   const { data: auth, reload: reloadAuth } = useData('/api/auth/status');
+  if (auth) setCurrency((auth as any).currency);   // before the pages below draw a single amount
   // Plays once, right after signing in.
   const [welcome, setWelcome] = useState(false);
   const [pkBusy, setPkBusy] = useState(false);

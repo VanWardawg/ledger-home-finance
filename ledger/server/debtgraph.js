@@ -10,6 +10,7 @@
 // lender's own payment history when someone has one (a mortgage's five-year history, a student loan's);
 // nothing fills it by itself. The future is plain arithmetic from the balance, rate and payment, including
 // any standing extra, the same as the payoff dates on the page.
+import { whole } from './money.js';
 import { db } from './db.js';
 
 db.exec(`CREATE TABLE IF NOT EXISTS debt_history (
@@ -35,7 +36,7 @@ function schedule(balance, apr, payment, cap = 720) {
   return { rows: out, never: false };
 }
 
-const dollars = (n) => `$${Math.round(n).toLocaleString('en-US')}`;
+const dollars = whole;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const monthName = (d) => `${MONTHS[Number(d.slice(5, 7)) - 1]} ${d.slice(0, 4)}`;
 

@@ -1,3 +1,5 @@
+import { CurrencySettings } from '../Currency';
+import { currencyCode } from '../lib';
 import { GigPay } from './GigPay';
 import { UpdateSettings } from '../UpdateNotice';
 import { useTaxes, setTaxes } from '../lib';
@@ -1788,7 +1790,7 @@ function ApplePay() {
             <div className="row" key={i}>
               <span className="grow wrap">{r.merchant || (r.outcome === 'wrong key' ? 'A report with a key Ledger doesn\'t know' : 'A report with nothing in it')}
                 <small>{when(r.at)} · {r.outcome === 'recorded' ? `added to ${r.detail}` : r.outcome === 'already recorded' ? 'already recorded, so not added twice' : r.detail || r.outcome}{r.phone ? ` · ${r.phone}` : ''}</small></span>
-              {r.amount != null && <span className="num">${Number(r.amount).toFixed(2)}</span>}
+              {r.amount != null && <span className="num">{cents(Number(r.amount))}</span>}
             </div>
           ))}
           <p className="sub">If a purchase isn't listed here, the phone's report never reached Ledger: the automation didn't run for that payment, the phone couldn't reach your home server at that moment, or Ledger was restarting for an update (last restart {when(data.startedAt)}). Add it with the + button; the bank's entry will still replace it.</p>
@@ -2000,6 +2002,7 @@ export default function Connections({ onChanged }: { onChanged: () => void }) {
         </section>
         </Fold>
       )}
+      {needsPassword ? null : <Fold id="currency" title="Currency" note={`Amounts are written in ${currencyCode()}`}><CurrencySettings /></Fold>}
       {needsPassword ? null : <Fold id="import" title="Import a file" note="For accounts the bank connection can't reach, such as Apple Card"><ImportFile sampleData={s.sampleData} onDone={refresh} /></Fold>}
 
       {needsPassword ? null : <p className="sub"><button className="link" onClick={() => dispatchEvent(new Event('ledger-tour'))}>Take the tour</button> to be shown round the app. <button className="link" onClick={() => dispatchEvent(new Event('ledger-setup'))}>Open the setup guide</button> to go through your household, accounts, paydays and budgets step by step. <a href="#about">About Ledger</a> explains how everything works, and is where to ask for something or report a problem.</p>}

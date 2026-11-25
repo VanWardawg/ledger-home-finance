@@ -1,4 +1,5 @@
 // One process serves both the API and the app, on one port.
+import { CURRENCIES, currency, validCurrency, validLocale } from './money.js';
 import { installGigPay } from './gigpay.js';
 import { installHaAi } from './haai.js';
 import { installHaSensors } from './hasensors.js';
@@ -622,6 +623,9 @@ app.get('/api/reports', (req, res) => {
 // ---- Settings -------------------------------------------------------------
 
 const SETTING_DEFAULTS = {
+  // What amounts are written in (server/money.js). Display only: nothing is converted.
+  currency: 'USD',
+  currency_locale: '',
   // How the household files: joint (married filing jointly), single, or hoh (head of household).
   filing_status: 'joint',
   // The state the household pays income tax to (two letters). Empty until chosen: none is assumed.
@@ -647,6 +651,8 @@ app.put('/api/settings', (req, res) => {
     const s = String(v ?? '').trim();
     if (k === 'tax_state') { if (!stateChosen(s)) return res.status(400).json({ error: 'Choose a state.' }); setSetting(k, s.toUpperCase()); continue; }
     if (k === 'logos_off') { setSetting(k, s === '1' ? '1' : '0'); continue; }
+    if (k === 'currency') { if (!validCurrency(s.toUpperCase())) return res.status(400).json({ error: 'Choose a currency from the list.' }); setSetting(k, s.toUpperCase()); continue; }
+    if (k === 'currency_locale') { setSetting(k, validLocale(s) ? s : ''); continue; }
     if (k === 'filing_status') { if (!['joint', 'single', 'hoh', 'separate'].includes(s)) return res.status(400).json({ error: 'Choose how you file.' }); setSetting(k, s); continue; }
     const blankOk = ['vipkid_override', 'extra_payment', 'withheld_fed', 'withheld_ar', 'paid_fed', 'paid_ar', 'tax_account'].includes(k);
     if (s === '' && blankOk) { setSetting(k, ''); continue; }
@@ -1097,6 +1103,7 @@ installStatementRemind(app);
 installCatSuggest(app);
 installOwners(app);
 installOffBudget(app);
+app.get('/api/currencies', (_req, res) => res.json({ currency: currency(), list: CURRENCIES.map(([code, name]) => ({ code, name })) }));
 installUpdateCheck(app);
 installPrices(app);
 installZero(app);

@@ -13,6 +13,7 @@
 //
 // Children's names stay in this copy. Nothing here is sent to Claude, and the host of a family copy is
 // told none of it (server/activity.js).
+import { cents } from './money.js';
 import { db, iso, getSetting, setSetting } from './db.js';
 
 db.exec(`CREATE TABLE IF NOT EXISTS kids (
@@ -159,7 +160,7 @@ export function installAllowance(app) {
     if (!isDate(date) || date > today) return res.status(400).json({ error: "That date isn't one the app can use. Choose today or earlier." });
     if (spend) {
       const has = round(db.prepare('SELECT COALESCE(SUM(amount), 0) s FROM kid_entries WHERE kid_id = ? AND jar = ?').get(k.id, jar).s);
-      if (amount > has + 0.004) return res.status(400).json({ error: `${k.name} only has $${has.toFixed(2)} ${jar === 'spend' ? 'to spend' : `in ${jar}`}.` });
+      if (amount > has + 0.004) return res.status(400).json({ error: `${k.name} only has ${cents(has)} ${jar === 'spend' ? 'to spend' : `in ${jar}`}.` });
     }
     db.prepare('INSERT INTO kid_entries (kid_id, date, amount, jar, note) VALUES (?,?,?,?,?)').run(k.id, date, spend ? -amount : amount, jar, note);
     res.json(view());

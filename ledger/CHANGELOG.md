@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.30
+
+- Currency: Settings, "Currency" (and the setup guide's first step) lets a household choose the money it
+  uses, from 22 currencies. Every amount is then written with that symbol, in the app, in the summary
+  email and alerts, and in what the AI features are told. It changes how amounts are written only:
+  nothing is converted, and a household has one currency. US dollars stay the default.
+- Fixed for plain Docker on Windows: the two lines that update Ledger no longer use `&&`, which the
+  terminal in Docker Desktop on Windows refuses. Updating is now `docker rm -f ledger`, then the start
+  line with `--pull always`. If your copy's own "How to update" box still shows a line with `&&`, use
+  the two lines in the README instead.
+
 ## 0.1.29
 
 - Links that say where a setting is now take you to the setting itself: the right section opens, the

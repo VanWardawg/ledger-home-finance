@@ -10,6 +10,7 @@
 // What a price does: every holding with that symbol gets `price` and `price_at`. A holding TYPED BY HAND
 // with a share count has its value set to shares times price, and an account kept by hand then follows
 // the total of its holdings. A holding the bank reported keeps the bank's own value.
+import { currency } from './money.js';
 import { db, getSetting, setSetting } from './db.js';
 import { setStart } from './tap.js';
 import './holdings.js';
@@ -34,7 +35,7 @@ export async function fetchPrice(symbol) {
     const meta = (await r.json())?.chart?.result?.[0]?.meta;
     const price = Number(meta?.regularMarketPrice);
     if (!Number.isFinite(price) || price <= 0 || price > 1e7) return null;
-    if (meta.currency && meta.currency !== 'USD') return null; // values in Ledger are dollars
+    if (meta.currency && meta.currency !== currency()) return null; // only prices already in the household's own currency: nothing is converted
     return { price, at: Number(meta.regularMarketTime) ? Number(meta.regularMarketTime) * 1000 : Date.now() };
   } catch {
     return null;
