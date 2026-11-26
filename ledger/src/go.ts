@@ -24,6 +24,8 @@ export const GO = {
   gig: { page: 'connections', fold: 'gig', at: '[data-go="gig-owed"]' },
   goals: { page: 'accounts', at: '[data-go="goals"]' },
   allowance: { page: 'accounts', at: '[data-news="allowance"]' },
+  otherIncome: { page: 'taxes', fold: 'tax-more', at: '[data-go="other-income"]' },
+  sideGig: { page: 'connections', fold: 'gig' },
   setBalance: { page: 'accounts', at: '[data-go="set-balance"], [data-go~="by-hand"] .more-btn' },
 } satisfies Record<string, Go>;
 
@@ -73,6 +75,7 @@ export function goTo(go: Go) {
     if (tries === 2) unfold(); // a section inside a section exists only once the outer one has opened
     const el = find();
     if (!el) { if (++tries < 30) setTimeout(look, 170); return; }
+    if (el instanceof HTMLDetailsElement) el.open = true;   // a folded part of a page that is landed on opens
     const tall = el.getBoundingClientRect().height > innerHeight * 0.5;
     el.scrollIntoView({ block: tall ? 'start' : 'center' });
     spot(el);

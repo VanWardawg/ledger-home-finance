@@ -22,6 +22,7 @@ export const JUST_ADDED: [title: string, text: string, more?: { date: string; go
 
 export const UPDATES: [date: string, items: string[]][] = [
   ['2026-11-25', [
+    'When you add a payday you can now say what it is: a paycheck, Social Security or other benefits, a pension, or other regular income. Ledger only ever asks for a pay stub for a job, and tells you where benefits and pensions go if they need to be in your tax estimate.',
     'You can choose your currency in Settings, "Currency": pounds, euros, Canadian or Australian dollars and eighteen more. Every amount is then written with its symbol. It only changes how amounts are written; nothing is converted.',
     'Links that point you to a setting now land on the setting itself: the section opens and the exact box or switch is ringed for a moment. That covers "Turn on AI", "Connect your bank", the messages that say a feature needs AI, and every "Show me" under What\'s new.',
     'On a copy you run yourself, About, "Ask for something or report a problem" now opens Ledger\'s project page on GitHub, where reports are read. Before, what you typed there was saved on your own copy and reached nobody.',

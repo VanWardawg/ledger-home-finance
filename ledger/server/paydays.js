@@ -63,24 +63,28 @@ function list() {
     const years = db.prepare('SELECT substr(date, 1, 4) year, COUNT(*) n FROM pay_dates WHERE schedule_id = ? GROUP BY year ORDER BY year').all(s.id);
     return {
       id: s.id, name: s.name, match: fromPattern(s.merchant_like), rule: s.rule, pattern: describeRule(s.rule),
-      amount_mode: s.amount_mode, amount: s.amount ?? null, gig: isGigPay(s),
+      amount_mode: s.amount_mode, amount: s.amount ?? null, gig: isGigPay(s), kind: KINDS.includes(s.kind) ? s.kind : 'job',
       lastDeposit: last || null, next: payDates(s.rule, today, ahead, s.id).slice(0, 3),
       calendars: years.map((y) => ({ year: y.year, dates: y.n })),
     };
   });
 }
 
+/** What a payday is. Only a job comes with pay stubs. */
+export const KINDS = ['job', 'benefits', 'pension', 'other'];
+
 function read(body) {
   const name = String(body?.name || '').trim().slice(0, 60);
-  if (!name) return { error: 'Give the paycheck a name, such as your employer.' };
+  if (!name) return { error: 'Give it a name, such as your employer or "Pension".' };
+  const kind = KINDS.includes(body?.kind) ? body.kind : 'job';
   const rule = cleanRule(body?.rule);
   if (!rule) return { error: 'Choose how often it is paid.' };
   const mode = ['last', 'average', 'fixed'].includes(body?.amount_mode) ? body.amount_mode : 'last';
   const amount = Number(body?.amount);
-  if (mode === 'fixed' && !(amount > 0)) return { error: 'Enter the take-home amount of one paycheck.' };
+  if (mode === 'fixed' && !(amount > 0)) return { error: 'Enter the amount that arrives each time.' };
   const match = toPattern(body?.match);
   if (mode !== 'fixed' && !match) return { error: "Enter a word from the deposit's name at your bank, or choose a set amount." };
-  return { name, rule, mode, amount: mode === 'fixed' ? Math.round(amount * 100) / 100 : null, match };
+  return { name, rule, mode, amount: mode === 'fixed' ? Math.round(amount * 100) / 100 : null, match, kind };
 }
 
 const TOOL = {
@@ -127,7 +131,7 @@ export function installPaydays(app) {
   app.post('/api/paydays', (req, res) => {
     const p = read(req.body);
     if (p.error) return res.status(400).json({ error: p.error });
-    db.prepare('INSERT INTO pay_schedules (name, merchant_like, rule, amount_mode, amount) VALUES (?,?,?,?,?)').run(p.name, p.match, p.rule, p.mode, p.amount);
+    db.prepare('INSERT INTO pay_schedules (name, merchant_like, rule, amount_mode, amount, kind) VALUES (?,?,?,?,?,?)').run(p.name, p.match, p.rule, p.mode, p.amount, p.kind);
     res.json(list());
   });
 
@@ -136,7 +140,7 @@ export function installPaydays(app) {
     if (!db.prepare('SELECT 1 FROM pay_schedules WHERE id = ?').get(id)) return res.status(404).json({ error: 'That paycheck is no longer there.' });
     const p = read(req.body);
     if (p.error) return res.status(400).json({ error: p.error });
-    db.prepare('UPDATE pay_schedules SET name = ?, merchant_like = ?, rule = ?, amount_mode = ?, amount = ? WHERE id = ?').run(p.name, p.match, p.rule, p.mode, p.amount, id);
+    db.prepare('UPDATE pay_schedules SET name = ?, merchant_like = ?, rule = ?, amount_mode = ?, amount = ?, kind = ? WHERE id = ?').run(p.name, p.match, p.rule, p.mode, p.amount, p.kind, id);
     res.json(list());
   });
 

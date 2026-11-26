@@ -17,6 +17,9 @@ db.exec(`CREATE TABLE IF NOT EXISTS pay_schedules (
   rule TEXT NOT NULL, amount_mode TEXT NOT NULL DEFAULT 'last')`);
 // amount_mode 'fixed' uses an amount the household typed (for a paycheck the bank feed can't show).
 if (!db.prepare("SELECT 1 FROM pragma_table_info('pay_schedules') WHERE name = 'amount'").get()) db.exec('ALTER TABLE pay_schedules ADD COLUMN amount REAL');
+// What a payday is (2026-11-25): 'job' (a paycheck, the only kind before this), 'benefits' (Social Security and
+// the like), 'pension', or 'other'. Only a job has pay stubs, so only a job is ever asked for one.
+if (!db.prepare("SELECT 1 FROM pragma_table_info('pay_schedules') WHERE name = 'kind'").get()) db.exec("ALTER TABLE pay_schedules ADD COLUMN kind TEXT NOT NULL DEFAULT 'job'");
 
 // The side gig's row, noted by id so the gig can be renamed without losing its pay forecast.
 if (gig().on && getSetting('gig_schedule_id') === '') {

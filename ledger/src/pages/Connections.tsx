@@ -1,3 +1,4 @@
+import { GO, jump } from '../go';
 import { CurrencySettings } from '../Currency';
 import { currencyCode } from '../lib';
 import { GigPay } from './GigPay';
@@ -826,13 +827,14 @@ const DAYS_OF_MONTH = [...Array.from({ length: 31 }, (_, i) => String(i + 1)), '
 const dayName = (d: string) => (d === 'last' ? 'Last day' : d);
 const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const niceDate = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-type PayForm = { name: string; match: string; how: 'twice' | 'once' | 'two-weeks' | 'weekly' | 'nth'; nth: string; day1: string; day2: string; weekday: string; anchor: string; amount_mode: string; amount: string };
-const BLANK_PAY: PayForm = { name: '', match: '', how: 'twice', nth: '2', day1: '15', day2: 'last', weekday: '5', anchor: '', amount_mode: 'last', amount: '' };
+type PayKind = 'job' | 'benefits' | 'pension' | 'other';
+type PayForm = { kind: PayKind; name: string; match: string; how: 'twice' | 'once' | 'two-weeks' | 'weekly' | 'nth'; nth: string; day1: string; day2: string; weekday: string; anchor: string; amount_mode: string; amount: string };
+const BLANK_PAY: PayForm = { kind: 'job', name: '', match: '', how: 'twice', nth: '2', day1: '15', day2: 'last', weekday: '5', anchor: '', amount_mode: 'last', amount: '' };
 // The form's choices as the rule the server keeps, and back again.
 const ruleOf = (f: PayForm) => (f.how === 'twice' ? `monthdays:${f.day1},${f.day2}` : f.how === 'once' ? `monthdays:${f.day1}` : f.how === 'weekly' ? `weekly:${f.weekday}` : f.how === 'nth' ? `nthweekday:${f.nth}:${f.weekday}` : `every:14:${f.anchor}`);
 function formOf(p: any): PayForm {
   const [type, spec, anchor] = String(p.rule).split(':');
-  const f: PayForm = { ...BLANK_PAY, name: p.name, match: p.match, amount_mode: p.amount_mode, amount: p.amount != null ? String(p.amount) : '' };
+  const f: PayForm = { ...BLANK_PAY, kind: p.kind || 'job', name: p.name, match: p.match, amount_mode: p.amount_mode, amount: p.amount != null ? String(p.amount) : '' };
   if (type === 'weekly') return { ...f, how: 'weekly', weekday: spec };
   if (type === 'nthweekday') return { ...f, how: 'nth', nth: spec, weekday: anchor };
   if (type === 'every') return { ...f, how: 'two-weeks', anchor: anchor || '' };
@@ -875,7 +877,7 @@ function PayCalendar({ p, onSaved }: { p: any; onSaved: () => void }) {
       {p.calendars.map((c: any) => (
         <small key={c.year}>Pay calendar for {c.year} loaded ({c.dates} dates). <button className="link" onClick={() => save([], c.year)}>Remove</button> </small>
       ))}
-      {!open ? <button className="link" onClick={() => setOpen(true)}>{p.calendars.length ? 'Add another year' : "Add your employer's pay calendar"}</button> : (
+      {!open ? <button className="link" onClick={() => setOpen(true)}>{p.calendars.length ? 'Add another year' : p.kind && p.kind !== 'job' ? 'Add a calendar of its payment dates' : "Add your employer's pay calendar"}</button> : (
         <div className="stack" style={{ gap: 8, marginTop: 8 }}>
           <small>A published calendar knows about bank holidays, so it is used in place of the pattern for the years it covers. Upload a PDF, photo or screenshot of it, or type the dates.</small>
           <div className="add-actions">
@@ -895,8 +897,13 @@ function PayCalendar({ p, onSaved }: { p: any; onSaved: () => void }) {
 }
 
 // When each paycheck arrives and how much it is. The checking forecast on the dashboard is built from these.
+const PAY_KIND_NAMES: Record<PayKind, string> = { job: 'A paycheck', benefits: 'Benefits', pension: 'A pension', other: 'Other income' };
+
 export function Paydays() {
   const { data: list, reload } = useData<any[]>('/api/paydays');
+  const taxesOn = useTaxes();
+  // Inside the setup guide the side gig has its own step, and Settings is not on screen to jump to.
+  const inGuide = typeof document !== 'undefined' && !!document.querySelector('.setup');
   const [editing, setEditing] = useState<number | 'new' | null>(null);
   const [f, setF] = useState<PayForm>(BLANK_PAY);
   const [err, setErr] = useState('');
@@ -908,7 +915,7 @@ export function Paydays() {
     e.preventDefault();
     if (f.how === 'two-weeks' && !f.anchor) return setErr('Choose the date of a recent or coming payday, so the app can count two weeks from it.');
     try {
-      await api(editing === 'new' ? '/api/paydays' : `/api/paydays/${editing}`, { method: editing === 'new' ? 'POST' : 'PUT', body: { name: f.name, match: f.match, rule: ruleOf(f), amount_mode: f.amount_mode, amount: f.amount } });
+      await api(editing === 'new' ? '/api/paydays' : `/api/paydays/${editing}`, { method: editing === 'new' ? 'POST' : 'PUT', body: { kind: f.kind, name: f.name, match: f.match, rule: ruleOf(f), amount_mode: f.amount_mode, amount: f.amount } });
       setEditing(null); changed();
     } catch (e: any) { setErr(e.message); }
   };
@@ -916,15 +923,15 @@ export function Paydays() {
   return (
     <section className="card">
       <div className="card-head"><h2>Paydays</h2></div>
-      <p className="sub first">When each paycheck arrives and how much it is. The dashboard's forecast of what's left before payday is built from these.</p>
-      {list.length === 0 && editing == null && <p className="sub">No paydays yet. Add one for each paycheck in the household.</p>}
+      <p className="sub first">When each paycheck, benefits check or pension arrives and how much it is. The dashboard's forecast of what's left before payday is built from these.</p>
+      {list.length === 0 && editing == null && <p className="sub">No paydays yet. Add one for each paycheck, benefits check or pension in the household.</p>}
       {list.map((p) => (
         <div key={p.id} className="payday">
           <div className="row">
             <span className="grow wrap">{p.name}
               <small>
                 Paid {p.pattern}. {p.amount_mode === 'fixed' ? `${cents(p.amount)} each time.` : p.lastDeposit ? `${p.amount_mode === 'average' ? 'About the average of recent deposits' : 'Same as the last deposit'} (${cents(p.lastDeposit.amount)} on ${niceDate(p.lastDeposit.date)}).` : `No deposit containing "${p.match}" has been seen yet, so it isn't in the forecast.`}
-                {p.next.length ? ` Next: ${p.next.map(niceDate).join(', ')}.` : ''}{p.gig ? ' This is your side gig.' : ''}
+                {p.next.length ? ` Next: ${p.next.map(niceDate).join(', ')}.` : ''}{p.gig ? ' This is your side gig.' : ''}{p.kind && p.kind !== 'job' ? ` ${PAY_KIND_NAMES[p.kind as PayKind]}: no pay stub is needed for it.` : ''}
               </small>
             </span>
             <button className="link" onClick={() => start(p)}>Change</button>
@@ -933,9 +940,17 @@ export function Paydays() {
           <PayCalendar p={p} onSaved={changed} />
         </div>
       ))}
-      {editing == null ? <div className="add-actions" style={{ marginTop: 12 }}><button className="primary" onClick={() => start()}>Add a paycheck</button></div> : (
+      {editing == null ? <div className="add-actions" style={{ marginTop: 12 }}><button className="primary" onClick={() => start()}>Add a payday</button></div> : (
         <form onSubmit={save} noValidate className="add-grid" style={{ marginTop: 14 }}>
-          <label>Whose paycheck<input type="text" value={f.name} maxLength={60} placeholder="Your paycheck (Acme)" onChange={set('name')} /></label>
+          <label>What kind of income is it?
+            <select value={f.kind} data-go="pay-kind" onChange={(e) => { const kind = e.target.value as PayKind; setF({ ...f, kind, how: kind === 'job' ? f.how : f.how === 'twice' ? 'once' : f.how }); setErr(''); }}>
+              <option value="job">A paycheck from a job</option>
+              <option value="benefits">Social Security or other benefits</option>
+              <option value="pension">A pension</option>
+              <option value="other">Other regular income</option>
+            </select>
+          </label>
+          <label>{f.kind === 'job' ? 'Whose paycheck' : 'What to call it'}<input type="text" value={f.name} maxLength={60} placeholder={f.kind === 'job' ? 'Your paycheck (Acme)' : f.kind === 'pension' ? 'Pension' : f.kind === 'benefits' ? 'Social Security' : 'Rent from the upstairs flat'} onChange={set('name')} /></label>
           <label>A word from its deposit at the bank<input type="text" value={f.match} placeholder="acme" onChange={set('match')} /><small>Lets the app recognise the deposit when it lands. Leave blank if you have no bank connection.</small></label>
           <label>How often
             <select value={f.how} onChange={set('how')}>
@@ -956,14 +971,18 @@ export function Paydays() {
               <option value="fixed">A set amount I'll type</option>
             </select>
           </label>
-          {f.amount_mode === 'fixed' && <label>Take-home pay each time<MoneyInput value={f.amount} placeholder="1,500.00" onChange={(v) => { setF({ ...f, amount: v }); setErr(''); }} /></label>}
+          {f.amount_mode === 'fixed' && <label>{f.kind === 'job' ? 'Take-home pay each time' : 'What arrives each time'}<MoneyInput value={f.amount} placeholder="1,500.00" onChange={(v) => { setF({ ...f, amount: v }); setErr(''); }} /></label>}
           <div style={{ alignSelf: 'end' }} className="add-actions">
-            <button type="submit" className="primary">{editing === 'new' ? 'Add paycheck' : 'Save'}</button>
+            <button type="submit" className="primary">{editing === 'new' ? (f.kind === 'job' ? 'Add paycheck' : 'Add it') : 'Save'}</button>
             <button type="button" onClick={() => setEditing(null)}>Cancel</button>
           </div>
         </form>
       )}
+      {editing != null && f.kind !== 'job' && (
+        <p className="sub pay-kind-note">Ledger counts this as income and shows it in your forecast. No pay stub is needed for it.{taxesOn && <> It is <b>not</b> counted in the tax estimate unless you enter the year's amount yourself, under <a href="#taxes" onClick={jump(GO.otherIncome)}>Taxes, "Retirement and other income"</a>. Whether it is taxable is a question for whoever prepares your taxes.</>}</p>
+      )}
       {(f.how === 'twice' || f.how === 'once') && editing != null && <p className="sub">A payday that falls on a weekend is counted on the Friday before.</p>}
+      {editing == null && <p className="sub">Paid for side jobs with no tax taken out? {inGuide ? 'That has its own step, next.' : <>Set that up under <a href="#connections" onClick={jump(GO.sideGig)}>Side gig</a>, so Ledger keeps it apart and shows what to set aside for tax.</>}</p>}
       {err && <p className="error" role="alert">{err}</p>}
     </section>
   );

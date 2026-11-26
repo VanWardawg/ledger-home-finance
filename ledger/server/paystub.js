@@ -249,7 +249,8 @@ function changedPay(since) {
   try { schedules = db.prepare('SELECT * FROM pay_schedules').all(); } catch { return out; }
   for (const s of schedules) {
     // Side-gig pay and pay that is an average of uneven deposits change all the time; that isn't news.
-    if (isGigPay(s) || s.amount_mode === 'average') continue;
+    // Nor is a benefit or a pension: there is no stub to ask for.
+    if (isGigPay(s) || s.amount_mode === 'average' || (s.kind && s.kind !== 'job')) continue;
     let deposits = [];
     try { deposits = db.prepare('SELECT date, amount FROM transactions WHERE merchant LIKE ? AND amount > 0 AND COALESCE(waiting, 0) = 0 AND COALESCE(pending, 0) = 0 ORDER BY date DESC LIMIT 12').all(s.merchant_like); } catch { continue; }
     const after = deposits.filter((d) => d.date > since), before = deposits.filter((d) => d.date <= since).slice(0, 3);
@@ -287,7 +288,7 @@ export function stubReminder(now = new Date()) {
   const wages = (who) => Number(getSetting(who === 'you' ? 'your_salary' : 'spouse_salary')) > 0;
   // Paychecks set up but no pay typed yet: the estimate has nothing to go on, and a stub is the quickest cure.
   let paydays = 0;
-  try { paydays = db.prepare('SELECT COUNT(*) n FROM pay_schedules WHERE CAST(id AS TEXT) != ?').get(getSetting('gig_schedule_id') || '').n; } catch { /* no such table yet */ }
+  try { paydays = db.prepare("SELECT COUNT(*) n FROM pay_schedules WHERE CAST(id AS TEXT) != ? AND COALESCE(kind, 'job') = 'job'").get(getSetting('gig_schedule_id') || '').n; } catch { /* no such table yet */ }
   const people = [];
   let newest = '';
   for (const who of joint ? ['you', 'spouse'] : ['you']) {

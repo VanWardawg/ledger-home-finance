@@ -47,9 +47,9 @@ const MARKET: Field[] = [
   ['people', 'People on your tax return', 'You, a spouse and dependents'],
 ];
 
-function Part({ title, summary, children }: { title: string; summary: string; children: React.ReactNode }) {
+function Part({ title, summary, go, children }: { title: string; summary: string; go?: string; children: React.ReactNode }) {
   return (
-    <details className="tax-part">
+    <details className="tax-part" data-go={go}>
       <summary><span>{title}</span><small>{summary}</small></summary>
       <div className="tax-part-body">{children}</div>
     </details>
@@ -136,7 +136,7 @@ export function TaxMore({ t, reload }: { t: any; reload: () => void }) {
         </div>
       </Part>
 
-      <Part title="Retirement and other income" summary={filled('income', incomeFields) ? `${filled('income', incomeFields)} filled in` : 'None'}>
+      <Part title="Retirement and other income" go="other-income" summary={filled('income', incomeFields) ? `${filled('income', incomeFields)} filled in` : 'None'}>
         {income.map(([title, fields]) => (
           <div key={title}>
             <div className="group-head"><span>{title}</span></div>

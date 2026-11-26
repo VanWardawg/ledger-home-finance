@@ -256,7 +256,7 @@ export default function About() {
         <p>The outlook card lists each bill and paycheck with the balance after it. If you know what a bill or paycheck will really be, or that it will come on a different day (a holiday, a bonus), choose <b>Change</b> on its row and set the amount or the date; it applies to that one bill or payday. A paycheck that arrives a few days early is recognised when it reaches the app, and a one-off bonus doesn't change what the app expects next time. If a bill is already pending at your bank, choose <b>It's pending at the bank</b> so it isn't taken off twice.</p>
       </>,
       <>
-        <p>Paydays come from Settings, Paydays. If the forecast looks wrong, that and the Recurring page are the first places to check.</p>
+        <p>Paydays come from Settings, Paydays. A payday can be a paycheck from a job, Social Security or other benefits, a pension, or other regular income: all of them count as income, and only a job is ever asked for a pay stub. If the forecast looks wrong, that and the Recurring page are the first places to check.</p>
       </>,
     ],
     'budgets': [

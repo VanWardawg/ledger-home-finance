@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.32
+
+- Paydays for people who are retired or on benefits. When you add a payday you now say what it is: a
+  paycheck from a job, Social Security or other benefits, a pension, or other regular income. Only a
+  job is ever asked for a pay stub. For the others Ledger says plainly that the money counts as income
+  but is not in the tax estimate unless you enter it yourself, with a link to where that is done.
+- Paydays now points to Side gig for pay with no tax taken out.
+
 ## 0.1.31
 
 - Fixed for plain Docker: a new copy could never set its password. Settings said to open Ledger "on the
