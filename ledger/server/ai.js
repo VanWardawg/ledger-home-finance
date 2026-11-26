@@ -87,7 +87,7 @@ export function noteUsage(feature, response, source = aiSource() || 'own', sent 
   } catch { return 0; /* the reply still stands */ }
 }
 
-const FEATURES = { check: 'A check that the AI answers', cfo: 'Ask your CFO', lookup: 'Tax rules looked up', recap: 'Dashboard recap', scan: 'Screenshots read', icon: 'Icons drawn', paydays: 'Pay calendars read', paystub: 'Pay stubs read', statements: 'Statements read', work: 'Work questions', budgets: 'Budget suggestions', logos: 'Logo searches', categories: 'Category suggestions' };
+const FEATURES = { review: 'Money review', check: 'A check that the AI answers', cfo: 'Ask your CFO', lookup: 'Tax rules looked up', recap: 'Dashboard recap', scan: 'Screenshots read', icon: 'Icons drawn', paydays: 'Pay calendars read', paystub: 'Pay stubs read', statements: 'Statements read', work: 'Work questions', budgets: 'Budget suggestions', logos: 'Logo searches', categories: 'Category suggestions' };
 
 /** What the Settings page shows: which key is in use, the included allowance, and this month's use. */
 export function aiStatus() {

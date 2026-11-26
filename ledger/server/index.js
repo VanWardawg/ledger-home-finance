@@ -2,6 +2,10 @@
 import { CURRENCIES, currency, validCurrency, validLocale } from './money.js';
 import { installGigPay } from './gigpay.js';
 import { installHaAi } from './haai.js';
+import { installLocalAi } from './localai.js';
+import { installAnalysis, moneyReview } from './analysis.js';
+import { installYnab } from './ynab.js';
+import { installBackup } from './backup.js';
 import { installHaSensors } from './hasensors.js';
 import express from 'express';
 import path from 'node:path';
@@ -1077,9 +1081,13 @@ app.delete('/api/accounts/:id', (req, res) => {
 installRecap(app, { summaryFor, debtPlan, taxEstimate });
 installAi(app);
 installHaAi(app);
+installLocalAi(app);
+installAnalysis(app, { summaryFor });
+installYnab(app);
+installBackup(app);
 installHoldings(app);
 installReconcile(app);
-installCfo(app, { summaryFor, debtPlan, taxEstimate, goals, investments });
+installCfo(app, { summaryFor, debtPlan, taxEstimate, goals, investments, moneyReview: () => moneyReview({ forAi: true, budget: Number(summaryFor().budget) || 0 }) });
 // Loan payments already saved take their loan's name (does nothing once they have it).
 nameLoanPayments();
 applyNames();

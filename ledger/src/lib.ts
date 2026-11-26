@@ -158,8 +158,8 @@ export async function setTaxes(on: boolean) {
  * "Chief Financial Officer". `plain` means the CFO answers through Home Assistant's AI, the basic way.
  */
 export function useAi() {
-  const { data } = useData<{ ready: boolean; plain?: boolean; claude?: boolean; aiName?: string }>('/api/cfo');
-  return { claude: data ? data.claude !== false : true, plain: !!data?.plain, name: data?.aiName || 'Claude' };
+  const { data } = useData<{ ready: boolean; plain?: boolean; local?: boolean; claude?: boolean; aiName?: string }>('/api/cfo');
+  return { claude: data ? data.claude !== false : true, plain: !!data?.plain, local: !!data?.local, name: data?.aiName || 'Claude' };
 }
 
 export function useGig() {

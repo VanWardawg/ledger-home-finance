@@ -16,7 +16,8 @@ import { settleBudgets } from './rollover.js';
 import { db, getSetting, iso } from './db.js';
 import { apiKey, model, buildFacts, readableError } from './recap.js';
 import { noteUsage, aiSource, limitMessage, notPrivate, privateCats } from './ai.js';
-import { viaHa, haAsk, aiName, haIsClaude } from './haai.js';
+import { viaPlain, plainAsk, aiName, plainIsClaude } from './plainai.js';
+import { viaLocal, localChat } from './localai.js';
 import { outlook, checkingEstimate } from './cashflow.js';
 import { getRecurrings, nextDue } from './recurring.js';
 import { renameBill } from './names.js';
@@ -383,7 +384,7 @@ function carryOut(action) {
 
 const LABELS = {
   get_month_overview: 'the month', get_checking_forecast: 'the checking forecast', get_accounts: 'your accounts', search_transactions: 'transactions',
-  propose_change: 'a change to propose', spending_breakdown: 'spending', get_bills: 'your bills', get_debt_plan: 'the debt plan', get_savings_goals: 'your savings goals', get_investments: 'your investments', get_tax_estimate: 'the tax estimate',
+  get_money_review: 'the money review', propose_change: 'a change to propose', spending_breakdown: 'spending', get_bills: 'your bills', get_debt_plan: 'the debt plan', get_savings_goals: 'your savings goals', get_investments: 'your investments', get_tax_estimate: 'the tax estimate',
 };
 
 const conversations = new Map();
@@ -487,7 +488,7 @@ async function askPlain(convo, question, deps) {
   convo.plain = convo.plain || [];
   const earlier = convo.plain.slice(-4).map((t) => `They asked: ${t.q}\nYou answered: ${t.a}`).join('\n\n');
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  const text = await haAsk('a question about the household\'s money',
+  const text = await plainAsk('a question about the household\'s money',
     `${PLAIN_SYSTEM}${privateCats().length ? PRIVATE_NOTE : ''}\n\nToday is ${today}.\n\nThe household's figures:\n${capped(facts, 45000)}${earlier ? `\n\nEarlier in this conversation:\n${earlier}` : ''}\n\nTheir question: ${question}`,
     'cfo', "your question, with this month's totals, your accounts, bills, debts and savings goals");
   convo.plain.push({ q: question, a: text });
@@ -495,14 +496,69 @@ async function askPlain(convo, question, deps) {
   return { reply: text, looked: ['this month', 'your accounts', 'your bills', 'the debt plan', 'your savings goals'], sources: [], cost: 0, actions: [] };
 }
 
+// The CFO on a model the household runs itself (server/localai.js). Unlike Home Assistant's AI, such a
+// server can be offered tools, so the model looks figures up step by step as Claude does: the same
+// read-only tools, run by this server. It is offered nothing that changes anything and nothing on the web.
+// A model that can't use tools is given the one bundle of figures instead (askPlain).
+const LOCAL_SYSTEM = `You are the financial officer inside Ledger, a household's private personal finance app, running on the household's own computer. The people asking are the household themselves, looking at their own accounts.
+
+Look figures up with the tools before you answer: never guess an amount, a date or a name, and never do sums on figures you have not looked up. Start with get_month_overview for general questions. For "why" questions look at the transactions behind a total (search_transactions, spending_breakdown) and name the purchases that explain it. For questions about what is unusual, what has changed, or where to cut back, call get_money_review, which has already compared this month with the household's own past.
+
+Amounts that are negative are money out. Give figures as they are, with cents where they matter. Be brief and plain: a few sentences, or a short list with "- " at the start of each line. No headings and no tables. If the tools don't cover what they ask, say so plainly and say which page of Ledger would show it (Transactions, Budgets, Recurring, Debt, Accounts, Reports, Taxes).
+
+You explain their own figures. Do not tell them what to claim or deduct on their taxes, and do not recommend particular investments: for those, say that a tax preparer or a licensed adviser is the person to ask. You cannot change anything in Ledger.`;
+
+const LOCAL_ROUNDS = 6;
+const localTools = () => [
+  ...TOOLS.filter((t) => t.name !== 'propose_change'),
+  { name: 'get_money_review', description: "What stands out in the household's money right now, worked out by Ledger from their own history: categories running above or below their usual, where the month is heading, purchases that are unusually large for their shop, charges that look doubled, subscriptions whose price changed, shops that are new, how the last three months compare with the three before, and how many days of spending their cash covers. Use for any question about what is unusual, what changed, or where money could be saved.", input_schema: { type: 'object', properties: {}, additionalProperties: false } },
+].map((t) => ({ type: 'function', function: { name: t.name, description: t.description, parameters: t.input_schema } }));
+
+async function askLocal(convo, question, deps) {
+  if (convo.noTools) return askPlain(convo, question, deps);
+  const today = new Date();
+  const system = `${LOCAL_SYSTEM}${privateCats().length ? PRIVATE_NOTE : ''}${currencyNote() ? '\n\n' + currencyNote() : ''}\n\nToday is ${today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} (${iso(today)}).`;
+  // Earlier questions go back as their questions and answers only: the looked-up figures are fetched afresh,
+  // which keeps a long conversation inside a small model's memory.
+  convo.local = convo.local || [];
+  const messages = [{ role: 'system', content: system }, ...convo.local.slice(-6).flatMap((t) => [{ role: 'user', content: t.q }, { role: 'assistant', content: t.a }]), { role: 'user', content: question }];
+  const looked = [];
+  const tools = localTools();
+  for (let i = 0; i < LOCAL_ROUNDS; i++) {
+    let reply;
+    try {
+      // On the last round no tools are offered, so the model has to answer with what it has.
+      reply = await localChat(messages, { tools: i < LOCAL_ROUNDS - 1 ? tools : undefined, feature: 'cfo', sent: looked.length ? `your question, and what it looked up to answer it: ${[...new Set(looked)].join(', ')}` : 'your question', maxTokens: 2500, think: true });
+    } catch (e) {
+      if (e.noTools && !looked.length) { convo.noTools = true; return askPlain(convo, question, deps); }
+      throw e;
+    }
+    if (!reply.calls.length) {
+      if (!reply.text) throw new Error("Your model didn't give an answer. Try asking again.");
+      convo.local.push({ q: question, a: reply.text });
+      convo.turns++;
+      return { reply: reply.text, looked: [...new Set(looked)], sources: [], cost: 0, actions: [] };
+    }
+    messages.push(reply.message);
+    for (const c of reply.calls) {
+      looked.push(LABELS[c.name] || c.name);
+      let out;
+      try { out = c.name === 'get_money_review' ? deps.moneyReview() : c.name === 'propose_change' ? { error: 'Changes cannot be proposed here.' } : runTool(c.name, c.input, deps, convo); } catch (e) { out = { error: `That lookup failed: ${e.message}` }; }
+      // Smaller than Claude is given: a local model's memory is short, and a long list crowds out the question.
+      messages.push({ role: 'tool', tool_call_id: c.id, name: c.name, content: capped(out, 9000) });
+    }
+  }
+  throw new Error('That question took too many lookups to answer. Try asking about one thing at a time.');
+}
+
 export function installCfo(app, deps) {
   // `plain`: answered through Home Assistant's AI, without the look-ups and proposals. `claude`: whether the
   // CFO is Claude here, which decides its name (Claude Financial Officer, or Chief Financial Officer).
-  app.get('/api/cfo', (_req, res) => res.json({ ready: apiKey() !== '' || viaHa(), limitNote: limitMessage(), plain: viaHa(), claude: !viaHa() || haIsClaude(), aiName: aiName() }));
+  app.get('/api/cfo', (_req, res) => res.json({ ready: apiKey() !== '' || viaPlain(), limitNote: limitMessage(), plain: viaPlain(), local: viaLocal(), claude: !viaPlain() || plainIsClaude(), aiName: aiName() }));
   app.post('/api/cfo/ask', async (req, res) => {
     const question = String(req.body?.question || '').trim().slice(0, 2000);
     if (!question) return res.status(400).json({ error: 'Type a question first.' });
-    if (!apiKey() && !viaHa()) return res.status(400).json({ error: limitMessage() || 'The CFO needs AI switched on. Add an Anthropic key on the Settings page.' });
+    if (!apiKey() && !viaPlain()) return res.status(400).json({ error: limitMessage() || 'The CFO needs AI switched on. Add an Anthropic key on the Settings page.' });
     tidyUp();
     let id = String(req.body?.id || '');
     let convo = conversations.get(id);
@@ -512,7 +568,7 @@ export function installCfo(app, deps) {
     convo.busy = true;
     convo.at = Date.now();
     try {
-      res.json({ id, ...(await (viaHa() ? askPlain(convo, question, deps) : ask(convo, question, deps))) });
+      res.json({ id, ...(await (viaLocal() ? askLocal(convo, question, deps) : viaPlain() ? askPlain(convo, question, deps) : ask(convo, question, deps))) });
     } catch (e) {
       res.status(502).json({ id, error: e.message });
     } finally {

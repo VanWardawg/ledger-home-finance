@@ -1,5 +1,35 @@
 # Changelog
 
+## Unreleased (this fork)
+
+- A model of your own. Settings, "AI recap and logos" has a new part, "A model of your own": give Ledger
+  the address of a model server on your network (Ollama, LM Studio, or anything else that answers
+  OpenAI-style requests) and choose a model. The dashboard recap, category suggestions, the money review
+  and the CFO then run there, and nothing about your money leaves your network for those. Nothing is
+  charged. Reading receipts, statements and pay stubs, finding logos and the official-site searches still
+  need an Anthropic key; one that is saved is still used for those.
+- The CFO on a model of your own looks things up step by step, as it does with Claude, when the model
+  supports tool calls: the same read-only lookups, plus the money review. It is offered nothing that
+  changes anything. A model without tool calls answers from the month's figures instead.
+- Money review, at the top of Reports. What stands out, worked out by Ledger from your own history with
+  no AI: categories running above or below their usual, where the month is heading, purchases unusually
+  large for their shop, charges that look doubled, subscriptions whose price changed, new shops, the last
+  three months against the three before, how many days your cash covers, and the age of your money (the
+  figure YNAB shows). With a model of your own or Home Assistant's AI switched on, a button has it write
+  the findings up in plain words; it is handed the finished figures and asked to add nothing.
+- Moving in from YNAB. Settings, "Moving in from YNAB" reads YNAB's exported Register file (and its Plan
+  file, if you choose it) and brings across each account, every transaction with the category you chose
+  and its memo, and transfers as transfers. It learns where you file each shop and can take your latest
+  month's amounts as budgets. Bringing the same files in again adds nothing twice. Category groups, flags,
+  cleared marks, scheduled transactions and targets do not come across.
+- Backups. Ledger now makes a whole copy of its database each night and keeps the last 7 (Settings,
+  "Backups" changes the number), in a `backups` folder beside the database. A copy can also be made on
+  the spot or downloaded. The copies are on the same disk as the database: include that folder in
+  whatever backs up the machine.
+- Tests, for the first time: `npm test` runs 34 checks of the review's arithmetic, the YNAB import, the
+  model connection and the backups. Nothing in them needs a model or the internet.
+- Fixed: switching Home Assistant's AI off no longer clears a different AI choice.
+
 ## 0.1.32
 
 - Paydays for people who are retired or on benefits. When you add a payday you now say what it is: a

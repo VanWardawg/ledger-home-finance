@@ -159,7 +159,7 @@ export function installHaAi(app) {
   app.get('/api/ai/ha', async (_req, res) => res.json(await haStatus()));
   app.put('/api/ai/ha', async (req, res) => {
     if (!haOffered()) return res.status(400).json({ error: "This copy of Ledger isn't running inside Home Assistant, so it has no Home Assistant AI to use." });
-    if (req.body?.on === false) { setSetting('ai_via', ''); return res.json(await haStatus()); }
+    if (req.body?.on === false) { if (getSetting('ai_via') === 'ha') setSetting('ai_via', ''); return res.json(await haStatus()); }
     let list;
     try { list = await haEntities(true); } catch (e) { return res.status(502).json({ error: e.message }); }
     const want = String(req.body?.entity ?? haEntity() ?? '');

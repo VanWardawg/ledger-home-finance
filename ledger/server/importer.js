@@ -8,7 +8,7 @@ import { findWaiting, settle } from './waiting.js';
 import { makeCategorizer, removeSampleData } from './simplefin.js';
 
 /** Minimal CSV reader: handles quoted fields, embedded commas and newlines. */
-function parseCsv(text) {
+export function parseCsv(text) {
   const rows = [];
   let row = [], field = '', quoted = false;
   const s = text.replace(/^﻿/, '');

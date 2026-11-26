@@ -8,7 +8,8 @@
     "dev:phone": "HOST=0.0.0.0 node server/index.js",
     "build": "vite build",
     "start": "NODE_ENV=production node server/index.js",
-    "reset-sample-data": "node server/db.js --reset"
+    "reset-sample-data": "node server/db.js --reset",
+    "test": "node --test --test-force-exit \"test/*.test.js\""
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",

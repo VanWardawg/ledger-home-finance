@@ -1,6 +1,7 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { compact, money, monthLong, monthShort, useData, useOwners } from '../lib';
 import { useState } from 'react';
+import { MoneyReview } from './Review';
 import { Logo, Skeleton, reducedMotion } from '../ui';
 
 const OTHER = { id: 0, name: 'Everything else', color: 'var(--ink3)', icon: '📦' };
@@ -35,6 +36,7 @@ export default function Reports() {
 
   return (
     <div className="stack">
+      <MoneyReview />
       {owners.marked && (
         <div className="owner-filter">
           <select value={who} onChange={(e) => setWho(e.target.value)} aria-label="Whose spending">

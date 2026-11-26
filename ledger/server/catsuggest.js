@@ -10,7 +10,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { db } from './db.js';
 import { apiKey, model, readableError } from './recap.js';
-import { viaHa, haAskJson } from './haai.js';
+import { viaPlain, plainAskJson } from './plainai.js';
 import { noteUsage, aiSource, limitMessage, privateCats, homeState } from './ai.js';
 
 const MAX = 120;
@@ -66,22 +66,22 @@ export function installCatSuggest(app) {
     const rows = inOther();
     res.json({
       merchants: rows.length, purchases: rows.reduce((a, r) => a + r.n, 0), total: round(rows.reduce((a, r) => a + r.total, 0)),
-      canAsk: !!apiKey() || viaHa(), why: apiKey() || viaHa() ? '' : (limitMessage() || 'Suggesting categories needs the AI features switched on in Settings.'),
+      canAsk: !!apiKey() || viaPlain(), why: apiKey() || viaPlain() ? '' : (limitMessage() || 'Suggesting categories needs the AI features switched on in Settings.'),
     });
   });
 
   app.post('/api/categories/suggest', async (_req, res) => {
-    if (!apiKey() && !viaHa()) return res.status(400).json({ error: limitMessage() || 'Suggesting categories needs the AI features switched on in Settings.' });
+    if (!apiKey() && !viaPlain()) return res.status(400).json({ error: limitMessage() || 'Suggesting categories needs the AI features switched on in Settings.' });
     const rows = inOther().slice(0, MAX);
     if (!rows.length) return res.json({ suggestions: [], asked: 0, unsure: 0 });
     const cats = choices();
     if (!cats.length) return res.status(400).json({ error: 'There are no spending categories to choose from yet.' });
     // Through Home Assistant's own AI: the same question, asked for as plain JSON, since nothing there
     // promises the strict form Claude's service does. Anything that doesn't fit is dropped as "unsure".
-    if (viaHa()) {
+    if (viaPlain()) {
       let list;
       try {
-        list = await haAskJson('categories for shops', `${SYSTEM.replace('{WHERE}', homeState())}\n\nThe household's categories: ${cats.map((c) => c.name).join(', ')}.\n\nFor each of these ${rows.length} merchants give a category, as a JSON list of objects like {"number": 1, "category": "Groceries"}. Use a category name exactly as given, or "Other" when unsure.\n\n${rows.map((r, i) => `${i + 1}. ${r.merchant}`).join('\n')}`,
+        list = await plainAskJson('categories for shops', `${SYSTEM.replace('{WHERE}', homeState())}\n\nThe household's categories: ${cats.map((c) => c.name).join(', ')}.\n\nFor each of these ${rows.length} merchants give a category, as a JSON list of objects like {"number": 1, "category": "Groceries"}. Use a category name exactly as given, or "Other" when unsure.\n\n${rows.map((r, i) => `${i + 1}. ${r.merchant}`).join('\n')}`,
           'categories', `${rows.length} shop names from Other, and the names of your categories`);
       } catch (e) { return res.status(502).json({ error: e.message }); }
       const items = Array.isArray(list) ? list : Array.isArray(list?.merchants) ? list.merchants : [];

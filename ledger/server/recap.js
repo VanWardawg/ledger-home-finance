@@ -12,7 +12,8 @@ import { db, iso, getSetting, setSetting } from './db.js';
 import { outlook } from './cashflow.js';
 import { status as vipkidStatus } from './vipkid.js';
 import { gig } from './gig.js';
-import { viaHa, haAsk, aiName } from './haai.js';
+import { viaPlain, plainAsk, aiName, plainRoute } from './plainai.js';
+import { localModel } from './localai.js';
 import { activeKey, familyCopy, forcedModel, noteUsage, aiSource, limitMessage, notPrivate, privateCats } from './ai.js';
 
 const MODELS = [
@@ -219,10 +220,10 @@ const inFlight = new Map();
 async function recap(month, deps, force) {
   const facts = buildFacts(month, deps);
   // Home Assistant's own AI, where the household chose it; otherwise Claude by key; otherwise fixed sentences.
-  const useHa = viaHa();
+  const useHa = viaPlain();
   const useClaude = !useHa && apiKey() !== '';
   // The leading number changes whenever the recap's ingredients do, so old cached text isn't reused.
-  const key = `2|${facts.month}|${facts.is_current_month ? facts.today : 'final'}|${useHa ? 'ha' : useClaude ? model() : 'rules'}${currency() === 'USD' ? '' : `|${currency()}`}`;   // a recap written in another currency is not reused (dollar households keep their cached one)
+  const key = `2|${facts.month}|${facts.is_current_month ? facts.today : 'final'}|${useHa ? (plainRoute() === 'local' ? `local:${localModel()}` : 'ha') : useClaude ? model() : 'rules'}${currency() === 'USD' ? '' : `|${currency()}`}`;   // a recap written in another currency is not reused (dollar households keep their cached one)
   let cache = {};
   try { cache = JSON.parse(getSetting('recap_cache', '{}')); } catch { /* start fresh */ }
   if (!force && cache[key]) return cache[key];
@@ -231,7 +232,7 @@ async function recap(month, deps, force) {
     let result;
     if (useHa) {
       try {
-        const text = await haAsk('the dashboard recap', `${SYSTEM()}${currencyNote() ? '\n\n' + currencyNote() : ''}\n\nToday's figures:\n${JSON.stringify(facts, null, 1)}`, 'recap', "this month's totals by category, bills due soon, the five largest purchases, and your debt and checking figures");
+        const text = await plainAsk('the dashboard recap', `${SYSTEM()}${currencyNote() ? '\n\n' + currencyNote() : ''}\n\nToday's figures:\n${JSON.stringify(facts, null, 1)}`, 'recap', "this month's totals by category, bills due soon, the five largest purchases, and your debt and checking figures");
         result = { text, source: 'ha', by: aiName(), at: Date.now() };
       } catch (e) {
         result = { text: writeFromRules(facts), source: 'automatic', error: e.message, at: Date.now() };
@@ -256,9 +257,9 @@ async function recap(month, deps, force) {
 }
 
 export function installRecap(app, deps) {
-  const settings = () => ({ viaHa: viaHa(), aiName: aiName(), hasKey: apiKey() !== '', model: model(), models: MODELS, limitNote: limitMessage(), modelFixed: familyCopy() });
+  const settings = () => ({ viaHa: viaPlain(), aiName: aiName(), hasKey: apiKey() !== '', model: model(), models: MODELS, limitNote: limitMessage(), modelFixed: familyCopy() });
   // The review count is read fresh each time, so it drops as you categorize.
-  const reply = async (req, force) => ({ ...(await recap(req.query.month, deps, force)), hasKey: apiKey() !== '' || viaHa(), review: reviewFor(req.query.month) });
+  const reply = async (req, force) => ({ ...(await recap(req.query.month, deps, force)), hasKey: apiKey() !== '' || viaPlain(), review: reviewFor(req.query.month) });
   app.get('/api/recap', async (req, res) => res.json(await reply(req, false)));
   app.post('/api/recap/refresh', async (req, res) => res.json(await reply(req, true)));
   app.get('/api/recap/settings', (_req, res) => res.json(settings()));

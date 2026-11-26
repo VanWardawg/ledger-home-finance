@@ -1998,3 +1998,35 @@ html[data-season] .seg button.on:not(.primary):not(.link) { background: var(--gl
 @media (max-width: 760px) {
   input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']), textarea, select { font-size: 16px !important; }
 }
+
+/* ---- Money review (Reports), a model of your own, YNAB import and backups (Settings) ---- */
+.review-figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 18px; margin: 6px 0 14px; }
+.review-figure { display: flex; flex-direction: column; gap: 2px; }
+.review-figure b { font-size: 20px; font-weight: 600; }
+.review-list { list-style: none; margin: 0 0 12px; padding: 0; }
+.review-list li { display: flex; gap: 10px; align-items: baseline; padding: 8px 0; border-top: 1px solid var(--line); }
+.review-tag { flex: 0 0 96px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink3); }
+.review-tag.bad { color: var(--bad); }
+.review-tag.warn { color: #b26a00; }
+.review-written { border-top: 1px solid var(--line); padding-top: 12px; margin-bottom: 12px; }
+.review-written p { margin: 0 0 8px; max-width: 70ch; }
+.review-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0; }
+.local-ai { margin-top: 14px; }
+.local-ai h3 .good { font-size: 13px; font-weight: 500; margin-left: 8px; }
+.local-ai-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; margin: 8px 0; }
+.local-ai-form label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; flex: 1 1 260px; min-width: 0; }
+.local-ai-form input, .local-ai-form select { width: 100%; }
+.ynab-steps { margin: 0 0 12px; padding-left: 20px; }
+.ynab-steps li { margin: 3px 0; }
+.ynab-files { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.ynab-files label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.ynab-accounts { width: 100%; border-collapse: collapse; margin: 8px 0 10px; font-size: 14px; }
+.ynab-accounts th { text-align: left; font-size: 12px; font-weight: 500; color: var(--ink3); padding: 4px 8px 4px 0; }
+.ynab-accounts td { padding: 6px 8px 6px 0; border-top: 1px solid var(--line); }
+.ynab-accounts .r { text-align: right; }
+.ynab-accounts select { max-width: 100%; }
+.backups code { font-size: 12px; overflow-wrap: anywhere; }
+.backup-list { list-style: none; margin: 8px 0; padding: 0; }
+.backup-list li { display: flex; gap: 12px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.backup-list li span:nth-child(2) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 560px) { .review-list li { flex-direction: column; gap: 2px; } .review-tag { flex: none; } }

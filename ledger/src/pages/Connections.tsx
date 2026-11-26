@@ -1,4 +1,5 @@
 import { GO, jump } from '../go';
+import { Backups, LocalAi, YnabImport } from './Adoption';
 import { CurrencySettings } from '../Currency';
 import { currencyCode } from '../lib';
 import { GigPay } from './GigPay';
@@ -1219,10 +1220,11 @@ function AiRecap() {
     <section className="card">
       <div className="card-head"><h2>AI recap</h2>{(s.hasKey || s.viaHa) && <span className="good">On</span>}</div>
       <p className="sub first">
-        With AI on, Claude writes the dashboard recap, reads screenshots of purchases and looks up merchant logos. Without it, the recap is an automatic summary and the other two are off.
+        With AI on, Claude writes the dashboard recap, reads screenshots of purchases and looks up merchant logos. Without it, the recap is an automatic summary and the other two are off. A model you run at home can do the writing and answering instead (below), and then nothing leaves your network for those.
         Ledger sends Anthropic only what each job needs: that day's totals and bills, the picture you chose, or a list of merchant names. No account numbers.
       </p>
       <AiRoute onChange={() => { reload(); reloadAi(); }} />
+      <LocalAi onChange={() => { reload(); reloadAi(); }} />
 
       {inc && (
         <div className="ai-choice">
@@ -2072,7 +2074,9 @@ export default function Connections({ onChanged }: { onChanged: () => void }) {
       {needsPassword ? null : <Fold id="email" title="Summary email" note="A short summary sent on the days you choose"><WeeklyEmail /></Fold>}
       {needsPassword ? null : <Fold id="alerts" title="Alerts" note="Emails when checking runs low, a bill is due or a budget tips over, and the pay stub reminder"><Alerts /></Fold>}
       {needsPassword || !auth.ingress ? null : <Fold id="ha-sensors" title="Home Assistant sensors" note="Optional: let automations react to bills, a low balance or budgets"><HaSensors /></Fold>}
-      {needsPassword ? null : <Fold id="ai" title="AI recap and logos" note="Claude writes the recap, reads screenshots and finds logos"><AiRecap /></Fold>}
+      {needsPassword ? null : <Fold id="ai" title="AI recap and logos" note="Claude, or a model of your own, writes the recap and answers questions"><AiRecap /></Fold>}
+      {needsPassword ? null : <Fold id="ynab" title="Moving in from YNAB" note="Bring your YNAB accounts, categories and history across"><YnabImport onDone={onChanged} /></Fold>}
+      {needsPassword ? null : <Fold id="backups" title="Backups" note="A copy of everything each night, and one to download"><Backups /></Fold>}
       {needsPassword || !gig.classes ? null : <Fold id="vipkid" title={`${gig.name} class calendar`} note="Reads your classes to work out each Friday's pay"><VipkidCalendar /></Fold>}
     </div>
   );
