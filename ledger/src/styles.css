@@ -2092,3 +2092,9 @@ html[data-palette='plum'] { color-scheme: dark; --line: rgba(255, 255, 255, 0.09
 .target-edit input, .target-edit select { width: auto; min-width: 120px; max-width: 100%; text-align: left; }
 .target-edit .target-acts { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .target-edit small, .target-edit .error { flex-basis: 100%; margin: 0; }
+
+/* Card payments on Budgets (src/pages/Budgets.tsx). */
+.card-pay.plain { grid-template-columns: minmax(0, 1fr); }
+.card-pay { padding: 10px 0; }
+.card-pay-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; align-items: baseline; }
+.card-pay .carry-note button.link { font-size: inherit; }

@@ -65,6 +65,57 @@ function AddCategory({ onDone }: { onDone: () => void }) {
   );
 }
 
+/**
+ * Credit cards (server/cardpay.js): what went on each card, what was paid, and, when every dollar has a
+ * job, how much is set aside to pay it. The box is money given to the card itself this month.
+ */
+function CardPayments({ data, month, onChanged }: { data: any; month: string; onChanged: (note?: string) => void }) {
+  const [err, setErr] = useState('');
+  const assign = async (card: any, amount: number, note?: string) => {
+    try { await api(`/api/cards/${card.id}/assign`, { method: 'PUT', body: { month, amount: Math.round(amount * 100) / 100 } }); setErr(''); onChanged(note); } catch (e: any) { setErr(e.message); }
+  };
+  return (
+    <section className="card" id="card-payments">
+      <div className="card-head"><h2>Card payments</h2></div>
+      <p className="sub first">{data.zero
+        ? <>A purchase on a card comes out of its category straight away, and that money then waits here until you pay the card. <b>Set aside</b> is what is waiting. To pay down a balance from before, give the card money in the box on the right; it comes out of "To be assigned" like any category.</>
+        : <>Purchases on a card count against their categories on the day they are made. This shows what went on each card this month and what you have paid. Switch on "give every dollar a job" below to also see how much is set aside for each card.</>}</p>
+      {data.cards.map((c: any) => (
+        <div key={c.id} className={`budget-row card-pay${data.zero ? '' : ' plain'}`}>
+          <div>
+            <div className="card-pay-top"><b>{c.name}</b>{data.zero && <span className="num">{money(Math.max(0, c.setAside))} set aside</span>}</div>
+            <small className="carry-note">{c.owed !== null && <>Owed today {money(c.owed)}. </>}Charged this month {money(c.charged)}, paid {money(c.paid)}.</small>
+            {data.zero && <small className="carry-note">Set aside since you began: {money(c.fromSpending)} from purchases your categories had money for{c.assigned >= 0.005 && <>, plus {money(c.assigned)} given to the card</>}, less what has been paid.</small>}
+            {data.zero && c.overpaid >= 0.005 && <small className="carry-note"><b className="bad">{money(c.overpaid)} more has been paid than was set aside.</b> That money has left your bank but still shows as free to assign. <button className="link" onClick={() => assign(c, c.assignedNow + c.overpaid, `${money(c.overpaid)} assigned to ${c.name}.`)}>Assign {money(c.overpaid)} to this card</button></small>}
+            {data.zero && c.short !== null && c.short >= 0.005 && c.overpaid < 0.005 && <small className="carry-note">{money(c.short)} of what is owed has nothing set aside for it yet. <button className="link" onClick={() => assign(c, c.assignedNow + c.short, `${money(c.short)} assigned to ${c.name}.`)}>Assign {money(c.short)} to this card</button></small>}
+            {data.zero && c.short !== null && c.short < 0.005 && c.overpaid < 0.005 && c.owed >= 0.005 && <small className="carry-note target-note met">Everything owed on it is set aside.</small>}
+          </div>
+          {data.zero && <CardInput key={`${c.id}-${month}-${c.assignedNow}`} card={c} onSave={(n) => assign(c, n)} />}
+        </div>
+      ))}
+      {err && <p className="error" role="alert">{err}</p>}
+    </section>
+  );
+}
+
+function CardInput({ card, onSave }: { card: any; onSave: (n: number) => void }) {
+  const [value, setValue] = useState(String(card.assignedNow));
+  const [err, setErr] = useState('');
+  const save = () => {
+    const n = Number(value);
+    if (value.trim() === '' || !Number.isFinite(n) || n < 0) return setErr('Enter 0 or more');
+    setErr('');
+    if (n !== card.assignedNow) onSave(n);
+  };
+  return (
+    <div>
+      <input type="number" min="0" step="10" inputMode="decimal" value={value} aria-label={`Given to ${card.name} this month`}
+        onChange={(e) => { setValue(e.target.value); setErr(''); }} onBlur={save} onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()} />
+      {err && <small className="bad">{err}</small>}
+    </div>
+  );
+}
+
 const monthName = (m: string) => { const [y, mo] = m.split('-').map(Number); return new Date(y, mo - 1, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }); };
 
 /** A category's target in words: what it is, and where this month stands against it (server/targets.js). */
@@ -229,7 +280,8 @@ export default function Budgets({ month }: { month: string }) {
   const { data: s, error, reload: reloadSummary } = useData(`/api/summary?month=${month}`);
   const { data: z, reload: reloadZero } = useData<any>(`/api/zero?month=${month}`);
   const { data: gr, reload: reloadGroups } = useData<any>('/api/groups');
-  const reload = () => { reloadSummary(); reloadZero(); reloadGroups(); };
+  const { data: cp, reload: reloadCards } = useData<any>(`/api/cards?month=${month}`);
+  const reload = () => { reloadSummary(); reloadZero(); reloadGroups(); reloadCards(); };
   // (Before the early returns below: hooks must run in the same order on every draw.)
   const [note, setNote] = useState('');
   const [targetFor, setTargetFor] = useState<number | null>(null);
@@ -378,6 +430,7 @@ export default function Budgets({ month }: { month: string }) {
           </div>
         ))}
       </section>
+      {cp?.cards?.length > 0 && <CardPayments data={cp} month={month} onChanged={(n) => { if (n) setNote(n); forgetLoaded(); reload(); }} />}
       {!zeroNow && suggest}
       <AddCategory onDone={reload} />
       {gr && <CategoryGroups list={own} cats={s.categories} onChanged={reload} />}

@@ -28,6 +28,12 @@
   whatever backs up the machine.
 - Tests, for the first time: `npm test` runs 35 checks of the review's arithmetic, the YNAB import, the
   model connection and the backups. Nothing in them needs a model or the internet.
+- Card payments. Budgets has a new part, "Card payments", listing each credit card that counts toward the
+  budget: what was charged to it this month, what was paid, and what is owed today. When every dollar
+  gets a job it also shows how much is set aside to pay the card: purchases your categories had money
+  for, plus anything you give the card itself, less payments made. Money given to a card comes out of
+  "To be assigned". If more has been paid than was set aside, or part of what is owed has nothing set
+  aside, the page says so and one press assigns the difference. No transaction is changed.
 - Targets. A category can be given a target from its row on Budgets: an amount to set aside every month,
   an amount to save up by a month you choose (the rest is spread over the months left), or, when every
   dollar gets a job, an amount to have to spend each month (topped up from what was left). The row then

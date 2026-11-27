@@ -24,6 +24,10 @@ import { db, iso, getSetting, setSetting } from './db.js';
 db.exec(`CREATE TABLE IF NOT EXISTS zero_assign (
   month TEXT NOT NULL, category_id INTEGER NOT NULL, amount REAL NOT NULL DEFAULT 0, PRIMARY KEY (month, category_id))`);
 
+// Money given to a credit card itself, to pay down what is owed on it (server/cardpay.js). It is assigned
+// money like any other, so it comes off "to be assigned" here.
+db.exec('CREATE TABLE IF NOT EXISTS card_assign (month TEXT NOT NULL, account_id INTEGER NOT NULL, amount REAL NOT NULL DEFAULT 0, PRIMARY KEY (month, account_id))');
+
 const round = (n) => Math.round(n * 100) / 100;
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 const thisMonth = () => iso(new Date()).slice(0, 7);
@@ -55,11 +59,12 @@ export function zeroFor(month) {
   }
   const income = (a, b) => db.prepare(`SELECT COALESCE(SUM(t.amount), 0) s FROM transactions t JOIN categories c ON c.id = t.category_id
     WHERE c.kind = 'income' AND t.date >= ? AND t.date < ?`).get(a, b).s;
-  const assignedAll = db.prepare('SELECT COALESCE(SUM(amount), 0) s FROM zero_assign WHERE month >= ? AND month <= ?').get(from(), month).s;
+  const cards = db.prepare('SELECT COALESCE(SUM(amount), 0) all_, COALESCE(SUM(CASE WHEN month = ? THEN amount END), 0) now FROM card_assign WHERE month >= ? AND month <= ?').get(month, from(), month);
+  const assignedAll = db.prepare('SELECT COALESCE(SUM(amount), 0) s FROM zero_assign WHERE month >= ? AND month <= ?').get(from(), month).s + cards.all_;
   return {
     month, from: from(), start: startAmount(),
     income: round(income(mStart, mEnd)), incomeSinceStart: round(income(first, mEnd)),
-    assignedMonth: round(Object.values(out).reduce((a, c) => a + c.assigned, 0)),
+    assignedMonth: round(Object.values(out).reduce((a, c) => a + c.assigned, 0) + cards.now),
     toAssign: round(startAmount() + income(first, mEnd) - assignedAll),
     cats: out,
   };
@@ -95,7 +100,7 @@ export function installZero(app) {
 
   // Starting over: forget what was assigned and begin again from this month.
   app.post('/api/zero/reset', (_req, res) => {
-    db.exec('DELETE FROM zero_assign');
+    db.exec('DELETE FROM zero_assign; DELETE FROM card_assign');
     setSetting('zero_from', thisMonth());
     res.json(view(''));
   });
