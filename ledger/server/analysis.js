@@ -72,7 +72,24 @@ export function monthOutlook(rows, today, budget = 0) {
   const spent = round(sum(trends.map((t) => t.spent)));
   const projected = round(sum(trends.map((t) => t.projected)));
   const usual = round(sum(trends.map((t) => t.usual)));
-  return { month: monthOf(today), day: Number(today.slice(8)), days_in_month: daysIn(monthOf(today)), spent, projected, usual, projected_against_usual: round(projected - usual), ...(budget > 0 ? { budget: round(budget), projected_against_budget: round(projected - budget) } : {}) };
+  return { month: monthOf(today), day: Number(today.slice(8)), days_in_month: daysIn(monthOf(today)), spent, projected, usual, projected_against_usual: round(projected - usual), ...(budget > 0 ? { budget: round(budget), left_of_budget_so_far: round(budget - spent), projected_against_budget: round(projected - budget) } : {}) };
+}
+
+/**
+ * The month's outlook as sentences. A small model handed the bare figures mixes up "so far" with "by the
+ * end of the month", and repeats the names of the fields; handed sentences it has only to carry them over.
+ */
+export function outlookWords(o, money = (n) => `$${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`) {
+  const side = (n, over, under) => (Math.abs(n) < 0.005 ? 'exactly at' : `${money(n)} ${n > 0 ? over : under}`);
+  const out = [
+    `Day ${o.day} of ${o.days_in_month}. Spent so far this month: ${money(o.spent)}.`,
+    `At this pace the month ends at about ${money(o.projected)}, which is ${side(o.projected_against_usual, 'above', 'below')} the household's usual month of ${money(o.usual)}.`,
+  ];
+  if (o.budget > 0) {
+    out.push(o.left_of_budget_so_far >= 0 ? `The budget for the month is ${money(o.budget)}. So far ${money(o.left_of_budget_so_far)} of it is unspent.` : `The budget for the month is ${money(o.budget)}. It is already overspent by ${money(o.left_of_budget_so_far)}.`);
+    out.push(`By the end of the month spending is on course to be ${side(o.projected_against_budget, 'over', 'under')} the budget. That is a projection, not the amount left today.`);
+  }
+  return out;
 }
 
 /**
@@ -309,6 +326,7 @@ export function moneyReview({ forAi = false, today = iso(new Date()), budget = 0
     review.highlights = highlights(review);
   }
   review.history_months = spending.length ? Math.max(0, daysBetween(spending.reduce((a, r) => (r.date < a ? r.date : a), spending[0].date), today) / 30.4) | 0 : 0;
+  if (forAi) review.outlook = { in_words: outlookWords(review.outlook), ...review.outlook };
   if (forAi && privateCats().length) review.note = 'Some categories are kept private by the household and are not in these figures.';
   return review;
 }
@@ -316,22 +334,22 @@ export function moneyReview({ forAi = false, today = iso(new Date()), budget = 0
 const SYSTEM = `You are writing a short review of a household's money for the people who live in it. It appears inside Ledger, their own private finance app. Everything you need has already been worked out and is given below as figures: do not add anything up, do not estimate, and do not mention any figure, shop or category that is not in what you are given.
 
 Write in plain everyday words, to "you". Three parts, each a short paragraph with no heading:
-1. How this month is going against their usual, in a sentence or two, using outlook.spent, outlook.projected and outlook.projected_against_usual exactly as given (a negative projected_against_usual means below their usual).
+1. How this month is going against their usual, in a sentence or two, taken from "The month in words" below, with its amounts exactly as given.
 2. The two to four things most worth their attention, most important first. Say what was seen and why it is worth a look. A charge that looks doubled or a subscription whose price went up comes before a category running a little high.
 3. One or two things they could do about it this week, each specific to what was found (check a charge with the shop, look at a subscription, set a budget for a category). If nothing stands out, say so in one sentence and stop.
 
-At most 170 words. No lists, no bold, no headings, no greeting and no sign-off. Do not give tax or investment advice. If the household has less than three months of history, say the review will sharpen as more months come in.`;
+At most 170 words. No lists, no bold, no headings, no greeting and no sign-off. The figures are labelled with short technical names (such as outlook or projected_against_usual): never write one of those names or anything with an underscore or a dot in it; say what it means in ordinary words. Do not give tax or investment advice. If the household has less than three months of history, say the review will sharpen as more months come in.`;
 
 const inFlight = new Map();
 async function written(review, force) {
-  const key = `2|${review.as_of}|${plainRoute()}${plainRoute() === 'local' ? `:${localModel()}` : ''}|${review.highlights.length}|${review.outlook.spent}`;
+  const key = `3|${review.as_of}|${plainRoute()}${plainRoute() === 'local' ? `:${localModel()}` : ''}|${review.highlights.length}|${review.outlook.spent}`;
   let cache = {};
   try { cache = JSON.parse(getSetting('review_cache', '{}')); } catch { /* start fresh */ }
   if (!force && cache[key]) return cache[key];
   if (inFlight.has(key)) return inFlight.get(key);
   const job = (async () => {
     const { highlights: found, ...figures } = review;
-    const text = await plainAsk('the money review', `${SYSTEM}${currencyNote() ? '\n\n' + currencyNote() : ''}\n\nWhat Ledger found, most important first:\n${found.length ? found.map((h) => `- ${h.text}`).join('\n') : '- Nothing stands out.'}\n\nThe figures behind it:\n${JSON.stringify(figures, null, 1).slice(0, 30000)}`,
+    const text = await plainAsk('the money review', `${SYSTEM}${currencyNote() ? '\n\n' + currencyNote() : ''}\n\nThe month in words:\n${outlookWords(review.outlook).map((l) => `- ${l}`).join('\n')}\n\nWhat Ledger found, most important first:\n${found.length ? found.map((h) => `- ${h.text}`).join('\n') : '- Nothing stands out.'}\n\nThe figures behind it:\n${JSON.stringify(figures, null, 1).slice(0, 30000)}`,
       'review', "this month's spending by category against your usual, and the purchases, price changes and new shops the review picked out");
     const result = { text, by: aiName(), where: plainWhere(), at: Date.now() };
     setSetting('review_cache', JSON.stringify(Object.fromEntries(Object.entries({ ...cache, [key]: result }).sort((a, b) => b[1].at - a[1].at).slice(0, 4))));

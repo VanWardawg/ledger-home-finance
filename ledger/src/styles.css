@@ -98,7 +98,7 @@ small { display: block; color: var(--ink3); font-size: 12px; }
 /* Controls */
 select, input[type='search'], input[type='number'], button {
   font: inherit; color: var(--ink); background: var(--panel);
-  border: 1px solid var(--line); border-radius: 8px; height: 34px; padding: 0 10px;
+  border: 1px solid var(--line); border-radius: var(--r-ctl, 8px); height: 34px; padding: 0 10px;
 }
 select { padding-right: 6px; }
 button { cursor: pointer; font-weight: 500; }
@@ -108,11 +108,11 @@ button.primary { background: var(--ink); color: var(--bg); border-color: transpa
 .month { font-weight: 500; }
 
 /* Cards and tiles */
-.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; min-width: 0; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-card, 14px); padding: 18px 20px; min-width: 0; }
 .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
 .card-head a { font-size: 13px; }
 .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-.tile { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; font-size: 13px; }
+.tile { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-card, 14px); padding: 14px 16px; font-size: 13px; }
 .tile .value { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; margin: 2px 0; }
 
 /* Pace chart */
@@ -2030,3 +2030,46 @@ html[data-season] .seg button.on:not(.primary):not(.link) { background: var(--gl
 .backup-list li { display: flex; gap: 12px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 14px; }
 .backup-list li span:nth-child(2) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 560px) { .review-list li { flex-direction: column; gap: 2px; } .review-tag { flex: none; } }
+
+/* ---- Style and solid colour themes (this fork; src/appearance.ts) -------------------------------
+   Two choices that stack: the style is the shape of things, the theme is their colours. The corner
+   sizes are variables so a style can change them in one place. */
+html[data-style='modern'] {
+  --display: 'Inter', 'Segoe UI Variable Display', 'Segoe UI', 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --r-card: 20px; --r-ctl: 10px;
+}
+html[data-style='modern'] .card { padding: 20px 22px; }
+html[data-style='modern']:not([data-season]) :is(.card, .tile) { border-color: transparent; box-shadow: 0 0 0 1px var(--line), 0 1px 2px rgba(15, 20, 40, 0.05), 0 14px 30px -20px rgba(15, 20, 40, 0.35); }
+html[data-style='modern']:not([data-season]) .sidebar { border-right-color: transparent; }
+html[data-style='modern'] :is(.hero, .tile .value, .strip-tile .value, .outlook-top .value, .card.estimate .value, .page-title .title-text) { font-weight: 700; letter-spacing: -0.035em; }
+html[data-style='modern'] .outlook-top .now .value { font-weight: 600; }
+html[data-style='modern'] .sidebar .nav { font-size: 14.5px; font-weight: 550; border-radius: 10px; padding: 9px 12px; }
+html[data-style='modern'] .nav.on { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
+html[data-style='modern'] button.primary { background: var(--accent); color: #fff; border-radius: 999px; padding: 0 16px; }
+html[data-style='modern'][data-scheme='dark'] button.primary { color: #0b0d12; }
+html[data-style='modern'] .track { height: 8px; border-radius: 999px; }
+html[data-style='modern'] .track.tall { height: 12px; border-radius: 999px; }
+html[data-style='modern'] h2 { font-size: 16px; letter-spacing: -0.01em; }
+
+html[data-style='sharp'] {
+  --display: var(--font, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Text', 'Helvetica Neue', sans-serif);
+  --r-card: 6px; --r-ctl: 4px;
+}
+html[data-style='sharp'] :is(.hero, .tile .value, .strip-tile .value, .outlook-top .value, .card.estimate .value, .page-title .title-text) { font-weight: 650; letter-spacing: -0.02em; }
+html[data-style='sharp'] .sidebar .nav { font-size: 14px; border-radius: 0 4px 4px 0; }
+html[data-style='sharp'] .nav.on { box-shadow: inset 3px 0 0 var(--accent); }
+html[data-style='sharp'] :is(.tile, .strip-tile, .outlook-top) .label, html[data-style='sharp'] h2 { text-transform: uppercase; font-size: 11.5px; letter-spacing: 0.07em; font-weight: 600; color: var(--ink2); }
+html[data-style='sharp'] .track, html[data-style='sharp'] .track.tall { border-radius: 0; }
+html[data-style='sharp'] :is(.seg, .seg a, .seg button) { border-radius: 4px; }
+html[data-season][data-style='sharp'] :is(.card, .tile) { border-radius: 8px; }
+
+/* Solid colour themes. Each sets every colour the plain look uses, so it holds whatever the device prefers. */
+html[data-palette='snow'] { color-scheme: light; --line: rgba(20, 25, 40, 0.09); --hover: rgba(20, 25, 40, 0.05); --selected: rgba(20, 25, 40, 0.08); --good: #0a7f45; --bad: #c93434; --warn: #a15c00; --field: #ffffff; --field-line: rgba(20, 25, 40, 0.22); --bg: #f4f6fa; --panel: #ffffff; --side: #eceff5; --ink: #111827; --ink2: #4b5563; --ink3: #8a93a3; --grid: #e6e9f0; --axis: #cbd1dc; --accent: #4f46e5; --series2: #f97316; --track: #e6e9f0; }
+html[data-palette='mint'] { color-scheme: light; --line: rgba(20, 25, 40, 0.09); --hover: rgba(20, 25, 40, 0.05); --selected: rgba(20, 25, 40, 0.08); --good: #0a7f45; --bad: #c93434; --warn: #a15c00; --field: #ffffff; --field-line: rgba(20, 25, 40, 0.22); --bg: #f0f5f1; --panel: #ffffff; --side: #e6eee8; --ink: #14201a; --ink2: #4a5a51; --ink3: #84948a; --grid: #e0e9e3; --axis: #c5d2c9; --accent: #17805a; --series2: #d97706; --track: #e0e9e3; }
+html[data-palette='clay'] { color-scheme: light; --line: rgba(20, 25, 40, 0.09); --hover: rgba(20, 25, 40, 0.05); --selected: rgba(20, 25, 40, 0.08); --good: #0a7f45; --bad: #c93434; --warn: #a15c00; --field: #ffffff; --field-line: rgba(20, 25, 40, 0.22); --bg: #f7f1ec; --panel: #fffdfb; --side: #efe6de; --ink: #241a14; --ink2: #5e5048; --ink3: #96877d; --grid: #ebe1d8; --axis: #d6c8bc; --accent: #c2532d; --series2: #2a78d6; --track: #ebe1d8; }
+html[data-palette='graphite'] { color-scheme: dark; --line: rgba(255, 255, 255, 0.09); --hover: rgba(255, 255, 255, 0.05); --selected: rgba(255, 255, 255, 0.1); --good: #3fbf7f; --bad: #ef6b6b; --warn: #e0a13a; --field-line: rgba(255, 255, 255, 0.2); --bg: #121315; --panel: #1b1c1f; --side: #161719; --ink: #f1f1f3; --ink2: #b3b4bb; --ink3: #7d7e87; --grid: #26272c; --axis: #3a3b42; --accent: #8b9cf9; --series2: #f59e6b; --track: #27282d; --field: #25262b; }
+html[data-palette='navy'] { color-scheme: dark; --line: rgba(255, 255, 255, 0.09); --hover: rgba(255, 255, 255, 0.05); --selected: rgba(255, 255, 255, 0.1); --good: #3fbf7f; --bad: #ef6b6b; --warn: #e0a13a; --field-line: rgba(255, 255, 255, 0.2); --bg: #0a1020; --panel: #111a30; --side: #0d1528; --ink: #eef2fb; --ink2: #aab4cc; --ink3: #74809c; --grid: #1c2742; --axis: #2f3c5c; --accent: #38bdf8; --series2: #f59e6b; --track: #1c2742; --field: #18233f; }
+html[data-palette='plum'] { color-scheme: dark; --line: rgba(255, 255, 255, 0.09); --hover: rgba(255, 255, 255, 0.05); --selected: rgba(255, 255, 255, 0.1); --good: #3fbf7f; --bad: #ef6b6b; --warn: #e0a13a; --field-line: rgba(255, 255, 255, 0.2); --bg: #130e19; --panel: #1c1526; --side: #17111f; --ink: #f4f0f8; --ink2: #b9aec6; --ink3: #84789a; --grid: #2a2036; --axis: #40334f; --accent: #c084fc; --series2: #f0a060; --track: #2a2036; --field: #261d33; }
+.swatch i.palette-chip { position: relative; overflow: hidden; }
+.palette-chip b { position: absolute; left: 9px; right: 9px; top: 9px; bottom: -6px; border-radius: 6px 6px 0 0; box-shadow: 0 0 0 1px rgba(128, 128, 128, 0.18); }
+.palette-chip u { position: absolute; left: 15px; top: 16px; width: 20px; height: 5px; border-radius: 3px; }

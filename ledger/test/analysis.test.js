@@ -8,7 +8,7 @@ import path from 'node:path';
 // analysis.js opens the database when it is loaded, so it is pointed at an empty one first.
 process.env.LEDGER_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'ledger-test-'));
 process.env.LEDGER_FRESH = '1';
-const { categoryTrends, monthOutlook, unusualPurchases, possibleDoubles, priceChanges, newMerchants, quarterShift, ageOfMoney, buildReview, highlights } = await import('../server/analysis.js');
+const { outlookWords, categoryTrends, monthOutlook, unusualPurchases, possibleDoubles, priceChanges, newMerchants, quarterShift, ageOfMoney, buildReview, highlights } = await import('../server/analysis.js');
 
 const buy = (date, merchant, amount, category = 'Groceries', extra = {}) => ({ date, merchant, amount, category, fixed: 0, account: 1, ...extra });
 /** One purchase on the 10th of each of the `n` months before 2026-11, plus anything given for November. */
@@ -144,4 +144,18 @@ test('an empty household gets an empty review, not an error', () => {
   assert.deepEqual(r.highlights, []);
   assert.equal(r.outlook.spent, 0);
   assert.equal(r.cash.age_of_money_days, null);
+});
+
+test('the month in words keeps "so far" apart from "by the end of the month"', () => {
+  const words = outlookWords({ day: 26, days_in_month: 30, spent: 3361.72, projected: 3572.41, usual: 3623.86, projected_against_usual: -51.45, budget: 3889, left_of_budget_so_far: 527.28, projected_against_budget: -316.59 }).join(' ');
+  assert.match(words, /Spent so far this month: \$3,361\.72/);
+  assert.match(words, /\$51\.45 below the household's usual month of \$3,623\.86/);
+  assert.match(words, /So far \$527\.28 of it is unspent/);
+  assert.match(words, /on course to be \$316\.59 under the budget/);
+  assert.doesNotMatch(words, /_/);
+  const over = outlookWords({ day: 20, days_in_month: 30, spent: 900, projected: 1350, usual: 1000, projected_against_usual: 350, budget: 800, left_of_budget_so_far: -100, projected_against_budget: 550 }).join(' ');
+  assert.match(over, /\$350\.00 above/);
+  assert.match(over, /already overspent by \$100\.00/);
+  assert.match(over, /\$550\.00 over the budget/);
+  assert.equal(outlookWords({ day: 1, days_in_month: 30, spent: 0, projected: 0, usual: 0, projected_against_usual: 0 }).length, 2);
 });

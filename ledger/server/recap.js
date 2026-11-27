@@ -233,7 +233,7 @@ async function recap(month, deps, force) {
     if (useHa) {
       try {
         const text = await plainAsk('the dashboard recap', `${SYSTEM()}${currencyNote() ? '\n\n' + currencyNote() : ''}\n\nToday's figures:\n${JSON.stringify(facts, null, 1)}`, 'recap', "this month's totals by category, bills due soon, the five largest purchases, and your debt and checking figures");
-        result = { text, source: 'ha', by: aiName(), at: Date.now() };
+        result = { text, source: plainRoute() === 'local' ? 'local' : 'ha', by: aiName(), at: Date.now() };
       } catch (e) {
         result = { text: writeFromRules(facts), source: 'automatic', error: e.message, at: Date.now() };
       }

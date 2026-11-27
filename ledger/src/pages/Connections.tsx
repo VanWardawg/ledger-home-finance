@@ -14,7 +14,7 @@ import { StatementReader } from './Statements';
 import { startAuthentication, startRegistration } from '@simplewebauthn/browser';
 import { api, cents, forgetLoaded, money, useData, useGig } from '../lib';
 import { choosePhoto, photoUrl, readPhotoMeta, removePhoto, savePhotoMeta, type PhotoMeta, framing } from '../photo';
-import { ACCENTS, COLORWAYS, STANDARD_LOOK, FONTS, INKS, readLook, saveLook, type Look, SIZES, readSize, saveSize } from '../appearance';
+import { ACCENTS, COLORWAYS, STANDARD_LOOK, FONTS, INKS, STYLES, PALETTES, readLook, saveLook, type Look, SIZES, readSize, saveSize } from '../appearance';
 
 const TYPES = [
   ['checking', 'Checking'], ['savings', 'Savings'], ['credit', 'Credit card'], ['investment', 'Investment or retirement'], ['hsa', 'Health savings account'],
@@ -1616,6 +1616,29 @@ function Appearance() {
       <p className="sub first">Saved on this device only.</p>
 
       <div className="look-row">
+        <span className="label">Style</span>
+        <small>{STYLES.find((s) => s.id === look.style)?.note}. Works with any of the colours below.</small>
+        <span className="seg" role="group" aria-label="Style">
+          {STYLES.map((s) => <button key={s.id} type="button" className={look.style === s.id ? 'on' : ''} aria-pressed={look.style === s.id} onClick={() => change({ style: s.id })}>{s.label}</button>)}
+        </span>
+      </div>
+
+      <div className="look-row">
+        <span className="label">Solid colour themes</span>
+        <small>Plain panels with no backdrop behind them. Each one is light or dark by its nature.</small>
+        <div className="swatches">
+          {PALETTES.map((p) => {
+            const on = look.backdrop === 'none' && look.palette === p.id;
+            return (
+              <button key={p.id} type="button" className={`swatch ${on ? 'on' : ''}`} aria-pressed={on} onClick={() => change({ backdrop: 'none', palette: p.id, scheme: p.dark ? 'dark' : 'light' })}>
+                <i className="palette-chip" style={{ background: p.show[0], boxShadow: p.dark ? undefined : 'inset 0 0 0 1px rgba(0,0,0,.12)' }}><b style={{ background: p.show[1] }} /><u style={{ background: p.show[2] }} /></i>{p.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="look-row">
         <span className="label">Holiday and season scenes</span>
         <select value={isScene ? look.backdrop : ''} aria-label="Holiday and season scenes" onChange={(e) => e.target.value && change({ backdrop: e.target.value })}>
           {!isScene && <option value="">Not in use</option>}
@@ -1629,10 +1652,10 @@ function Appearance() {
           {/* The app's plain look, with solid panels and no glass. */}
           {/* Both are always offered (it was one swatch named by the device's light or dark setting, so a
               phone in light mode never saw "Onyx": a family member, 2026-11-19). Choosing one sets light or dark too. */}
-          <button type="button" className={`swatch ${look.backdrop === 'none' && darkNow ? 'on' : ''}`} aria-pressed={look.backdrop === 'none' && darkNow} onClick={() => change({ backdrop: 'none', scheme: 'dark' })}>
+          <button type="button" className={`swatch ${look.backdrop === 'none' && !look.palette && darkNow ? 'on' : ''}`} aria-pressed={look.backdrop === 'none' && !look.palette && darkNow} onClick={() => change({ backdrop: 'none', palette: '', scheme: 'dark' })}>
             <i style={{ background: 'linear-gradient(135deg, #0e0f13, #1c1e26)' }} />Onyx
           </button>
-          <button type="button" className={`swatch ${look.backdrop === 'none' && !darkNow ? 'on' : ''}`} aria-pressed={look.backdrop === 'none' && !darkNow} onClick={() => change({ backdrop: 'none', scheme: 'light' })}>
+          <button type="button" className={`swatch ${look.backdrop === 'none' && !look.palette && !darkNow ? 'on' : ''}`} aria-pressed={look.backdrop === 'none' && !look.palette && !darkNow} onClick={() => change({ backdrop: 'none', palette: '', scheme: 'light' })}>
             <i style={{ background: 'linear-gradient(135deg, #f5f4f0, #ffffff)', boxShadow: 'inset 0 0 0 1px rgba(0,0,0,.18)' }} />Ivory
           </button>
           {COLORWAYS.map((w) => (

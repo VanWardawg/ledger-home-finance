@@ -26,8 +26,18 @@
   "Backups" changes the number), in a `backups` folder beside the database. A copy can also be made on
   the spot or downloaded. The copies are on the same disk as the database: include that folder in
   whatever backs up the machine.
-- Tests, for the first time: `npm test` runs 34 checks of the review's arithmetic, the YNAB import, the
+- Tests, for the first time: `npm test` runs 35 checks of the review's arithmetic, the YNAB import, the
   model connection and the backups. Nothing in them needs a model or the internet.
+- Style and solid colour themes. Settings, "Appearance" has two new choices. Style is the shape of things:
+  Classic (as before), Modern (rounded panels, soft shadows, bold sans figures) or Sharp (square corners,
+  thin lines, small capitals). Solid colour themes are six plain looks beside Onyx and Ivory: Snow, Mint and
+  Clay (light), Graphite, Navy and Plum (dark). A style works with any colours, including the scenes and
+  colourways. Like the rest of Appearance, both are kept on the device.
+- The written money review no longer has to read bare figures: it is handed the month in sentences ("spent
+  so far", "on course for", "left of the budget so far"), so a small model stops confusing what is left
+  today with where the month will end, and stops repeating the names of fields. The CFO on a model of your
+  own is given the same sentences.
+- Fixed: a recap written by a model of your own was signed "your Home Assistant's AI".
 - Fixed: switching Home Assistant's AI off no longer clears a different AI choice.
 
 ## 0.1.32

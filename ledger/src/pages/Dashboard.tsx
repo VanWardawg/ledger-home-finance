@@ -261,7 +261,7 @@ function Recap({ month }: { month: string }) {
       )}
       {r && (
         <small>
-          {r.source === 'claude' ? 'Written by Claude' : r.source === 'ha' ? (r.by === 'Claude' ? 'Written by Claude, through Home Assistant' : "Written by your Home Assistant's AI") : 'Automatic summary'} · {new Date(r.at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+          {r.source === 'claude' ? 'Written by Claude' : r.source === 'local' ? 'Written by your own model' : r.source === 'ha' ? (r.by === 'Claude' ? 'Written by Claude, through Home Assistant' : "Written by your Home Assistant's AI") : 'Automatic summary'} · {new Date(r.at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
           {r.error ? <> · <span className="bad">{r.error}</span></> : null}
           {!r.hasKey ? <> · <a href="#connections" onClick={jump(GO.ai)}>Turn on AI</a> for a recap written by Claude</> : null}
         </small>

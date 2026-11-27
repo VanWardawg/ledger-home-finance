@@ -18,9 +18,13 @@ export type Look = {
   /** Accent colour as #rrggbb, or '' to follow the backdrop. */
   accent: string;
   font: string;
+  /** The shape of things: 'classic' (serif figures, as upstream), 'modern' or 'sharp'. */
+  style: string;
+  /** A solid colour theme for the plain look ('' is Onyx or Ivory). Only used while the backdrop is 'none'. */
+  palette: string;
 };
 
-export const DEFAULT_LOOK: Look = { backdrop: 'auto', colors: ['#1b2450', '#6a4fd8'], angle: 160, scheme: 'auto', ink: '', accent: '', font: 'system' };
+export const DEFAULT_LOOK: Look = { backdrop: 'auto', colors: ['#1b2450', '#6a4fd8'], angle: 160, scheme: 'auto', ink: '', accent: '', font: 'system', style: 'classic', palette: '' };
 // What "Back to the standard look" in Settings returns to on every copy: plain Onyx, with the usual colours and
 // typeface (The owner, 2026-11-18: "it's the cleanest look available"). Where a device starts before anyone chooses
 // is a separate thing (`ledger-look-default`: Onyx on a family copy, the holiday scenes on his own).
@@ -38,6 +42,23 @@ export const COLORWAYS: { id: string; label: string; light: string[]; dark: stri
   { id: 'sand', label: 'Sand', light: ['#efe2cc', '#e2ceb0'], dark: ['#2a2016', '#c08a4a'] },
   { id: 'slate', label: 'Slate', light: ['#e1e6ec', '#cfd6df'], dark: ['#181c24', '#6f8fb8'] },
   { id: 'ember', label: 'Ember', light: ['#f6d6c8', '#eec0a8'], dark: ['#34120c', '#e05a3a'] },
+];
+
+/** How panels, headings and figures are drawn. The colours are a separate choice. */
+export const STYLES: { id: string; label: string; note: string }[] = [
+  { id: 'classic', label: 'Classic', note: 'Serif headings and figures' },
+  { id: 'modern', label: 'Modern', note: 'Rounded panels, soft shadows, bold sans figures' },
+  { id: 'sharp', label: 'Sharp', note: 'Square corners, thin lines, small capitals' },
+];
+
+/** Solid colour themes for the plain look (src/styles.css, html[data-palette]). `show` is what the button is painted with. */
+export const PALETTES: { id: string; label: string; dark: boolean; show: string[] }[] = [
+  { id: 'snow', label: 'Snow', dark: false, show: ['#f4f6fa', '#ffffff', '#4f46e5'] },
+  { id: 'mint', label: 'Mint', dark: false, show: ['#f0f5f1', '#ffffff', '#17805a'] },
+  { id: 'clay', label: 'Clay', dark: false, show: ['#f7f1ec', '#fffdfb', '#c2532d'] },
+  { id: 'graphite', label: 'Graphite', dark: true, show: ['#121315', '#1b1c1f', '#8b9cf9'] },
+  { id: 'navy', label: 'Navy', dark: true, show: ['#0a1020', '#111a30', '#38bdf8'] },
+  { id: 'plum', label: 'Plum', dark: true, show: ['#130e19', '#1c1526', '#c084fc'] },
 ];
 
 export const FONTS: { id: string; label: string; stack: string }[] = [
@@ -72,6 +93,8 @@ export function readLook(): Look {
     ink: hex('ledger-ink'),
     accent: hex('ledger-accent'),
     font: FONTS.some((f) => f.id === get('ledger-font')) ? (get('ledger-font') as string) : 'system',
+    style: STYLES.some((s) => s.id === get('ledger-style')) ? (get('ledger-style') as string) : 'classic',
+    palette: PALETTES.some((p) => p.id === get('ledger-palette')) ? (get('ledger-palette') as string) : '',
   };
 }
 
@@ -132,7 +155,11 @@ export function applyLook(look: Look = readLook()) {
   }
   // Light or dark: your choice; or, with your own colours, whichever suits them; or else the device's setting.
   const scheme = photo ? (photo.dark ? 'dark' : 'light') : look.backdrop === 'custom' ? (customIsDark(look.colors) ? 'dark' : 'light') : look.scheme;
-  if (scheme === 'auto') delete root.dataset.scheme; else root.dataset.scheme = scheme;
+  // A solid colour theme belongs to the plain look, and brings its own light or dark with it.
+  const palette = look.backdrop === 'none' ? PALETTES.find((p) => p.id === look.palette) : undefined;
+  if (palette) { root.dataset.palette = palette.id; root.dataset.scheme = palette.dark ? 'dark' : 'light'; }
+  else { delete root.dataset.palette; if (scheme === 'auto') delete root.dataset.scheme; else root.dataset.scheme = scheme; }
+  if (look.style && look.style !== 'classic') root.dataset.style = look.style; else delete root.dataset.style;
   const set = (name: string, value: string) => (value ? root.style.setProperty(name, value) : root.style.removeProperty(name));
   set('--ink', look.ink);
   set('--ink2', look.ink && `color-mix(in srgb, ${look.ink} 78%, transparent)`);
@@ -151,6 +178,8 @@ export function saveLook(change: Partial<Look>): Look {
   put('ledger-ink', look.ink);
   put('ledger-accent', look.accent);
   put('ledger-font', look.font);
+  put('ledger-style', look.style);
+  put('ledger-palette', look.palette);
   applyLook(look);
   return look;
 }
