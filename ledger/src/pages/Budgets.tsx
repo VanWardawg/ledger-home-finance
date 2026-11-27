@@ -65,17 +65,71 @@ function AddCategory({ onDone }: { onDone: () => void }) {
   );
 }
 
+const monthName = (m: string) => { const [y, mo] = m.split('-').map(Number); return new Date(y, mo - 1, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }); };
+
+/** A category's target in words: what it is, and where this month stands against it (server/targets.js). */
+function targetWords(c: any) {
+  const t = c.target;
+  const more = `${money(t.need)} more needed this month.`;
+  if (t.kind === 'monthly') return `Target: ${money(t.amount)} every month. ${t.met ? 'Met this month.' : more}`;
+  if (t.kind === 'refill') return `Target: ${money(t.amount)} to spend each month. ${t.met ? 'Met this month.' : more}`;
+  const head = `Target: ${money(t.amount)} by ${monthName(t.due)}.`;
+  if (t.reached) return `${head} Reached.`;
+  if (t.late) return `${head} That month has passed. ${t.met ? 'Nothing more is needed this month.' : `${money(t.need)} is still needed.`}`;
+  return `${head} That takes ${money(t.per)} a month for the ${t.months === 1 ? 'month' : `${t.months} months`} left. ${t.met ? 'This month is covered.' : more}`;
+}
+
+/** Setting, changing or removing one category's target, in place under its bar. */
+function TargetEdit({ cat, zero, onDone, onClose }: { cat: any; zero: boolean; onDone: (note: string) => void; onClose: () => void }) {
+  const t = cat.target;
+  const [kind, setKind] = useState<string>(t?.kind || 'monthly');
+  const [amount, setAmount] = useState(t ? String(t.amount) : '');
+  const [due, setDue] = useState<string>(t?.due || '');
+  const [err, setErr] = useState('');
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!(Number(amount) > 0)) return setErr('Enter an amount above 0.');
+    if (kind === 'by_date' && !due) return setErr('Choose the month to have it by.');
+    try {
+      const r = await api(`/api/categories/${cat.id}/target`, { method: 'PUT', body: { kind, amount: Number(amount), due } });
+      onDone(`Target set for ${cat.name}.${r.carryOn ? ` Carry over was switched on for it, so what you set aside is kept from month to month.` : ''}`);
+    } catch (e: any) { setErr(e.message); }
+  };
+  const remove = async () => { try { await api(`/api/categories/${cat.id}/target`, { method: 'DELETE' }); onDone(`Target removed from ${cat.name}. Its budget is unchanged.`); } catch (e: any) { setErr(e.message); } };
+  return (
+    <form className="target-edit" onSubmit={save} noValidate>
+      <label>Target for {cat.name}
+        <select value={kind} onChange={(e) => { setKind(e.target.value); setErr(''); }}>
+          <option value="monthly">Set aside an amount every month</option>
+          <option value="by_date">Save up an amount by a month</option>
+          {(zero || kind === 'refill') && <option value="refill">Have an amount to spend each month (top it up)</option>}
+        </select>
+      </label>
+      <label>Amount<input type="number" min="0" step="10" inputMode="decimal" value={amount} placeholder="150" onChange={(e) => { setAmount(e.target.value); setErr(''); }} /></label>
+      {kind === 'by_date' && <label>Have it by<input type="month" value={due} onChange={(e) => { setDue(e.target.value); setErr(''); }} /></label>}
+      <div className="target-acts">
+        <button type="submit" className="primary">Save target</button>
+        {t && <button type="button" onClick={remove}>Remove target</button>}
+        <button type="button" className="link" onClick={onClose}>Cancel</button>
+      </div>
+      {kind === 'by_date' && !zero && !cat.rollover && <small>Saving up needs what you set aside to stay in the category, so Carry over is switched on for {cat.name} when you save this.</small>}
+      {err && <p className="error" role="alert">{err}</p>}
+    </form>
+  );
+}
+
 /**
  * "Give every dollar a job" (server/zero.js): the money that has come in and not yet been handed to a
  * category, with quick ways to fill the month. Shown at the top of Budgets while the mode is on.
  */
-function ZeroBar({ z, month, onChanged }: { z: any; month: string; onChanged: () => void }) {
+function ZeroBar({ z, month, onChanged, targetsNeed = 0 }: { z: any; month: string; onChanged: () => void; targetsNeed?: number }) {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState('');
   const [guide, setGuide] = useState(() => { try { return !z.before && !localStorage.getItem('ledger-zero-guide'); } catch { return false; } });
   const closeGuide = () => { try { localStorage.setItem('ledger-zero-guide', '1'); } catch { /* private window */ } setGuide(false); };
   if (z.before) return <section className="card"><p className="sub" style={{ margin: 0 }}>This month is from before you began giving every dollar a job ({z.from}), so it shows the budgets you had then.</p></section>;
   const fill = async (how: string) => { setBusy(true); try { const r = await api('/api/zero/fill', { method: 'POST', body: { month, how } }); setNote(r.filled ? `${r.filled} categor${r.filled === 1 ? 'y' : 'ies'} filled in. Change any amount on the right.` : 'Every category already has an amount this month.'); onChanged(); } catch (e: any) { setNote(e.message); } setBusy(false); };
+  const fillTargets = async () => { setBusy(true); try { const r = await api('/api/targets/fill', { method: 'POST', body: { month } }); setNote(r.given < 0.005 ? 'There is no money waiting to be assigned, so no target was given anything.' : `${money(r.given)} given to targets.${r.short >= 0.005 ? ` ${money(r.short)} more is needed and there was nothing left to assign.` : ' Every target is met this month.'}`); onChanged(); } catch (e: any) { setNote(e.message); } setBusy(false); };
   const left = z.toAssign;
   return (
     <section className={`card zero-bar ${left < -0.005 ? 'over' : left > 0.005 ? 'some' : 'done'}`}>
@@ -84,6 +138,7 @@ function ZeroBar({ z, month, onChanged }: { z: any; month: string; onChanged: ()
         <p className="sub">{left > 0.005 ? 'Money that has come in and has no job yet. Hand it out below until this reads zero.' : left < -0.005 ? 'The categories below have been given more than has come in. Lower some until this reads zero.' : 'Every dollar has a job.'} Income this month so far: {money(z.income)}; given out this month: {money(z.assignedMonth)}.</p>
       </div>
       <div className="add-actions">
+        {targetsNeed >= 0.005 && <button disabled={busy} onClick={fillTargets}>Give targets what they need ({money(targetsNeed)})</button>}
         <button disabled={busy} onClick={() => fill('usual')}>Fill empty ones with my usual amounts</button>
         <button className="link" onClick={() => setGuide(true)}>How this works</button>
         {z.hasLast && <button disabled={busy} onClick={() => fill('last')}>Fill empty ones like last month</button>}
@@ -177,6 +232,7 @@ export default function Budgets({ month }: { month: string }) {
   const reload = () => { reloadSummary(); reloadZero(); reloadGroups(); };
   // (Before the early returns below: hooks must run in the same order on every draw.)
   const [note, setNote] = useState('');
+  const [targetFor, setTargetFor] = useState<number | null>(null);
   if (error) return <p className="error">{error}</p>;
   if (!s) return <Skeleton tiles={0} cards={2} rows={6} />;
   const suggest = <section className="card"><div className="card-head"><h2>Suggested budgets</h2></div><p className="sub first">Ledger can suggest an amount for each category from what you've really spent over the last few months, or from your take-home pay if it hasn't seen a full month yet. You check them before anything changes.</p><BudgetSuggest onApplied={reload} /></section>;
@@ -211,6 +267,15 @@ export default function Budgets({ month }: { month: string }) {
     ];
   const left = s.budget - s.spent;
   const zeroNow = !!z?.on && !z.before;
+  const targetsNeed = s.categories.reduce((a: number, c: any) => a + (c.target?.need || 0), 0);
+  // Giving one category what its target still needs: this month's amount goes up by it, or the monthly budget becomes the target's figure.
+  const giveTarget = async (c: any) => {
+    try {
+      if (c.zero) await api('/api/zero/assign', { method: 'PUT', body: { month, category_id: c.id, amount: Math.round((c.base + c.target.need) * 100) / 100 } });
+      else await api(`/api/categories/${c.id}`, { method: 'PATCH', body: { budget: c.target.per } });
+      setNote(c.zero ? `${money(c.target.need)} more assigned to ${c.name}.` : `The monthly budget for ${c.name} is now ${money(c.target.per)}.`); forgetLoaded(); reload();
+    } catch (e: any) { setNote(e.message); }
+  };
   // Covering an overspent category by moving what the page suggests (zero-based mode only).
   const cover = async (c: any) => {
     try {
@@ -250,7 +315,7 @@ export default function Budgets({ month }: { month: string }) {
   return (
     <div className="stack">
       {note && <p className="sub" role="status">{note}</p>}
-      {z?.on && <ZeroBar z={z} month={month} onChanged={reload} />}
+      {z?.on && <ZeroBar z={z} month={month} onChanged={reload} targetsNeed={zeroNow ? targetsNeed : 0} />}
       <section className="tiles">
         <div className="tile"><div className="label">Budget</div><div className="value">{money(s.budget)}</div><div className="sub">{zeroNow ? 'in your categories this month' : s.categories.some((c: any) => c.rollover && Math.abs(c.carry) >= 0.005) ? 'this month, with what was carried over' : 'per month'}</div></div>
         <div className="tile"><div className="label">Spent</div><div className="value">{money(s.spent)}</div><div className="sub">{Math.round((s.spent / (s.budget || 1)) * 100)}% used</div></div>
@@ -279,7 +344,7 @@ export default function Budgets({ month }: { month: string }) {
         </section>
       )}
       <section className="card">
-        {zeroNow ? <p className="sub" style={{ margin: 0 }}>The box on the right is what each category is given <b>this month</b>. It saves when you leave the field. Each bar shows what the category has to spend: this month's amount plus whatever it had left from before.</p> : <p className="sub" style={{ margin: 0 }}>Change a monthly amount on the right. It saves when you leave the field. <b>Carry over</b> moves whatever is left at the end of a month into the next one, which suits things you save up for, such as clothing, gifts or car repairs.</p>}
+        {zeroNow ? <p className="sub" style={{ margin: 0 }}>The box on the right is what each category is given <b>this month</b>. It saves when you leave the field. Each bar shows what the category has to spend: this month's amount plus whatever it had left from before. <b>Target</b> says what a category should be given, and the page then shows what it still needs each month.</p> : <p className="sub" style={{ margin: 0 }}>Change a monthly amount on the right. It saves when you leave the field. <b>Carry over</b> moves whatever is left at the end of a month into the next one, which suits things you save up for, such as clothing, gifts or car repairs. <b>Target</b> says what a category should be given: an amount every month, or an amount saved up by a date.</p>}
         {groups.map((g) => (
           <div key={g.title}>
             <div className="group-head">
@@ -292,15 +357,19 @@ export default function Budgets({ month }: { month: string }) {
                   <Meter id={c.id} icon={c.icon} name={c.name} spent={c.spent} budget={c.budget} />
                   {c.zero && Math.abs(c.carry) >= 0.005 && <small className="carry-note">{c.carry > 0 ? <>{money(c.base)} this month, plus <b className="good">{money(c.carry)}</b> left from before</> : <>{money(c.base)} this month, less <b className="bad">{money(-c.carry)}</b> overspent before</>}</small>}
                   {c.rollover && <small className="carry-note">{Math.abs(c.carry) < 0.005 ? "Carries over: what's left this month moves to next month." : c.carry > 0 ? <>{money(c.base)} a month, plus <b className="good">{money(c.carry)}</b> carried over</> : <>{money(c.base)} a month, less <b className="bad">{money(-c.carry)}</b> overspent before</>}</small>}
+                  {c.target && targetFor !== c.id && <small className={`carry-note target-note${c.target.met ? ' met' : ''}`}>{targetWords(c)}{c.target.kind !== 'monthly' && !c.target.keeps && ' Switch on Carry over so what you set aside is kept.'}{!c.target.met && <> <button className="link" onClick={() => giveTarget(c)}>{c.zero ? `Assign ${money(c.target.need)} more` : `Set the budget to ${money(c.target.per)}`}</button></>}</small>}
+                  {targetFor === c.id && <TargetEdit cat={c} zero={!!c.zero} onClose={() => setTargetFor(null)} onDone={(n) => { setTargetFor(null); setNote(n); forgetLoaded(); reload(); }} />}
                 </div>
-                <BudgetInput key={`${c.id}-${month}-${c.zero ? c.base : 'set'}`} cat={c} month={month} onSaved={reload} />
+                <BudgetInput key={`${c.id}-${month}-${c.base}`} cat={c} month={month} onSaved={reload} />
                 <More name={c.name} sub={`${money(c.spent)} spent of ${money(c.budget)}`} items={() => [
                   !c.zero && { label: c.rollover ? 'Stop carrying over' : 'Carry over', hint: c.rollover ? 'The same budget every month again' : "What's left moves into next month", run: () => carry(c) },
+                  { label: c.target ? 'Change the target' : 'Set a target', hint: 'An amount to set aside each month, or to save up by a date', run: () => setTargetFor(c.id) },
                   !['Other', 'Income', 'Transfer'].includes(c.name) && { label: 'Rename or change the icon', run: () => dispatchEvent(new CustomEvent('ledger-icon-edit', { detail: { id: c.id, name: c.name, icon: c.icon } })) },
                   !['Other', 'Income', 'Transfer'].includes(c.name) && { label: 'Remove', danger: true, hint: 'Anything filed in it moves to Other', run: () => removeCategory(c) },
                 ]} />
                 <div className="budget-acts wide-only">
                 {!c.zero && <button className="link budget-remove" aria-pressed={!!c.rollover} aria-label={`${c.rollover ? 'Stop carrying over' : 'Carry over'} what is left of ${c.name}`} onClick={() => carry(c)}>{c.rollover ? 'Stop carrying over' : 'Carry over'}</button>}
+                <button className="link budget-remove target-link" aria-label={`${c.target ? 'Change the target for' : 'Set a target for'} ${c.name}`} onClick={() => setTargetFor(targetFor === c.id ? null : c.id)}>{c.target ? 'Change target' : 'Target'}</button>
                 {!['Other', 'Income', 'Transfer'].includes(c.name) && <button className="link budget-remove" aria-label={`Rename the category ${c.name}`} onClick={() => dispatchEvent(new CustomEvent('ledger-icon-edit', { detail: { id: c.id, name: c.name, icon: c.icon } }))}>Rename</button>}
                 {!['Other', 'Income', 'Transfer'].includes(c.name) && <button className="link budget-remove" aria-label={`Remove the category ${c.name}`} onClick={() => removeCategory(c)}>Remove</button>}
                 </div>

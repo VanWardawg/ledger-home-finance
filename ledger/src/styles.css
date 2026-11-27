@@ -2082,3 +2082,13 @@ html[data-palette='plum'] { color-scheme: dark; --line: rgba(255, 255, 255, 0.09
 .group-add { margin-top: 10px; }
 .group-pick { align-items: center; gap: 12px; }
 .group-pick select { max-width: 220px; }
+
+/* Targets, under a category's bar on Budgets (src/pages/Budgets.tsx). */
+.target-note button.link { font-size: inherit; }
+.target-note.met { color: var(--ink3); }
+.target-link:hover { color: var(--accent, inherit); }
+.target-edit { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; margin: 8px 0 6px 2px; padding: 12px; border: 1px solid var(--line); border-radius: var(--r-ctl, 8px); }
+.target-edit label { display: grid; gap: 4px; font-size: 13px; color: var(--ink2); }
+.target-edit input, .target-edit select { width: auto; min-width: 120px; max-width: 100%; text-align: left; }
+.target-edit .target-acts { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.target-edit small, .target-edit .error { flex-basis: 100%; margin: 0; }

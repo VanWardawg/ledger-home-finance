@@ -7,6 +7,7 @@ import { installAnalysis, moneyReview } from './analysis.js';
 import { installYnab } from './ynab.js';
 import { installBackup } from './backup.js';
 import { installGroups } from './groups.js';
+import { installTargets, attachTargets } from './targets.js';
 import { installHaSensors } from './hasensors.js';
 import express from 'express';
 import path from 'node:path';
@@ -159,6 +160,7 @@ function summaryFor(monthArg) {
     c.carry = carried[c.id] || 0;
     if (c.rollover) c.budget = Math.max(0, round(c.base + c.carry));
   }
+  attachTargets(categories, month);   // what each category with a target still needs this month (server/targets.js)
 
   const byDay = Object.fromEntries(db.prepare(`
     SELECT t.date, -SUM(t.amount) s FROM transactions t JOIN categories c ON c.id = t.category_id
@@ -1087,6 +1089,7 @@ installAnalysis(app, { summaryFor });
 installYnab(app);
 installBackup(app);
 installGroups(app);
+installTargets(app);
 installHoldings(app);
 installReconcile(app);
 installCfo(app, { summaryFor, debtPlan, taxEstimate, goals, investments, moneyReview: () => moneyReview({ forAi: true, budget: Number(summaryFor().budget) || 0 }) });

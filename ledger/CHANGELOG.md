@@ -28,6 +28,13 @@
   whatever backs up the machine.
 - Tests, for the first time: `npm test` runs 35 checks of the review's arithmetic, the YNAB import, the
   model connection and the backups. Nothing in them needs a model or the internet.
+- Targets. A category can be given a target from its row on Budgets: an amount to set aside every month,
+  an amount to save up by a month you choose (the rest is spread over the months left), or, when every
+  dollar gets a job, an amount to have to spend each month (topped up from what was left). The row then
+  says what the category still needs this month and one press gives it that. In the every-dollar mode,
+  "Give targets what they need" hands out the money waiting to be assigned, in page order, and says what
+  it could not cover. A target moves nothing by itself. Saving up by a date switches Carry over on for
+  that category (and says so). YNAB's export has no targets in it, so they are set again by hand.
 - Category groups. Budgets has a new part at the foot, "Category groups": make headings such as Everyday,
   Bills or Kids, put them in order, and choose which each category sits under. The page is then laid out
   under your groups, each with its own spent and budgeted totals. Groups change the layout and nothing

@@ -166,7 +166,7 @@ export function YnabImport({ onDone }: { onDone: () => void }) {
           <label className="row check"><span className="grow">Learn where you file each shop ({p.rules} shop{p.rules === 1 ? '' : 's'} always filed the same way)</span><input type="checkbox" checked={rules} onChange={(e) => setRules(e.target.checked)} /></label>
           {p.plan && <label className="row check"><span className="grow">Use {p.plan.month}'s amounts as each category's monthly budget ({p.plan.categories} categories, {cents(p.plan.total)} in all; only where no budget is set yet)</span><input type="checkbox" checked={budgets} onChange={(e) => setBudgets(e.target.checked)} /></label>}
           {p.planError && <p className="error">{p.planError}</p>}
-          <p className="sub">Category groups come across as groups on the Budgets page. What does not: flags, cleared marks, scheduled transactions and targets. Two YNAB categories with the same name in different groups become one. Bills are found again from your history on the Recurring page.</p>
+          <p className="sub">Category groups come across as groups on the Budgets page. What does not: flags, cleared marks, scheduled transactions and targets (YNAB's export leaves targets out; set them again on the Budgets page). Two YNAB categories with the same name in different groups become one. Bills are found again from your history on the Recurring page.</p>
           <p><button type="button" className="primary" disabled={busy || coming === 0} onClick={go}>{busy ? 'Bringing it in…' : `Bring in ${coming.toLocaleString()} transactions`}</button></p>
         </>
       )}
