@@ -20,14 +20,19 @@
 - Moving in from YNAB. Settings, "Moving in from YNAB" reads YNAB's exported Register file (and its Plan
   file, if you choose it) and brings across each account, every transaction with the category you chose
   and its memo, and transfers as transfers. It learns where you file each shop and can take your latest
-  month's amounts as budgets. Bringing the same files in again adds nothing twice. Category groups, flags,
-  cleared marks, scheduled transactions and targets do not come across.
+  month's amounts as budgets. Bringing the same files in again adds nothing twice. Flags, cleared marks,
+  scheduled transactions and targets do not come across.
 - Backups. Ledger now makes a whole copy of its database each night and keeps the last 7 (Settings,
   "Backups" changes the number), in a `backups` folder beside the database. A copy can also be made on
   the spot or downloaded. The copies are on the same disk as the database: include that folder in
   whatever backs up the machine.
 - Tests, for the first time: `npm test` runs 35 checks of the review's arithmetic, the YNAB import, the
   model connection and the backups. Nothing in them needs a model or the internet.
+- Category groups. Budgets has a new part at the foot, "Category groups": make headings such as Everyday,
+  Bills or Kids, put them in order, and choose which each category sits under. The page is then laid out
+  under your groups, each with its own spent and budgeted totals. Groups change the layout and nothing
+  else, and removing one leaves its categories where they were, in no group. Bringing a YNAB export in
+  now carries its category groups across too (a category already in a group here is left alone).
 - Style and solid colour themes. Settings, "Appearance" has two new choices. Style is the shape of things:
   Classic (as before), Modern (rounded panels, soft shadows, bold sans figures) or Sharp (square corners,
   thin lines, small capitals). Solid colour themes are six plain looks beside Onyx and Ivory: Snow, Mint and

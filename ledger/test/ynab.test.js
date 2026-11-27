@@ -147,3 +147,17 @@ test('a broken file changes nothing', () => {
   assert.throws(() => importYnab(`${HEAD}\n"X","","01/01/2026","Y","","","","",$1.00,$0.00,""`, '', { accounts: { X: { to: 999999 } } }), /isn't in Ledger any more/);
   assert.equal(db.prepare('SELECT COUNT(*) n FROM accounts').get().n, before);
 });
+
+test("YNAB's category groups come across, and a choice made here is kept", () => {
+  const inGroup = (name) => db.prepare('SELECT g.name FROM categories c LEFT JOIN category_groups g ON g.id = c.group_id WHERE c.name = ?').get(name)?.name ?? null;
+  assert.equal(inGroup('Groceries'), 'Everyday');
+  assert.equal(inGroup('Fuel'), 'Everyday');
+  assert.equal(inGroup('Income'), null);
+  assert.equal(db.prepare("SELECT COUNT(*) n FROM category_groups WHERE lower(name) IN ('inflow', 'credit card payments')").get().n, 0);
+  // Moved in Ledger, then the same file brought in again: it stays where it was put.
+  const other = Number(db.prepare("INSERT INTO category_groups (name, sort) VALUES ('Car', 99)").run().lastInsertRowid);
+  db.prepare("UPDATE categories SET group_id = ? WHERE name = 'Fuel'").run(other);
+  const again = importYnab(REGISTER, PLAN, {});
+  assert.equal(again.groupsSet, 0);
+  assert.equal(inGroup('Fuel'), 'Car');
+});

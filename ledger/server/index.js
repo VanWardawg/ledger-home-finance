@@ -6,6 +6,7 @@ import { installLocalAi } from './localai.js';
 import { installAnalysis, moneyReview } from './analysis.js';
 import { installYnab } from './ynab.js';
 import { installBackup } from './backup.js';
+import { installGroups } from './groups.js';
 import { installHaSensors } from './hasensors.js';
 import express from 'express';
 import path from 'node:path';
@@ -135,7 +136,7 @@ function summaryFor(monthArg) {
   const lastDay = isCurrent ? Number(today.slice(8)) : days;
 
   const categories = db.prepare(`
-    SELECT c.id, c.name, c.icon, c.color, c.fixed, c.budget, COALESCE(-SUM(t.amount), 0) spent
+    SELECT c.id, c.name, c.icon, c.color, c.fixed, c.budget, c.group_id, COALESCE(-SUM(t.amount), 0) spent
     FROM categories c LEFT JOIN transactions t ON t.category_id = c.id AND t.date >= ? AND t.date < ?
     WHERE c.kind = 'expense' GROUP BY c.id ORDER BY c.sort`).all(start, end)
     .map((c) => ({ ...c, spent: round(c.spent) }));
@@ -1085,6 +1086,7 @@ installLocalAi(app);
 installAnalysis(app, { summaryFor });
 installYnab(app);
 installBackup(app);
+installGroups(app);
 installHoldings(app);
 installReconcile(app);
 installCfo(app, { summaryFor, debtPlan, taxEstimate, goals, investments, moneyReview: () => moneyReview({ forAi: true, budget: Number(summaryFor().budget) || 0 }) });

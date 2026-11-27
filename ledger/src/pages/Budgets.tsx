@@ -119,10 +119,62 @@ function ZeroSwitch({ z, onChanged }: { z: any; onChanged: () => void }) {
   );
 }
 
+/**
+ * Category groups (server/groups.js): headings to sort the categories under. Making, naming, ordering
+ * and removing them, and choosing each category's group, all in one place at the foot of the page.
+ */
+function CategoryGroups({ list, cats, onChanged }: { list: any[]; cats: any[]; onChanged: () => void }) {
+  const [name, setName] = useState('');
+  const [err, setErr] = useState('');
+  const [editing, setEditing] = useState<{ id: number; name: string } | null>(null);
+  const run = async (path: string, method: string, body?: object) => { try { await api(path, { method, body }); setErr(''); forgetLoaded(); onChanged(); return true; } catch (e: any) { setErr(e.message); return false; } };
+  const add = async (e: React.FormEvent) => { e.preventDefault(); if (!name.trim()) return setErr('Enter a name for the group.'); if (await run('/api/groups', 'POST', { name })) setName(''); };
+  const remove = (g: any) => { if (confirm(`Remove the group "${g.name}"? Its ${g.categories} categor${g.categories === 1 ? 'y stays' : 'ies stay'}, in no group. No category or transaction is removed.`)) run(`/api/groups/${g.id}`, 'DELETE'); };
+  return (
+    <Fold id="budget-groups" title="Category groups" note={list.length ? `${list.length} group${list.length === 1 ? '' : 's'}` : 'Not in use'}>
+      <p className="sub first">Groups are headings to sort your categories under, such as Everyday, Bills or Kids. They change how this page is laid out and nothing else: budgets, totals and where a purchase is filed stay as they are. With no groups, the page shows flexible spending and fixed bills.</p>
+      {list.map((g, i) => (
+        <div key={g.id} className="row group-row">
+          {editing?.id === g.id
+            ? <form className="grow group-edit" onSubmit={async (e) => { e.preventDefault(); if (await run(`/api/groups/${g.id}`, 'PATCH', { name: editing!.name })) setEditing(null); }}>
+                <input type="text" value={editing!.name} autoFocus aria-label={`New name for ${g.name}`} onChange={(e) => setEditing({ id: g.id, name: e.target.value })} />
+                <button type="submit" className="primary">Save</button><button type="button" onClick={() => setEditing(null)}>Cancel</button>
+              </form>
+            : <>
+                <span className="grow"><b>{g.name}</b> <small style={{ display: 'inline' }}>{g.categories} categor{g.categories === 1 ? 'y' : 'ies'}</small></span>
+                <button className="link" disabled={i === 0} aria-label={`Move ${g.name} up`} onClick={() => run(`/api/groups/${g.id}`, 'PATCH', { move: -1 })}>Up</button>
+                <button className="link" disabled={i === list.length - 1} aria-label={`Move ${g.name} down`} onClick={() => run(`/api/groups/${g.id}`, 'PATCH', { move: 1 })}>Down</button>
+                <button className="link" aria-label={`Rename the group ${g.name}`} onClick={() => setEditing({ id: g.id, name: g.name })}>Rename</button>
+                <button className="link" aria-label={`Remove the group ${g.name}`} onClick={() => remove(g)}>Remove</button>
+              </>}
+        </div>
+      ))}
+      <form className="add-actions group-add" onSubmit={add} noValidate>
+        <input type="text" value={name} placeholder="Everyday" aria-label="Name of a new group" onChange={(e) => { setName(e.target.value); setErr(''); }} />
+        <button type="submit">Add a group</button>
+      </form>
+      {err && <p className="error" role="alert">{err}</p>}
+      {list.length > 0 && <>
+        <div className="group-head"><span>Which group each category is in</span></div>
+        {cats.map((c: any) => (
+          <label key={c.id} className="row group-pick">
+            <span className="grow">{c.icon} {c.name}</span>
+            <select value={c.group_id ?? ''} aria-label={`Group for ${c.name}`} onChange={(e) => run(`/api/categories/${c.id}/group`, 'PUT', { group_id: e.target.value === '' ? null : Number(e.target.value) })}>
+              <option value="">Not in a group</option>
+              {list.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+            </select>
+          </label>
+        ))}
+      </>}
+    </Fold>
+  );
+}
+
 export default function Budgets({ month }: { month: string }) {
   const { data: s, error, reload: reloadSummary } = useData(`/api/summary?month=${month}`);
   const { data: z, reload: reloadZero } = useData<any>(`/api/zero?month=${month}`);
-  const reload = () => { reloadSummary(); reloadZero(); };
+  const { data: gr, reload: reloadGroups } = useData<any>('/api/groups');
+  const reload = () => { reloadSummary(); reloadZero(); reloadGroups(); };
   // (Before the early returns below: hooks must run in the same order on every draw.)
   const [note, setNote] = useState('');
   if (error) return <p className="error">{error}</p>;
@@ -145,10 +197,18 @@ export default function Budgets({ month }: { month: string }) {
       forgetLoaded(); reload();
     } catch (e: any) { setNote(e.message); }
   };
-  const groups = [
-    { title: 'Flexible spending', items: s.categories.filter((c: any) => !c.fixed) },
-    { title: 'Fixed bills', items: s.categories.filter((c: any) => c.fixed) },
-  ];
+  // Under your own groups once there are any (a category in none, or in a group since removed, goes last);
+  // otherwise the two the page has always had.
+  const own: any[] = gr?.groups || [];
+  const groups = own.length
+    ? [
+      ...own.map((g) => ({ title: g.name, items: s.categories.filter((c: any) => c.group_id === g.id) })),
+      { title: 'Not in a group', items: s.categories.filter((c: any) => !own.some((g) => g.id === c.group_id)) },
+    ].filter((g) => g.items.length > 0)
+    : [
+      { title: 'Flexible spending', items: s.categories.filter((c: any) => !c.fixed) },
+      { title: 'Fixed bills', items: s.categories.filter((c: any) => c.fixed) },
+    ];
   const left = s.budget - s.spent;
   const zeroNow = !!z?.on && !z.before;
   // Covering an overspent category by moving what the page suggests (zero-based mode only).
@@ -251,6 +311,7 @@ export default function Budgets({ month }: { month: string }) {
       </section>
       {!zeroNow && suggest}
       <AddCategory onDone={reload} />
+      {gr && <CategoryGroups list={own} cats={s.categories} onChanged={reload} />}
       {z && <ZeroSwitch z={z} onChanged={reload} />}
     </div>
   );

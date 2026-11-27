@@ -13,9 +13,10 @@
 //
 // Nothing is sent anywhere: the files are read on this server and nowhere else.
 //
-// What does not come across, said plainly on the page too: category groups (Ledger has none), flags,
+// Category groups come across as Ledger's own (server/groups.js). What does not, said plainly on the page too: flags,
 // cleared marks, scheduled transactions, and targets. Two YNAB categories with the same name in different
 // groups become one.
+import { groupNamed } from './groups.js';
 import crypto from 'node:crypto';
 import { db, getSetting, setSetting } from './db.js';
 import { parseCsv } from './importer.js';
@@ -220,7 +221,7 @@ export function importYnab(registerCsv, planCsv, choices = {}) {
   let plan = null;
   if (choices.budgets !== false && String(planCsv || '').trim()) plan = readPlan(planCsv);
   const want = choices.accounts && typeof choices.accounts === 'object' ? choices.accounts : {};
-  const result = { added: 0, skipped: 0, accountsMade: 0, categoriesMade: 0, rulesLearned: 0, budgetsSet: 0, left: 0 };
+  const result = { added: 0, skipped: 0, accountsMade: 0, categoriesMade: 0, groupsSet: 0, rulesLearned: 0, budgetsSet: 0, left: 0 };
   db.exec('BEGIN');
   try {
     removeSampleData();
@@ -289,6 +290,18 @@ export function importYnab(registerCsv, planCsv, choices = {}) {
       const tx = Number(insert.run(acc, r.date, r.payee, r.amount, category, r.memo, id).lastInsertRowid);
       if (category === income && r.amount > 0) okIncome.run(tx);
       result.added++;
+    }
+
+    // YNAB's groups. A category takes the group it was last filed under there, unless it already sits in
+    // one here: a choice made in Ledger is never undone by bringing a file in again.
+    if (choices.groups !== false) {
+      const where = new Map();
+      for (const r of rows) if (r.kind === 'expense' && r.category && r.group && !/^(inflow|credit card payments?|hidden categories)$/i.test(r.group)) where.set(r.category.toLowerCase(), r.group);
+      const put = db.prepare('UPDATE categories SET group_id = ? WHERE id = ? AND group_id IS NULL');
+      for (const [name, group] of where) {
+        const id = catId.get(name);
+        if (id) result.groupsSet += Number(put.run(groupNamed(group), id).changes);
+      }
     }
 
     // What YNAB's history says about where each shop is filed.

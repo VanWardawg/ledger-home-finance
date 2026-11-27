@@ -2073,3 +2073,12 @@ html[data-palette='plum'] { color-scheme: dark; --line: rgba(255, 255, 255, 0.09
 .swatch i.palette-chip { position: relative; overflow: hidden; }
 .palette-chip b { position: absolute; left: 9px; right: 9px; top: 9px; bottom: -6px; border-radius: 6px 6px 0 0; box-shadow: 0 0 0 1px rgba(128, 128, 128, 0.18); }
 .palette-chip u { position: absolute; left: 15px; top: 16px; width: 20px; height: 5px; border-radius: 3px; }
+
+/* Category groups, at the foot of Budgets (src/pages/Budgets.tsx). */
+.group-row { gap: 12px; align-items: center; }
+.group-row button.link:disabled { color: var(--ink3); cursor: default; }
+.group-edit { display: flex; gap: 8px; align-items: center; }
+.group-edit input, .group-add input { flex: 1; min-width: 0; max-width: 280px; }
+.group-add { margin-top: 10px; }
+.group-pick { align-items: center; gap: 12px; }
+.group-pick select { max-width: 220px; }
